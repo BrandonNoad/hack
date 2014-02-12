@@ -1,0 +1,10 @@
+# Android workspace prefereces
+android-workspace/.metadata/*
+
+# Android workspace temp files
+android-workspace/HACK/bin/classes/com/cs446project/hack/*.class
+android-workspace/HACK/bin/HACK.apk
+android-workspace/HACK/bin/classes.dex
+android-workspace/HACK/bin/dexedLibs/
+android-workspace/HACK/bin/res/
+android-workspace/HACK/bin/resources.ap_

@@ -3,7 +3,9 @@
 
     <string name="app_name">HACK</string>
     <string name="action_settings">Settings</string>
-    <string name="hello_world">Hello world!</string>
+    <string name="msg_initial">Nothing yet</string>
+    <string name="msg_noBT">No Bluetooth support</string>
+    <string name="msg_yesBT">Bluetooth available</string>
     <string name="button_label">Test Bluetooth</string>
 
 </resources>

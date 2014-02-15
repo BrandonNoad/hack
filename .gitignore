@@ -2,7 +2,7 @@
 android-workspace/.metadata/*
 
 # Android workspace temp files
-android-workspace/HACK/bin/classes/com/cs446project/hack/*.class
+android-workspace/HACK/bin/classes/*
 android-workspace/HACK/gen/com/cs446project/hack/R.java
 android-workspace/HACK/bin/HACK.apk
 android-workspace/HACK/bin/classes.dex

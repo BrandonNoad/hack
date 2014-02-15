@@ -3,9 +3,18 @@
 
     <string name="app_name">HACK</string>
     <string name="action_settings">Settings</string>
-    <string name="msg_initial">Nothing yet</string>
-    <string name="msg_noBT">No Bluetooth support</string>
-    <string name="msg_yesBT">Bluetooth available</string>
+    <string name="msg_init">Press the button to begin.</string>
+    <string name="msg_checkBT">Checking for a bluetooth device&#8230;</string>
+    <string name="msg_noBT">No Bluetooth support, cannot continue!</string>
+    <string name="msg_enablingBT">Attempting to enable Bluetooth&#8230;</string>
+    <string name="msg_BToff">Bluetooth is now off.</string>
+    <string name="msg_BTon">Bluetooth is now on.</string>
+    <string name="msg_reqSearch">Requesting a device scan.</string>
+    <string name="msg_searchStart">Searching for devices&#8230;</string>
+    <string name="msg_searchDone">Device search complete.</string>
+    <string name="msg_tryConnect">About to try connecting to: </string>
+    <string name="msg_yesConnect">Connection successful.</string>
+    <string name="msg_noConnect">Connection failed.</string>
     <string name="button_label">Test Bluetooth</string>
 
 </resources>

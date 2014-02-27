@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.hack"
+    android:versionCode="1"
+    android:versionName="1.0" >
+
+    <uses-sdk
+        android:minSdkVersion="16"
+        android:targetSdkVersion="19" />
+
+    <application
+        android:allowBackup="true"
+        android:icon="@drawable/ic_launcher"
+        android:label="@string/app_name"
+        android:theme="@style/AppTheme" >
+        <activity
+            android:name="com.hack.AllUnitsActivity"
+            android:label="@string/app_name" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name="com.hack.SingleUnitActivity"
+            android:label="@string/title_activity_single_unit"
+            android:parentActivityName="com.hack.AllUnitsActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.hack.AllUnitsActivity" />
+        </activity>
+        <activity
+            android:name="com.hack.AddUnitActivity"
+            android:label="@string/title_activity_add_unit"
+            android:parentActivityName="com.hack.AllUnitsActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.hack.AllUnitsActivity" />
+        </activity>
+        <activity
+            android:name="com.hack.DeviceDetailsActivity"
+            android:label="@string/title_activity_device_details"
+            android:parentActivityName="com.hack.SingleUnitActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.hack.SingleUnitActivity" />
+        </activity>
+    </application>
+
+</manifest>

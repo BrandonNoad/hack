@@ -20,14 +20,14 @@ public class AllUnitsActivity extends Activity {
     
     private HardwareUnitAdapter mHardwareUnitAdapter;
     private ArrayList<HardwareUnit> mAllUnitsList = new ArrayList<HardwareUnit>(); 
-    private HardwareUnitsDataSource mHardwareUnitsDataSource;
+    private HardwareUnitDataSource mHardwareUnitsDataSource;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_all_units);
         
-        mHardwareUnitsDataSource = new HardwareUnitsDataSource(this);
+        mHardwareUnitsDataSource = new HardwareUnitDataSource(this);
         mHardwareUnitsDataSource.open();
         
         mAllUnitsList = mHardwareUnitsDataSource.getAllHardwareUnits();

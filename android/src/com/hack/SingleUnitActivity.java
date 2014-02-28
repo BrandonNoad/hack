@@ -14,7 +14,7 @@ import android.widget.TextView;
 public class SingleUnitActivity extends Activity {
     
     public final static String EXTRA_SOCKET_ID = "com.hack.SOCKET_ID";
-    private HardwareUnitsDataSource mHardwareUnitsDataSource;
+    private HardwareUnitDataSource mHardwareUnitsDataSource;
     
     private OnClickListener mOnClickListener = new OnClickListener() {
         public void onClick(View v) {
@@ -47,7 +47,7 @@ public class SingleUnitActivity extends Activity {
         // Show the Up button in the action bar.
         setupActionBar();
         
-        mHardwareUnitsDataSource = new HardwareUnitsDataSource(this);
+        mHardwareUnitsDataSource = new HardwareUnitDataSource(this);
         mHardwareUnitsDataSource.open();
         
         Button socketButton0 = (Button) findViewById(R.id.socket0);

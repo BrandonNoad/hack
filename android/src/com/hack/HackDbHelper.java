@@ -21,7 +21,8 @@ public class HackDbHelper extends SQLiteOpenHelper {
     
     private static final String SQL_CREATE_SOCKETS =
             "CREATE TABLE " + HackSockets.TABLE_NAME + " (" +
-            HackSockets._ID + " INTEGER PRIMARY KEY" +
+            HackSockets._ID + " INTEGER PRIMARY KEY, " + COMMA_SEP +
+            HackSockets.COLUMN_NAME_SOCKET_DESCRIPTION + TEXT_TYPE +
             " )";
     
     private static final String SQL_CREATE_DEVICES =

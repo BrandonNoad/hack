@@ -17,6 +17,7 @@ public class HackDbContract {
     
     public static abstract class HackSockets implements BaseColumns {
         public static final String TABLE_NAME = "sockets";
+        public static final String COLUMN_NAME_SOCKET_DESCRIPTION = "socketDescription";
     }
     
     public static abstract class HackDevices implements BaseColumns {

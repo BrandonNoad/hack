@@ -10,7 +10,7 @@ import android.database.sqlite.SQLiteDatabase;
 
 import com.hack.HackDbContract.HackHardwareUnits;
 
-public class HardwareUnitsDataSource {
+public class HardwareUnitDataSource {
     
     // Database fields
     private SQLiteDatabase mDatabase;
@@ -20,7 +20,7 @@ public class HardwareUnitsDataSource {
             HackHardwareUnits.COLUMN_NAME_HARDWARE_UNIT_NAME
     };
       
-    public HardwareUnitsDataSource(Context context) {
+    public HardwareUnitDataSource(Context context) {
       mDbHelper = new HackDbHelper(context);
     }
 

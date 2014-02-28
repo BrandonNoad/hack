@@ -15,7 +15,7 @@ public class AddUnitActivity extends Activity {
     
     public final static String EXTRA_UNIT_ID = "com.hack.UNIT_ID";
     
-    private HardwareUnitsDataSource mHardwareUnitsDataSource;
+    private HardwareUnitDataSource mHardwareUnitsDataSource;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -24,7 +24,7 @@ public class AddUnitActivity extends Activity {
         // Show the Up button in the action bar.
         setupActionBar();
         
-        mHardwareUnitsDataSource = new HardwareUnitsDataSource(this);
+        mHardwareUnitsDataSource = new HardwareUnitDataSource(this);
         mHardwareUnitsDataSource.open();
         
         Button addUnitButton = (Button) findViewById(R.id.add);

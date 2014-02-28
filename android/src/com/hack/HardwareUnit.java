@@ -4,6 +4,11 @@ public class HardwareUnit {
     private long mId;
     private String mName;
     
+    public HardwareUnit(long id, String name) {
+        mId = id;
+        mName = name;
+    }   
+    
     public long getId() {
         return mId;
     }
@@ -20,9 +25,5 @@ public class HardwareUnit {
         mName = name;
     }
     
-    public HardwareUnit(long id, String name) {
-        mId = id;
-        mName = name;
-    }
-
+     
 }

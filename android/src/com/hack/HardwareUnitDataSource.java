@@ -17,7 +17,9 @@ public class HardwareUnitDataSource {
     private HackDbHelper mDbHelper;
     private String[] mAllColumns = { 
             "_ID",
-            HackHardwareUnits.COLUMN_NAME_HARDWARE_UNIT_NAME
+            HackHardwareUnits.COLUMN_NAME_HARDWARE_UNIT_NAME,
+            HackHardwareUnits.COLUMN_NAME_HARDWARE_UNIT_BASE_PATH,
+            HackHardwareUnits.COLUMN_NAME_HARDWARE_UNIT_PORT_NUMBER
     };
       
     public HardwareUnitDataSource(Context context) {
@@ -40,7 +42,7 @@ public class HardwareUnitDataSource {
     }
     
     public ArrayList<HardwareUnit> getAllHardwareUnits() {
-      ArrayList<HardwareUnit> hardwareUnits = new ArrayList<HardwareUnit>();
+      ArrayList<HardwareUnit> hardwareUnits = new ArrayList<HardwareUnit>();     
       Cursor cursor = mDatabase.query(
               HackHardwareUnits.TABLE_NAME,
               mAllColumns, 
@@ -54,7 +56,9 @@ public class HardwareUnitDataSource {
       while (!cursor.isAfterLast()) {
         long id = cursor.getLong(0);
         String name = cursor.getString(1);
-        HardwareUnit hu = new HardwareUnit(id, name);
+        String basePath = cursor.getString(2);
+        int portNumber = cursor.getInt(3);
+        HardwareUnit hu = new HardwareUnit(id, name, basePath, portNumber);
         hardwareUnits.add(hu);
         cursor.moveToNext();
       }
@@ -76,9 +80,10 @@ public class HardwareUnitDataSource {
         cursor.moveToFirst();
         long huId = cursor.getLong(0);
         String name = cursor.getString(1);
-        HardwareUnit hu = new HardwareUnit(huId, name);
-        return hu;
-        
+        String basePath = cursor.getString(2);
+        int portNumber = cursor.getInt(3);
+        HardwareUnit hu = new HardwareUnit(id, name, basePath, portNumber);
+        return hu;        
     }
 
 }

@@ -8,5 +8,7 @@
     <string name="title_activity_single_unit">SingleUnitActivity</string>
     <string name="title_activity_add_unit">AddUnitActivity</string>
     <string name="title_activity_device_details">DeviceDetailsActivity</string>
+    <string name="name">Name</string>
+    <string name="type">Type</string>
 
 </resources>

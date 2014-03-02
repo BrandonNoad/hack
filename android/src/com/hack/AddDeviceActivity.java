@@ -11,28 +11,34 @@ import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.EditText;
 
-public class AddUnitActivity extends Activity {
+public class AddDeviceActivity extends Activity {
     
     public final static String EXTRA_UNIT_ID = "com.hack.UNIT_ID";
     
-    private HardwareUnitDataSource mHardwareUnitsDataSource;
+    private DeviceDataSource mDeviceDataSource;
+    private long mHardwareUnitId;
+    private long mSocketId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_add_unit);
+        setContentView(R.layout.activity_add_device);
         // Show the Up button in the action bar.
         setupActionBar();
         
-        mHardwareUnitsDataSource = new HardwareUnitDataSource(this);
-        mHardwareUnitsDataSource.open();
+        mDeviceDataSource = new DeviceDataSource(this);
+        mDeviceDataSource.open();
         
         Button addUnitButton = (Button) findViewById(R.id.add);
         addUnitButton.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
-                add();                
+                addDevice();                
             }
         });
+        
+        Intent intent = getIntent();
+        mHardwareUnitId = intent.getLongExtra(SingleUnitActivity.EXTRA_HARDWARE_UNIT_ID, -1);
+        mSocketId = intent.getLongExtra(SingleUnitActivity.EXTRA_SOCKET_ID, -1);        
     }
 
     /**
@@ -68,12 +74,12 @@ public class AddUnitActivity extends Activity {
         return super.onOptionsItemSelected(item);
     }
 
-    public void add() {
-        Intent intent = new Intent(this, AllUnitsActivity.class);
-        EditText et = (EditText) findViewById(R.id.addUnitEditText);
-        String unitName = et.getText().toString();
-        long id = mHardwareUnitsDataSource.addHardwareUnit(unitName);
-        intent.putExtra(EXTRA_UNIT_ID, id);  // pass back unit id
+    public void addDevice() {
+        Intent intent = new Intent(this, SingleUnitActivity.class);
+        EditText et = (EditText) findViewById(R.id.deviceNameEditText);
+        String deviceName = et.getText().toString();
+        long deviceId = mDeviceDataSource.addDevice(mHardwareUnitId, mSocketId, deviceName);
+        intent.putExtra(EXTRA_UNIT_ID, mHardwareUnitId);  // pass back hardware unit id
         startActivity(intent);
     }
 }

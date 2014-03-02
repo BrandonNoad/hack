@@ -1,5 +1,7 @@
 package com.hack;
 
+import java.util.ArrayList;
+
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
@@ -7,39 +9,25 @@ import android.support.v4.app.NavUtils;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.View.OnClickListener;
-import android.widget.Button;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
+import android.widget.GridView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class SingleUnitActivity extends Activity {
-    
+  
+    public final static String EXTRA_HARDWARE_UNIT_ID = "com.hack.HARDWARE_UNIT_ID";
     public final static String EXTRA_SOCKET_ID = "com.hack.SOCKET_ID";
-    private HardwareUnitDataSource mHardwareUnitsDataSource;
+    public final static String EXTRA_DEVICE_ID = "com.hack.DEVICE_ID";
+    public final static int NUM_SOCKETS = 4;
     
-    private OnClickListener mOnClickListener = new OnClickListener() {
-        public void onClick(View v) {
-            int buttonId = v.getId();
-            long socketId = -1;
-            switch(buttonId) {
-                case (R.id.socket0):
-                    socketId = 0;
-                    break;
-                case (R.id.socket1):
-                    socketId = 1;
-                    break;
-                case (R.id.socket2):
-                    socketId = 2;
-                    break;
-                case (R.id.socket3):
-                    socketId = 3;
-                    break;
-                default:
-                    break;            
-            }
-            startDeviceDetailsActivity(socketId);
-        }
-    };     
-    
+    private HardwareUnitDataSource mHardwareUnitDataSource;
+    private DeviceDataSource mDeviceDataSource;
+    private ArrayList<Device> mDevices = new ArrayList<Device>();
+    private DeviceAdapter mDeviceAdapter;
+    private long mHardwareUnitId;
+        
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -47,21 +35,34 @@ public class SingleUnitActivity extends Activity {
         // Show the Up button in the action bar.
         setupActionBar();
         
-        mHardwareUnitsDataSource = new HardwareUnitDataSource(this);
-        mHardwareUnitsDataSource.open();
-        
-        Button socketButton0 = (Button) findViewById(R.id.socket0);
-        socketButton0.setOnClickListener(mOnClickListener);        
-        Button socketButton1 = (Button) findViewById(R.id.socket1);
-        socketButton1.setOnClickListener(mOnClickListener);
-        Button socketButton2 = (Button) findViewById(R.id.socket2);
-        socketButton2.setOnClickListener(mOnClickListener);
-        Button socketButton3 = (Button) findViewById(R.id.socket3);
-        socketButton3.setOnClickListener(mOnClickListener);
+        mHardwareUnitDataSource = new HardwareUnitDataSource(this);
+        mHardwareUnitDataSource.open();
+        mDeviceDataSource = new DeviceDataSource(this);
+        mDeviceDataSource.open();
         
         Intent intent = getIntent();
-        Long unitId = intent.getLongExtra(AllUnitsActivity.EXTRA_UNIT_ID, -1);        
-        displayUnit(unitId);
+        mHardwareUnitId = intent.getLongExtra(AllUnitsActivity.EXTRA_UNIT_ID, -1);
+        if (mHardwareUnitId >= 0) {
+            displayUnit(mHardwareUnitId);
+            displayDevices(mHardwareUnitId);
+           
+        }
+        
+        GridView socketGrid = (GridView) findViewById(R.id.socketGrid);
+        mDeviceAdapter = new DeviceAdapter(this, mDevices);
+        socketGrid.setAdapter(mDeviceAdapter);
+        
+        socketGrid.setOnItemClickListener(new OnItemClickListener() {
+            public void onItemClick(AdapterView parent, View v, int position, long id) {
+                Device device = (Device) parent.getItemAtPosition(position);
+                if (device != null) {
+                    startDeviceDetailsActivity(device.getId());
+                } else {
+                    startAddDeviceActivity(position);
+                }
+            }
+         });
+        
     }
 
     /**
@@ -98,14 +99,28 @@ public class SingleUnitActivity extends Activity {
     }
     
     public void displayUnit(long unitId) {
-        HardwareUnit unit = mHardwareUnitsDataSource.getHardwareUnitById(unitId);
+        HardwareUnit unit = mHardwareUnitDataSource.getHardwareUnitById(unitId);
         TextView unitName = (TextView) findViewById(R.id.unitName);
         unitName.setText(unit.getName());
     }
     
-    public void startDeviceDetailsActivity(long socketId) {
+    public void displayDevices(long unitId) {
+        for (int i = 0; i < NUM_SOCKETS; i++) {
+            Device d = mDeviceDataSource.getDevice(unitId, i);
+            mDevices.add(d);
+        }
+    }
+    
+    public void startDeviceDetailsActivity(long deviceId) {
         Intent intent = new Intent(this, DeviceDetailsActivity.class);
-        intent.putExtra(EXTRA_SOCKET_ID, socketId);
+        intent.putExtra(EXTRA_DEVICE_ID, deviceId);
+        startActivity(intent);
+    }
+    
+    public void startAddDeviceActivity(long socketId) {
+        Intent intent = new Intent(this, AddDeviceActivity.class);
+        intent.putExtra(EXTRA_HARDWARE_UNIT_ID, mHardwareUnitId);
+        intent.putExtra(EXTRA_SOCKET_ID, socketId);  
         startActivity(intent);
     }
 

@@ -41,7 +41,7 @@ public class DeviceDataSource {
       values.put(HackDevices.COLUMN_NAME_SOCKET_ID, socketId);
       values.put(HackDevices.COLUMN_NAME_DEVICE_NAME, name);
       values.put(HackDevices.COLUMN_NAME_DEVICE_STATE, 0);
-      long id = mDatabase.insert(HackHardwareUnits.TABLE_NAME, null, values);
+      long id = mDatabase.insert(HackDevices.TABLE_NAME, null, values);
       return id;
     }
     
@@ -76,20 +76,47 @@ public class DeviceDataSource {
         Cursor cursor = mDatabase.query(
                 HackDevices.TABLE_NAME,
                 mAllColumns, 
-                HackDevices._ID + "= " + id, 
+                HackDevices._ID + " = " + id,
                 null, 
                 null, 
                 null, 
                 null);
 
-        cursor.moveToFirst();
-        long deviceId = cursor.getLong(0);
-        long hardwareUnitId = cursor.getLong(1);
-        long socketId = cursor.getLong(2);
-        String name = cursor.getString(3);
-        int state = cursor.getInt(4);
-        Device d = new Device(deviceId, hardwareUnitId, socketId, name, state);
-        return d;        
+        if (cursor.moveToFirst()) {
+            long deviceId = cursor.getLong(0);
+            long hardwareUnitId = cursor.getLong(1);
+            long socketId = cursor.getLong(2);
+            String name = cursor.getString(3);
+            int state = cursor.getInt(4);
+            Device d = new Device(deviceId, hardwareUnitId, socketId, name, state);
+            return d;
+        } else {
+            return null;
+        }
+    }
+    
+    public Device getDevice(long hId, long sId) {
+        Cursor cursor = mDatabase.query(
+                HackDevices.TABLE_NAME,
+                mAllColumns, 
+                HackDevices.COLUMN_NAME_HARDWARE_UNIT_ID + " = " + hId + " " +
+                "AND " + HackDevices.COLUMN_NAME_SOCKET_ID + " = " + sId,
+                null, 
+                null, 
+                null, 
+                null);
+
+        if (cursor.moveToFirst()) {
+            long deviceId = cursor.getLong(0);
+            long hardwareUnitId = cursor.getLong(1);
+            long socketId = cursor.getLong(2);
+            String name = cursor.getString(3);
+            int state = cursor.getInt(4);
+            Device d = new Device(deviceId, hardwareUnitId, socketId, name, state);
+            return d;
+        } else {
+            return null;
+        }
     }
 
 }

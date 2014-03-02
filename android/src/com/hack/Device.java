@@ -14,5 +14,28 @@ public class Device {
         mName = name;
         mState = state;
     }
-
+    
+    public long getId() {
+        return mId;
+    }
+    
+    public String getName() {
+        return mName;
+    }
+    
+    public int getState() {
+        return mState;
+    }
+    
+    public void setId(long id) {
+        mId = id;
+    }
+    
+    public void setName(String name) {
+        mName = name;
+    }
+    
+    public void setState(int state) {
+        mState = state;
+    }
 }

@@ -22,6 +22,6 @@
         android:layout_alignParentLeft="true"
         android:layout_below="@+id/socketLabel"
         android:layout_weight="1"
-        android:background="@drawable/socket" />
+        android:background="@drawable/wall_socket" />
 
 </RelativeLayout>

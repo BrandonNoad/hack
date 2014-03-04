@@ -3,25 +3,29 @@
     android:id="@+id/RelativeLayout1"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:layout_centerHorizontal="true"
     android:orientation="vertical" >
 
     <TextView
         android:id="@+id/socketLabel"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
         android:layout_alignParentTop="true"
         android:layout_alignRight="@+id/socketImage"
         android:layout_weight="1"
-        android:gravity="center_horizontal" />
+        android:gravity="center_horizontal"
+        android:paddingTop="10dp"
+        android:textAppearance="?android:attr/textAppearanceMedium" />
 
     <ImageView
         android:id="@+id/socketImage"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:layout_alignParentLeft="true"
         android:layout_below="@+id/socketLabel"
         android:layout_weight="1"
-        android:background="@drawable/wall_socket" />
+        android:background="@drawable/socket"
+        android:padding="5dp" />
 
 </RelativeLayout>

@@ -27,6 +27,14 @@ public class Device {
         return mState;
     }
     
+    public long getSocketId() {
+        return mSocketId;
+    }
+    
+    public long getHardwareUnitId() {
+        return mHardwareUnitId;
+    }
+    
     public void setId(long id) {
         mId = id;
     }

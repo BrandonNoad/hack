@@ -6,8 +6,11 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 
+import android.app.ActionBar;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -19,11 +22,8 @@ import android.support.v4.app.NavUtils;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.view.View.OnClickListener;
-import android.widget.Button;
 import android.widget.CompoundButton;
-import android.widget.TextView;
+import android.widget.Toast;
 import android.widget.ToggleButton;
 
 public class DeviceDetailsActivity extends Activity {
@@ -32,8 +32,9 @@ public class DeviceDetailsActivity extends Activity {
     Device mDevice;
     DeviceDataSource mDeviceDataSource;
     int mDeviceState;
-    TextView message;
-    String mBasePath = "http://brandonnoad.com/";
+//    TextView message;
+    String mBasePath = "http://184.175.46.62:8080/";
+    ActionBar mActionBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,9 +42,10 @@ public class DeviceDetailsActivity extends Activity {
         setContentView(R.layout.activity_device_details);
         // Show the Up button in the action bar.
         setupActionBar();
+        mActionBar = getActionBar();
         
         ToggleButton deviceStateToggle = (ToggleButton) findViewById(R.id.deviceStateToggleButton);
-        message = (TextView) findViewById(R.id.res);
+//        message = (TextView) findViewById(R.id.res);
         
         mDeviceDataSource = new DeviceDataSource(this);
         mDeviceDataSource.open();
@@ -53,6 +55,7 @@ public class DeviceDetailsActivity extends Activity {
         
         mDevice = mDeviceDataSource.getDeviceById(mDeviceId);
         if (mDevice != null) {
+            mActionBar.setTitle(mDevice.getName());
             mDeviceState = mDevice.getState();
             if (mDeviceState == 0) {
                 deviceStateToggle.setChecked(false);
@@ -60,7 +63,7 @@ public class DeviceDetailsActivity extends Activity {
                 deviceStateToggle.setChecked(true);
             }
         }
-        
+       
         deviceStateToggle.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             
             @Override
@@ -70,21 +73,24 @@ public class DeviceDetailsActivity extends Activity {
                     getSystemService(Context.CONNECTIVITY_SERVICE);
                     NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
                     if (networkInfo != null && networkInfo.isConnected()) {
-                        new DownloadWebpageTask().execute(mBasePath + "on");
+                        new DownloadWebpageTask().execute(mBasePath + mDevice.getSocketId() + "/on");
                     } else {
-                        message.setText("No network connection available.");
+                        Toast.makeText(getApplicationContext(), "No network connection available", 
+                        Toast.LENGTH_LONG).show();
+//                        message.setText("No network connection available.");
                     }                    
                 } else {
                     ConnectivityManager connMgr = (ConnectivityManager)
                     getSystemService(Context.CONNECTIVITY_SERVICE);
                     NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
                     if (networkInfo != null && networkInfo.isConnected()) {
-                        new DownloadWebpageTask().execute(mBasePath + "off");
+                        new DownloadWebpageTask().execute(mBasePath + mDevice.getSocketId() + "/off");
                     } else {
-                        message.setText("No network connection available.");
+                        Toast.makeText(getApplicationContext(), "No network connection available", 
+                        Toast.LENGTH_LONG).show(); 
+//                        message.setText("No network connection available.");
                     }
                 }
-                
             }
         });
     }
@@ -97,6 +103,7 @@ public class DeviceDetailsActivity extends Activity {
         getActionBar().setDisplayHomeAsUpEnabled(true);
 
     }
+    
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -116,7 +123,9 @@ public class DeviceDetailsActivity extends Activity {
             //
             // http://developer.android.com/design/patterns/navigation.html#up-vs-back
             //
-            NavUtils.navigateUpFromSameTask(this);
+            Intent upIntent = NavUtils.getParentActivityIntent(this);
+            upIntent.putExtra(AllUnitsActivity.EXTRA_UNIT_ID, mDevice.getHardwareUnitId());            
+            NavUtils.navigateUpTo(this, upIntent);
             return true;
         }
         return super.onOptionsItemSelected(item);
@@ -125,7 +134,8 @@ public class DeviceDetailsActivity extends Activity {
     private String downloadUrl(String myurl) throws IOException {
         InputStream is = null;
         try {
-            URL url = new URL(myurl);
+            URL url = new URI(myurl).toURL();
+            Log.i("URL:", url.toString());
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setReadTimeout(10000 /* milliseconds */);
             conn.setConnectTimeout(15000 /* milliseconds */);
@@ -140,11 +150,12 @@ public class DeviceDetailsActivity extends Activity {
             // Convert the InputStream into a string
             String contentAsString = readIt(is, 500);
             return contentAsString;  
-        } finally {  // make sure input stream is closed
+        }  catch(URISyntaxException e) {return "error";}
+        finally {  // make sure input stream is closed
             if (is != null) {
                 is.close();
             } 
-        }
+        }        
     }
     
     // Reads an InputStream and converts it to a String.
@@ -175,7 +186,9 @@ public class DeviceDetailsActivity extends Activity {
        // onPostExecute displays the results of the AsyncTask.
        @Override
        protected void onPostExecute(String result) {
-           message.setText(result);
+           Toast.makeText(getApplicationContext(), result, 
+           Toast.LENGTH_LONG).show();     
+//           message.setText(result);
       }
    }
 }

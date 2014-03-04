@@ -37,11 +37,11 @@
         </activity>
         <activity
             android:name="com.hack.AddDeviceActivity"
-            android:label="@string/title_activity_add_unit"
-            android:parentActivityName="com.hack.AllUnitsActivity" >
+            android:label="@string/title_add_new_device"
+            android:parentActivityName="com.hack.SingleUnitActivity" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.hack.AllUnitsActivity" />
+                android:value="com.hack.SingleUnitActivity" />
         </activity>
         <activity
             android:name="com.hack.DeviceDetailsActivity"

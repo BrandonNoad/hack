@@ -8,26 +8,17 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context=".AddDeviceActivity" >
 
-    <Button
-        android:id="@+id/add"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginBottom="54dp"
-        android:text="Add" />
-
     <EditText
         android:id="@+id/deviceNameEditText"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="100dp"
+        android:layout_marginTop="33dp"
         android:ems="10"
-        android:hint="Enter Device Name" >
-
-        <requestFocus />
-    </EditText>
+        android:gravity="center_vertical|center_horizontal"
+        android:hint="Enter Device Name"
+        android:imeOptions="actionDone"
+        android:singleLine="true" />
 
 </RelativeLayout>

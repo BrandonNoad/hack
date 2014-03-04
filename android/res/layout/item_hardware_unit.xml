@@ -6,8 +6,10 @@
 
     <TextView
         android:id="@+id/hardwareUnitName"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="TextView" />
+        android:padding="10dp"
+        android:text="TextView"
+        android:textAppearance="?android:attr/textAppearanceMedium" />
 
 </LinearLayout>

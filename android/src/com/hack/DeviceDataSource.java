@@ -45,6 +45,14 @@ public class DeviceDataSource {
       return id;
     }
     
+    public int deleteDeviceById(long deviceId) {
+        int result = mDatabase.delete(
+                HackDevices.TABLE_NAME,
+                HackDevices._ID + " = " + deviceId,
+                null);
+        return result;
+    }
+    
     public ArrayList<Device> getAllHardwareUnits() {
       ArrayList<Device> devices = new ArrayList<Device>();
       Cursor cursor = mDatabase.query(

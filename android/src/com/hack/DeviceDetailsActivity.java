@@ -33,7 +33,7 @@ public class DeviceDetailsActivity extends Activity {
     DeviceDataSource mDeviceDataSource;
     int mDeviceState;
 //    TextView message;
-    String mBasePath = "http://184.175.46.62:8080/";
+    String mBasePath = "http://192.168.43.239:8080/";
     ActionBar mActionBar;
 
     @Override

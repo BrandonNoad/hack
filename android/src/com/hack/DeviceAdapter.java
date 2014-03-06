@@ -23,7 +23,7 @@ public class DeviceAdapter extends ArrayAdapter<Device> {
         Device device = getItem(position);
         // Check if an existing view is being reused, otherwise inflate the view
         if (v == null) {
-           v = LayoutInflater.from(getContext()).inflate(R.layout.item_socket, null);
+           v = LayoutInflater.from(getContext()).inflate(R.layout.item_socket, parent, false);
         }
         // Lookup view for data population
         TextView socketLabel = (TextView) v.findViewById(R.id.socketLabel);

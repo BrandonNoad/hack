@@ -34,9 +34,11 @@ public class HardwareUnitDataSource {
       mDbHelper.close();
     }
 
-    public long addHardwareUnit(String name) {
+    public long addHardwareUnit(String name, String basePath, int portNumber) {
       ContentValues values = new ContentValues();
       values.put(HackHardwareUnits.COLUMN_NAME_HARDWARE_UNIT_NAME, name);
+      values.put(HackHardwareUnits.COLUMN_NAME_HARDWARE_UNIT_BASE_PATH, basePath);
+      values.put(HackHardwareUnits.COLUMN_NAME_HARDWARE_UNIT_PORT_NUMBER, portNumber);
       long id = mDatabase.insert(HackHardwareUnits.TABLE_NAME, null, values);
       return id;
     }

@@ -16,6 +16,7 @@
         android:layout_height="wrap_content"
         android:ems="10"
         android:hint="@string/hardware_unit_name"
+        android:inputType="textCapWords"
         android:singleLine="true" >
 
         <requestFocus

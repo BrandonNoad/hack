@@ -52,11 +52,6 @@
                 android:value="com.hack.SingleUnitActivity" />
         </activity>
         <activity
-            android:name="com.hack.LoginActivity"
-            android:label="@string/title_activity_login"
-            android:windowSoftInputMode="adjustResize|stateVisible" >
-        </activity>
-        <activity
             android:name="com.hack.AddHardwareUnitActivity"
             android:label="@string/title_activity_add_hardware_unit"
             android:parentActivityName="com.hack.AllUnitsActivity" >

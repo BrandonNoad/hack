@@ -1,67 +1,10 @@
-// -- Common functions called by both the Bluetooth and Web Server handlers
-
-function turnRedLightOn() {
-  digitalWrite(LED1, 1);
-}
-
-function turnRedLightOff() {
-  digitalWrite(LED1, 0);
-}
-
-function turnGreenLightOn() {
-  digitalWrite(LED2, 1);
-}
-
-function turnGreenLightOff() {
-  digitalWrite(LED2, 0);
-}
-
-function turnBlueLightOn() {
-  digitalWrite(LED3, 1);
-  lightStatus = "ON";
-}
-
-function turnBlueLightOff() {
-  digitalWrite(LED3, 0);
-  lightStatus = "OFF";
-}
-
-// -- BlueTooth
-
-var command = "";
-
-function btHandler(e) {
-  command += e.data;
-
-  if (e.data == " ") {
-    command = "";
-  } else {    
-    // handle event
-    if (command == "red_on") {
-      turnRedLightOn();
-    } else if (command == "red_off") {
-      turnRedLightOff();
-    } else if (command == "green_on") {
-      turnGreenLightOn();
-    } else if (command == "green_off") {
-      turnGreenLightOff();
-    } else if (command == "blue_on") {
-      turnBlueLightOn();
-    } else if (command == "blue_off") {
-      turnBlueLightOff(); 
-    }
-  }
-}
-
-Serial1.onData(btHandler);
-
-
 // -- Web Server
 
 var ACCESS_POINT_NAME = "";
 var WPA2_KEY = "";
 var PORT_NUMBER = 80;
 
+var isWebServerSetUp = false;
 var lightStatus = "OFF";
 
 function webHandler(req, res) {
@@ -70,9 +13,9 @@ function webHandler(req, res) {
 
   // we can use url.parse(req.url) to do more complicated things
   if (req.url == "/on") {
-    turnBlueLightOn();
+    digitalWrite(LED3, 1);
   } else if (req.url == "/off") {
-    turnBlueLightOff();
+    digitalWrite(LED3, 0);
   }
 
   // write response header
@@ -119,7 +62,7 @@ function webServerInit() {
       // turn off all lights
       setTimeout(function(e) {
         digitalWrite(LED1, 0);
-      	digitalWrite(LED2, 0);
+        digitalWrite(LED2, 0);
         digitalWrite(LED3, 0);
       }, 5000);
       
@@ -131,5 +74,93 @@ function webServerInit() {
  * Special function called automatically when Espruino is powered on.
  */
 function onInit() {
-  webServerInit();
+  if (isWebServerSetUp) {
+    webServerInit();
+  }
 }
+
+// -- Bluetooth
+
+var command = "";
+
+/* Changes the behaviour of the btHandler()
+ *   0 - receive command
+ *   1 - receive ACCESS_POINT_NAME
+ *   2 - receive WPA2_KEY
+ *   3 - receive PORT_NUMBER
+ */
+var btMode = 0;
+
+function btHandler(e) {
+  if (btMode == 0) {  // receive command
+    print("mode 0\n");
+    if (e.data == " ") {
+      command = "";
+    } else {
+      command += e.data;
+      print("command: " + command + "\n");
+      // handle event
+      if (command == "red_on") {
+        digitalWrite(LED1, 1);
+        command = "";
+      } else if (command == "red_off") {
+        digitalWrite(LED1, 0);
+        command = "";
+      } else if (command == "set_ap") {
+        btMode = 1;
+        command = "";
+      } else if (command == "set_wpa") {
+        btMode = 2;  
+        command = "";
+      } else if (command == "set_port") {
+        btMode = 3;
+        command = "";
+      } else if (command == "save") {
+        print("Access Point: " + ACCESS_POINT_NAME + ", WPA2 key: " + WPA2_KEY + ", Port Number: " + PORT_NUMBER + "\n");
+        isWebServerSetUp = true;
+        save();
+        command = "";
+      }
+        }
+  } else if (btMode == 1) {  //  receive ACCESS_POINT_NAME
+    print("mode 1\n");
+    if (e.data == "|") {
+      ACCESS_POINT_NAME = command;
+      digitalWrite(LED1, 1);
+      command = "";
+      btMode = 0;
+    } else {
+      command += e.data;
+      print("command: " + command + "\n");
+    }
+  } else if (btMode == 2) {  //  receive WPA2_KEY 
+    print("mode 2\n");
+    if (e.data == "|") {
+      WPA2_KEY = command;
+      digitalWrite(LED2, 1);
+      command = "";
+      btMode = 0;
+    } else {
+      command += e.data;
+      print("command: " + command + "\n");
+    }
+  } else if (btMode == 3) {  // receive PORT NUMBER
+    print("mode 3\n");
+    if (e.data == "|") {
+      PORT_NUMBER = command;
+      digitalWrite(LED3, 1);
+      command = "";
+      btMode = 0;
+      setTimeout(function(e) {
+        digitalWrite(LED1, 0);
+        digitalWrite(LED2, 0);
+        digitalWrite(LED3, 0);
+      }, 500);
+    } else {
+      command += e.data;
+      print("command: " + command + "\n");
+    }
+  }
+}
+
+Serial1.onData(btHandler);

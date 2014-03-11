@@ -13,6 +13,7 @@ public class HackDbContract {
     public static abstract class HackHardwareUnits implements BaseColumns {
         public static final String TABLE_NAME = "hardwareUnits";
         public static final String COLUMN_NAME_HARDWARE_UNIT_NAME = "hardwareUnitName";
+        public static final String COLUMN_NAME_HARDWARE_UNIT_ACCESS_POINT_NAME = "hardwareBasePath";
         public static final String COLUMN_NAME_HARDWARE_UNIT_BASE_PATH = "hardwareBasePath";
         public static final String COLUMN_NAME_HARDWARE_UNIT_PORT_NUMBER = "hardwarePortNumber";
     }

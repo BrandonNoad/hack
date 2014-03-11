@@ -28,13 +28,17 @@ import android.widget.ToggleButton;
 
 public class DeviceDetailsActivity extends Activity {
     
-    long mDeviceId;
-    Device mDevice;
-    DeviceDataSource mDeviceDataSource;
-    int mDeviceState;
-//    TextView message;
-    String mBasePath = "http://192.168.43.239:8080/";
-    ActionBar mActionBar;
+    private long mDeviceId;
+    private Device mDevice;
+    private DeviceDataSource mDeviceDataSource;
+    private int mDeviceState;
+    
+    private HardwareUnit mHardwareUnit;
+    private HardwareUnitDataSource mHardwareUnitDataSource;
+    
+    private String mBasePath = "";
+    private int mPortNumber = 80;
+    private ActionBar mActionBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,10 +49,11 @@ public class DeviceDetailsActivity extends Activity {
         mActionBar = getActionBar();
         
         ToggleButton deviceStateToggle = (ToggleButton) findViewById(R.id.deviceStateToggleButton);
-//        message = (TextView) findViewById(R.id.res);
         
         mDeviceDataSource = new DeviceDataSource(this);
         mDeviceDataSource.open();
+        mHardwareUnitDataSource = new HardwareUnitDataSource(this);
+        mHardwareUnitDataSource.open();
         
         Intent intent = getIntent();
         mDeviceId = intent.getLongExtra(SingleUnitActivity.EXTRA_DEVICE_ID, -1);
@@ -62,8 +67,11 @@ public class DeviceDetailsActivity extends Activity {
             } else {
                 deviceStateToggle.setChecked(true);
             }
+            mHardwareUnit = mHardwareUnitDataSource.getHardwareUnitById(mDevice.getHardwareUnitId());
+            mBasePath = mHardwareUnit.getBasePath();
+            mPortNumber = mHardwareUnit.getPortNumber();
         }
-       
+        
         deviceStateToggle.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             
             @Override
@@ -73,22 +81,26 @@ public class DeviceDetailsActivity extends Activity {
                     getSystemService(Context.CONNECTIVITY_SERVICE);
                     NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
                     if (networkInfo != null && networkInfo.isConnected()) {
-                        new DownloadWebpageTask().execute(mBasePath + mDevice.getSocketId() + "/on");
+                        String url = "http://" + mBasePath + ":" + mPortNumber + "/on";
+                        Log.i("URL", url);
+                        new DownloadWebpageTask().execute(url);
+//                        new DownloadWebpageTask().execute(mBasePath + mDevice.getSocketId() + "/on");
                     } else {
                         Toast.makeText(getApplicationContext(), "No network connection available", 
                         Toast.LENGTH_LONG).show();
-//                        message.setText("No network connection available.");
                     }                    
                 } else {
                     ConnectivityManager connMgr = (ConnectivityManager)
                     getSystemService(Context.CONNECTIVITY_SERVICE);
                     NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
                     if (networkInfo != null && networkInfo.isConnected()) {
-                        new DownloadWebpageTask().execute(mBasePath + mDevice.getSocketId() + "/off");
+                        String url = "http://" + mBasePath + ":" + mPortNumber + "/off";
+                        Log.i("URL", url);
+                        new DownloadWebpageTask().execute(url);
+//                        new DownloadWebpageTask().execute(mBasePath + mDevice.getSocketId() + "/off");
                     } else {
                         Toast.makeText(getApplicationContext(), "No network connection available", 
                         Toast.LENGTH_LONG).show(); 
-//                        message.setText("No network connection available.");
                     }
                 }
             }
@@ -148,7 +160,7 @@ public class DeviceDetailsActivity extends Activity {
             is = conn.getInputStream();
 
             // Convert the InputStream into a string
-            String contentAsString = readIt(is, 500);
+            String contentAsString = readIt(is, 500);  // TODO: change 500
             return contentAsString;  
         }  catch(URISyntaxException e) {return "error";}
         finally {  // make sure input stream is closed
@@ -188,7 +200,6 @@ public class DeviceDetailsActivity extends Activity {
        protected void onPostExecute(String result) {
            Toast.makeText(getApplicationContext(), result, 
            Toast.LENGTH_LONG).show();     
-//           message.setText(result);
       }
    }
 }

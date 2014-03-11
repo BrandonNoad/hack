@@ -51,6 +51,14 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.hack.SingleUnitActivity" />
         </activity>
+        <activity
+            android:name="com.hack.AddHardwareUnitActivity"
+            android:label="@string/title_activity_add_hardware_unit"
+            android:parentActivityName="com.hack.AllUnitsActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.hack.AllUnitsActivity" />
+        </activity>
     </application>
 
 </manifest>

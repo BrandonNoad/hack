@@ -98,9 +98,10 @@ public class AddHardwareUnitActivity extends Activity {
         EditText portNumberET = (EditText) findViewById(R.id.editTextPortNumber);
         
         // add new unit to db
-        mHardwareUnitDataSource.addHardwareUnit(nameET.getText().toString(),
+        long huId = mHardwareUnitDataSource.addHardwareUnit(nameET.getText().toString(),
                                                 basePathET.getText().toString(),
                                                 Integer.parseInt(portNumberET.getText().toString()));
+        Log.i("AddHardwareUnitActivity - addHardwareUnit()", "unit Id: " + huId);
         
         // send details to espruino via BT
         String accessPointName = accessPointNameET.getText().toString();

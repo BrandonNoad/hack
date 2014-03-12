@@ -16,7 +16,7 @@ public class HackDbHelper extends SQLiteOpenHelper {
     private static final String SQL_CREATE_HARDWARE_UNITS =
         "CREATE TABLE " + HackHardwareUnits.TABLE_NAME + 
         " (" +
-            HackHardwareUnits._ID + " INTEGER PRIMARY KEY, " +
+            HackHardwareUnits._ID + " INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
             HackHardwareUnits.COLUMN_NAME_HARDWARE_UNIT_NAME + " " + TEXT_TYPE + ", " +
             HackHardwareUnits.COLUMN_NAME_HARDWARE_UNIT_BASE_PATH + " " + TEXT_TYPE + ", " +
             HackHardwareUnits.COLUMN_NAME_HARDWARE_UNIT_PORT_NUMBER + " " + INT_TYPE +
@@ -45,7 +45,7 @@ public class HackDbHelper extends SQLiteOpenHelper {
     private static final String SQL_CREATE_DEVICES =
         "CREATE TABLE " + HackDevices.TABLE_NAME + 
         " (" +
-            HackDevices._ID + " INTEGER PRIMARY KEY, " +
+            HackDevices._ID + " INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
             HackDevices.COLUMN_NAME_HARDWARE_UNIT_ID + " " + INT_TYPE + ", " +
             HackDevices.COLUMN_NAME_SOCKET_ID + " " + INT_TYPE + ", " +
             HackDevices.COLUMN_NAME_DEVICE_NAME + " " + TEXT_TYPE + ", " +

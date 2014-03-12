@@ -59,8 +59,6 @@ public class AllUnitsActivity extends Activity {
     private HardwareUnitDataSource mHardwareUnitDataSource;
     private HardwareUnit mSelectedHardwareUnit;
     
-    
-    
     // onCreate()
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -85,6 +83,9 @@ public class AllUnitsActivity extends Activity {
         // regular click
         listOfAllHardware.setOnItemClickListener(new OnItemClickListener() {
            public void onItemClick(AdapterView parent, View v, int position, long id) {
+               if (mActionMode != null) {
+                   return;
+               }
                HardwareUnit unit = (HardwareUnit) parent.getItemAtPosition(position);
                startSingleUnitActivity(unit.getId());
            }
@@ -102,6 +103,7 @@ public class AllUnitsActivity extends Activity {
                     // Start the CAB using the ActionMode.Callback defined above
                     mActionMode = AllUnitsActivity.this.startActionMode(mActionModeCallback);
                     v.setSelected(true);
+                    mHardwareUnitAdapter.setSelectedIndex(position);  // set background colour
                     mSelectedHardwareUnit = hu;
                     return true;
                 }
@@ -191,6 +193,12 @@ public class AllUnitsActivity extends Activity {
         startActivity(intent);
     }
     
+    public void deleteHardwareUnit(HardwareUnit hu) {
+        int result = mHardwareUnitDataSource.deleteHardwareUnitById(hu.getId());
+        Log.i("AllUnitsActivity - deleteHardwareUnit()", "deleted?: " + result);
+        mHardwareUnitAdapter.remove(hu);
+    }
+    
     public void startSingleUnitActivity(long unitId) {
         Intent intent = new Intent(this, SingleUnitActivity.class);
         intent.putExtra(EXTRA_UNIT_ID, unitId);
@@ -201,11 +209,7 @@ public class AllUnitsActivity extends Activity {
         Intent intent = new Intent(this, AddHardwareUnitActivity.class);
         intent.putExtra(EXTRA_BT_DEVICE, mSelectedBluetoothDevice);
         startActivity(intent);
-    }   
-      
-   
-    
-   
+    }
     
     ActionMode mActionMode = null;
     private ActionMode.Callback mActionModeCallback = new ActionMode.Callback() {
@@ -231,8 +235,8 @@ public class AllUnitsActivity extends Activity {
         public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
             switch (item.getItemId()) {
                 case R.id.action_delete:
-                    Toast.makeText(getApplicationContext(), "Delete", 
-                    Toast.LENGTH_LONG).show();         
+                    deleteHardwareUnit(mSelectedHardwareUnit);
+                    mSelectedHardwareUnit = null;     
                     mode.finish(); // Action picked, so close the CAB
                     return true;
                 default:
@@ -244,8 +248,9 @@ public class AllUnitsActivity extends Activity {
         @Override
         public void onDestroyActionMode(ActionMode mode) {
             mActionMode = null;
+            mHardwareUnitAdapter.setSelectedIndex(-1);  // reset background colour
         }
-    };    
+    };
       
     public void doBluetoothDialogOkClick() {
         if (mSelectedBluetoothDevice != null && mSelectedBluetoothDevice.getAddress().equals(ESPRUINO_MAC)) {

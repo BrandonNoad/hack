@@ -1,6 +1,7 @@
 package com.hack;
 
 public class Device {
+    
     private long mId;
     private long mHardwareUnitId;
     private long mSocketId;

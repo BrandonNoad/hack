@@ -12,7 +12,8 @@ import com.hack.HackDbContract.HackDevices;
 import com.hack.HackDbContract.HackHardwareUnits;
 
 public class DeviceDataSource {
- // Database fields
+    
+    // Database fields
     private SQLiteDatabase mDatabase;
     private HackDbHelper mDbHelper;
     private String[] mAllColumns = { 

@@ -1,6 +1,7 @@
 package com.hack;
 
 public class HardwareUnit {
+    
     private long mId;
     private String mName;
     private String mBasePath;

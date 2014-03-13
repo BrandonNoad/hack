@@ -23,55 +23,65 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.Toast;
 
+/**
+ * This activity establishes a Bluetooth connection with a HACK hardware unit
+ * and displays a form allowing the user to add a new hardware unit. The form
+ * details are sent to the HACK hardware unit via Bluetooth, which initializes
+ * the HACK harware unit web server.
+ */
 public class AddHardwareUnitActivity extends Activity {
     
-    private final UUID ESPRUINO_UUID = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb");
+    // -- Constants
     
-    private ConnectedThread mConnectedThread;
+    private static final UUID ESPRUINO_UUID = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb");
+    
+    // -- Member Variables
     private ConnectToBluetoothTask mConnectTask;
+    private ConnectedThread mConnectedThread;
     private BluetoothDevice mBluetoothDevice;
     private Button mAddHardwareUnitButton;
-    
     private HardwareUnitDataSource mHardwareUnitDataSource;
+    
+    // -- Initialize Activity
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_hardware_unit);
-        // Show the Up button in the action bar.
-        setupActionBar();
+
+        setupActionBar();  // show "up" button in action bar
         
+        // initialize members
         mHardwareUnitDataSource = new HardwareUnitDataSource(this);
-        mHardwareUnitDataSource.open();
-        
+        mHardwareUnitDataSource.open();        
         mAddHardwareUnitButton = (Button) findViewById(R.id.add_hardware_unit_button);
         
+        // get BluetoothDevice passed in from previoius activity
+        Bundle bundle = getIntent().getExtras();
+        mBluetoothDevice = bundle.getParcelable(AllUnitsActivity.EXTRA_BT_DEVICE);
+        
+        // set up event listeners
         mAddHardwareUnitButton.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
                 addHardwareUnit();
             }
         });
         
-        // disable button until bluetooth connection is established
+        // disable "Add" button until bluetooth connection is established
         mAddHardwareUnitButton.setEnabled(false);
-        
-        Bundle bundle = getIntent().getExtras();
-        mBluetoothDevice = bundle.getParcelable(AllUnitsActivity.EXTRA_BT_DEVICE);
         
         // start bluetooth connection
         startBTConnection();
-        
     }
+    
+    // -- Action Bar
 
     /**
      * Set up the {@link android.app.ActionBar}.
      */
     private void setupActionBar() {
-
         getActionBar().setDisplayHomeAsUpEnabled(true);
-
     }
 
     @Override
@@ -101,6 +111,17 @@ public class AddHardwareUnitActivity extends Activity {
         return super.onOptionsItemSelected(item);
     }
     
+    // -- Intents
+    
+    public void startAllUnitsActivity() {
+        // return to All Units Activity
+        Intent intent = new Intent(this, AllUnitsActivity.class);
+        startActivity(intent);
+    }
+    
+    // -- Misc.
+    
+    // TODO: Find a better way to close the bluetooth connection when back button is pressed
     @Override
     public void onBackPressed()
     {
@@ -109,8 +130,16 @@ public class AddHardwareUnitActivity extends Activity {
         }
         super.onBackPressed();
     }
-       
     
+    // -- Bluetooth
+    
+    public void startBTConnection() {
+        if (mBluetoothDevice != null) {
+            mConnectTask = new ConnectToBluetoothTask();
+            mConnectTask.execute(mBluetoothDevice);
+            Log.i("AllUnitsActivity - doClick()", "Waiting for ConnectThread");
+        }
+    }
     
     public void addHardwareUnit() {
         EditText nameET = (EditText) findViewById(R.id.editTextHardwareUnitName);
@@ -141,7 +170,7 @@ public class AddHardwareUnitActivity extends Activity {
             mConnectedThread.write((portNumber + "|").getBytes());
             mConnectedThread.write("save".getBytes());
         } else {
-            Log.i("Connected Thread", "mConnectedThread is null");
+            Log.i("AddHardwareUnitActivity - addHardwareUnit()", "mConnectedThread is null");
         }
                
         // close BT connection
@@ -150,10 +179,12 @@ public class AddHardwareUnitActivity extends Activity {
         
         // return to all units activity
         startAllUnitsActivity();
-    }
+    }    
     
-    
-    
+    /**
+     * Async Task used to establish a Bluetooth connection with the HACK 
+     * hardware unit.
+     */
     private class ConnectToBluetoothTask extends AsyncTask<BluetoothDevice, Void, Integer> {
         
         private BluetoothSocket mmSocket;
@@ -168,6 +199,7 @@ public class AddHardwareUnitActivity extends Activity {
                 tmp = device.createRfcommSocketToServiceRecord(ESPRUINO_UUID);
             } catch (IOException e) { 
                 // do something
+                Log.i("ConnectToBluetoothTask - doInBackground()", "Failed to establish BT socket");
             }
             
             mmSocket = tmp;
@@ -178,31 +210,34 @@ public class AddHardwareUnitActivity extends Activity {
                 mmSocket.connect();
             } catch (IOException connectException) {
                 // Unable to connect; close the socket and get out
-                Log.i("ConnectThread", "Unable to connect.");
+                Log.i("ConnectToBluetoothTask - doInBackground()", "Unable to connect to BT device");
                 
                 try {
                     mmSocket.close();
                     this.cancel(true);
+                    
+                    // display dialog asking user to re-try connection
                     DialogFragment bluetoothConnectionErrorDialog = BluetoothConnectionErrorDialog.newInstance();
-                    bluetoothConnectionErrorDialog.show(getFragmentManager(), "bluetooth_dialog");
+                    bluetoothConnectionErrorDialog.show(getFragmentManager(), "bluetooth_connection_error_dialog");
                 } catch (IOException closeException) { 
                     // do something
                 }
                 
                 return -1;
             }
-            Log.i("Connect Thread", "Connection successful");
+            
+            Log.i("ConnectToBluetoothTask - doInBackground()", "Connection successful!");
             
             // Do work to manage the connection (in a separate thread)
             manageConnectedSocket(mmSocket);
             
             return 0;
-            
         }
         
         // onPostExecute is invoked on UI thread and displays the results of the AsyncTask.
         @Override
         protected void onPostExecute(Integer result) {
+            // enable "Add" button so user can submit form
             mAddHardwareUnitButton.setEnabled(true);
        }
         
@@ -210,9 +245,12 @@ public class AddHardwareUnitActivity extends Activity {
         protected void onCancelled(Integer result) {
             mAddHardwareUnitButton.setEnabled(false);
         }
-        
     }
-        
+    
+    /**
+     * Creates a worker thread to manage the bluetooth connection.
+     * Worker thread handles writes/reads of bytes to/from HACK hardware.
+     */
     private synchronized void manageConnectedSocket(BluetoothSocket btSocket) {       
         mConnectedThread = new ConnectedThread(btSocket);
         mConnectedThread.start();       
@@ -251,9 +289,9 @@ public class AddHardwareUnitActivity extends Activity {
                 try {
                     // Read from the InputStream
                     bytes = mmInStream.read(buffer);
+                    // TODO: Set up handler
                     // Send the obtained bytes to the UI activity
-//                    mHandler.obtainMessage(MESSAGE_READ, bytes, -1, buffer)
-//                            .sendToTarget();
+//                    mHandler.obtainMessage(MESSAGE_READ, bytes, -1, buffer).sendToTarget();
                 } catch (IOException e) {
                     break;
                 }
@@ -276,22 +314,9 @@ public class AddHardwareUnitActivity extends Activity {
                 mmSocket.close();
             } catch (IOException e) { }
         }
-    } 
-    
-    public void startBTConnection() {
-        if (mBluetoothDevice != null) {
-            mConnectTask = new ConnectToBluetoothTask();
-            mConnectTask.execute(mBluetoothDevice);
-            Log.i("AllUnitsActivity - doClick()", "Waiting for ConnectThread");
-        }
-        
     }
     
-    public void startAllUnitsActivity() {
-        // return to All Units Activity
-        Intent intent = new Intent(this, AllUnitsActivity.class);
-        startActivity(intent);
-    }
+    // -- Bluetooth Connection Error Dialog
     
     public static class BluetoothConnectionErrorDialog extends DialogFragment { 
         

@@ -18,7 +18,7 @@ public class HardwareUnitAdapter extends ArrayAdapter<HardwareUnit> {
     public HardwareUnitAdapter(Context context, ArrayList<HardwareUnit> hardwareUnits) {
         super(context, R.layout.item_hardware_unit, hardwareUnits);
         mSelectedIndex = -1;
-        mSelectedColor = Color.parseColor("#ff33b5e5");
+        mSelectedColor = Color.parseColor("#ff33b5e5");  // light blue backgrond colour
      }
     
     public void setSelectedIndex(int index) {

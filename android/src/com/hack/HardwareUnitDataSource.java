@@ -93,7 +93,7 @@ public class HardwareUnitDataSource {
         String name = cursor.getString(1);
         String basePath = cursor.getString(2);
         int portNumber = cursor.getInt(3);
-        HardwareUnit hu = new HardwareUnit(id, name, basePath, portNumber);
+        HardwareUnit hu = new HardwareUnit(huId, name, basePath, portNumber);
         return hu;        
     }
 

@@ -28,6 +28,8 @@ import android.widget.ToggleButton;
 
 public class DeviceDetailsActivity extends Activity {
     
+    // -- Member Variables 
+    
     private long mDeviceId;
     private Device mDevice;
     private DeviceDataSource mDeviceDataSource;
@@ -40,6 +42,8 @@ public class DeviceDetailsActivity extends Activity {
     private int mPortNumber = 80;
     private ActionBar mActionBar;
 
+    // -- Initialize Activity
+    
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -47,17 +51,21 @@ public class DeviceDetailsActivity extends Activity {
         // Show the Up button in the action bar.
         setupActionBar();
         mActionBar = getActionBar();
-        
-        ToggleButton deviceStateToggle = (ToggleButton) findViewById(R.id.deviceStateToggleButton);
-        
+                
+        // initialize memebers
         mDeviceDataSource = new DeviceDataSource(this);
         mDeviceDataSource.open();
         mHardwareUnitDataSource = new HardwareUnitDataSource(this);
         mHardwareUnitDataSource.open();
         
+        // get device id from previous activity
         Intent intent = getIntent();
         mDeviceId = intent.getLongExtra(SingleUnitActivity.EXTRA_DEVICE_ID, -1);
         
+        
+        ToggleButton deviceStateToggle = (ToggleButton) findViewById(R.id.deviceStateToggleButton);
+        
+        // TODO: update device state from server response
         mDevice = mDeviceDataSource.getDeviceById(mDeviceId);
         if (mDevice != null) {
             mActionBar.setTitle(mDevice.getName());
@@ -72,50 +80,28 @@ public class DeviceDetailsActivity extends Activity {
             mPortNumber = mHardwareUnit.getPortNumber();
         }
         
+        // set up event listeners
         deviceStateToggle.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (isChecked) {      
-                    ConnectivityManager connMgr = (ConnectivityManager)
-                    getSystemService(Context.CONNECTIVITY_SERVICE);
-                    NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
-                    if (networkInfo != null && networkInfo.isConnected()) {
-                        String url = "http://" + mBasePath + ":" + mPortNumber + "/on";
-                        Log.i("URL", url);
-                        new DownloadWebpageTask().execute(url);
-//                        new DownloadWebpageTask().execute(mBasePath + mDevice.getSocketId() + "/on");
-                    } else {
-                        Toast.makeText(getApplicationContext(), "No network connection available", 
-                        Toast.LENGTH_LONG).show();
-                    }                    
+                if (isChecked) {
+                    turnOnDevice();
                 } else {
-                    ConnectivityManager connMgr = (ConnectivityManager)
-                    getSystemService(Context.CONNECTIVITY_SERVICE);
-                    NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
-                    if (networkInfo != null && networkInfo.isConnected()) {
-                        String url = "http://" + mBasePath + ":" + mPortNumber + "/off";
-                        Log.i("URL", url);
-                        new DownloadWebpageTask().execute(url);
-//                        new DownloadWebpageTask().execute(mBasePath + mDevice.getSocketId() + "/off");
-                    } else {
-                        Toast.makeText(getApplicationContext(), "No network connection available", 
-                        Toast.LENGTH_LONG).show(); 
-                    }
+                   turnOffDevice();
                 }
             }
         });
     }
-
+    
+    // -- Action Bar
+    
     /**
      * Set up the {@link android.app.ActionBar}.
      */
     private void setupActionBar() {
-
         getActionBar().setDisplayHomeAsUpEnabled(true);
-
     }
-    
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -143,6 +129,42 @@ public class DeviceDetailsActivity extends Activity {
         return super.onOptionsItemSelected(item);
     }
   
+    // -- Communicate with Espruino
+    
+    // TODO: Clean up this whole section; rename Async Task and method names
+    
+    public void turnOnDevice() {
+        ConnectivityManager connMgr = (ConnectivityManager)
+        getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
+        if (networkInfo != null && networkInfo.isConnected()) {
+            String url = "http://" + mBasePath + ":" + mPortNumber + "/on";
+            Log.i("URL", url);
+            // start async task
+            new DownloadWebpageTask().execute(url);
+//                    new DownloadWebpageTask().execute(mBasePath + mDevice.getSocketId() + "/on");
+        } else {
+            Toast.makeText(getApplicationContext(), "No network connection available", 
+            Toast.LENGTH_LONG).show();
+        }
+    }
+    
+    public void turnOffDevice() {
+        ConnectivityManager connMgr = (ConnectivityManager)
+        getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
+        if (networkInfo != null && networkInfo.isConnected()) {
+            String url = "http://" + mBasePath + ":" + mPortNumber + "/off";
+            Log.i("URL", url);
+            // start async task
+            new DownloadWebpageTask().execute(url);
+//                    new DownloadWebpageTask().execute(mBasePath + mDevice.getSocketId() + "/off");
+        } else {
+            Toast.makeText(getApplicationContext(), "No network connection available", 
+            Toast.LENGTH_LONG).show(); 
+        }
+    }
+    
     private String downloadUrl(String myurl) throws IOException {
         InputStream is = null;
         try {
@@ -198,6 +220,7 @@ public class DeviceDetailsActivity extends Activity {
        // onPostExecute displays the results of the AsyncTask.
        @Override
        protected void onPostExecute(String result) {
+           // display response string
            Toast.makeText(getApplicationContext(), result, 
            Toast.LENGTH_LONG).show();     
       }

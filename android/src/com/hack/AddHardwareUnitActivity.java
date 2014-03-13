@@ -5,8 +5,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.UUID;
 
-import com.hack.AllUnitsActivity.BluetoothDialogFragment;
-
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -15,6 +13,7 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.NavUtils;
 import android.util.Log;
@@ -24,13 +23,14 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Toast;
 
 public class AddHardwareUnitActivity extends Activity {
     
     private final UUID ESPRUINO_UUID = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb");
     
     private ConnectedThread mConnectedThread;
-    private ConnectThread mConnectThread;
+    private ConnectToBluetoothTask mConnectTask;
     private BluetoothDevice mBluetoothDevice;
     private Button mAddHardwareUnitButton;
     
@@ -92,11 +92,25 @@ public class AddHardwareUnitActivity extends Activity {
             //
             // http://developer.android.com/design/patterns/navigation.html#up-vs-back
             //
+            if (mConnectedThread != null) {
+                mConnectedThread.cancel();
+            }
             NavUtils.navigateUpFromSameTask(this);
             return true;
         }
         return super.onOptionsItemSelected(item);
     }
+    
+    @Override
+    public void onBackPressed()
+    {
+        if (mConnectedThread != null) {
+            mConnectedThread.cancel();
+        }
+        super.onBackPressed();
+    }
+       
+    
     
     public void addHardwareUnit() {
         EditText nameET = (EditText) findViewById(R.id.editTextHardwareUnitName);
@@ -132,7 +146,7 @@ public class AddHardwareUnitActivity extends Activity {
                
         // close BT connection
         mConnectedThread.cancel();
-        mConnectThread.cancel();
+        mConnectTask.cancel(true);
         
         // return to all units activity
         startAllUnitsActivity();
@@ -140,27 +154,24 @@ public class AddHardwareUnitActivity extends Activity {
     
     
     
-    public class ConnectThread extends Thread {
+    private class ConnectToBluetoothTask extends AsyncTask<BluetoothDevice, Void, Integer> {
         
-        private final BluetoothSocket mmSocket;
-        private final BluetoothDevice mmDevice;
-         
-        public ConnectThread(BluetoothDevice device, UUID uuid) {
-            Log.i("Connect Thread", "ctor starting");
-            // Use a temporary object that is later assigned to mmSocket,
-            // because mmSocket is final
+        private BluetoothSocket mmSocket;
+
+        @Override
+        protected Integer doInBackground(BluetoothDevice...bluetoothDevices) {
             BluetoothSocket tmp = null;
-            mmDevice = device;
-     
+            BluetoothDevice device = bluetoothDevices[0];
+            
             // Get a BluetoothSocket to connect with the given BluetoothDevice
             try {                
-                tmp = device.createRfcommSocketToServiceRecord(uuid);
-            } catch (IOException e) { }
+                tmp = device.createRfcommSocketToServiceRecord(ESPRUINO_UUID);
+            } catch (IOException e) { 
+                // do something
+            }
+            
             mmSocket = tmp;
-        }
-     
-        public void run() {
-            Log.i("ConnectThread", "Running new thread");
+            
             try {
                 // Connect the device through the socket. This will block
                 // until it succeeds or throws an exception
@@ -168,34 +179,41 @@ public class AddHardwareUnitActivity extends Activity {
             } catch (IOException connectException) {
                 // Unable to connect; close the socket and get out
                 Log.i("ConnectThread", "Unable to connect.");
-                DialogFragment bluetoothConnectionErrorDialog = BluetoothConnectionErrorDialog.newInstance();
-                bluetoothConnectionErrorDialog.show(getFragmentManager(), "bluetooth_dialog");
+                
                 try {
                     mmSocket.close();
+                    this.cancel(true);
+                    DialogFragment bluetoothConnectionErrorDialog = BluetoothConnectionErrorDialog.newInstance();
+                    bluetoothConnectionErrorDialog.show(getFragmentManager(), "bluetooth_dialog");
                 } catch (IOException closeException) { 
                     // do something
                 }
                 
-                return;
+                return -1;
             }
             Log.i("Connect Thread", "Connection successful");
             
             // Do work to manage the connection (in a separate thread)
             manageConnectedSocket(mmSocket);
+            
+            return 0;
+            
         }
-     
-        /** Will cancel an in-progress connection, and close the socket */
-        public void cancel() {
-            try {
-                mmSocket.close();
-            } catch (IOException e) { 
-                // do something
-            }
+        
+        // onPostExecute is invoked on UI thread and displays the results of the AsyncTask.
+        @Override
+        protected void onPostExecute(Integer result) {
+            mAddHardwareUnitButton.setEnabled(true);
+       }
+        
+        @Override
+        protected void onCancelled(Integer result) {
+            mAddHardwareUnitButton.setEnabled(false);
         }
+        
     }
-    
-    private synchronized void manageConnectedSocket(BluetoothSocket btSocket) {
-        mAddHardwareUnitButton.setEnabled(true);
+        
+    private synchronized void manageConnectedSocket(BluetoothSocket btSocket) {       
         mConnectedThread = new ConnectedThread(btSocket);
         mConnectedThread.start();       
     }   
@@ -262,8 +280,8 @@ public class AddHardwareUnitActivity extends Activity {
     
     public void startBTConnection() {
         if (mBluetoothDevice != null) {
-            mConnectThread = new ConnectThread(mBluetoothDevice, this.ESPRUINO_UUID);
-            mConnectThread.start();             
+            mConnectTask = new ConnectToBluetoothTask();
+            mConnectTask.execute(mBluetoothDevice);
             Log.i("AllUnitsActivity - doClick()", "Waiting for ConnectThread");
         }
         

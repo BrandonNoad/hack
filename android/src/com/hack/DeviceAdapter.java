@@ -3,6 +3,7 @@ package com.hack;
 import java.util.ArrayList;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,8 +13,18 @@ import android.widget.TextView;
 
 public class DeviceAdapter extends ArrayAdapter<Device> {
     
+    private int mSelectedIndex;
+    private int mSelectedColor;
+    
+    public void setSelectedIndex(int index) {
+        mSelectedIndex = index;
+        notifyDataSetChanged();
+    }
+    
     public DeviceAdapter(Context context, ArrayList<Device> devices) {
         super(context, R.layout.item_socket, devices);
+        mSelectedIndex = -1;
+        mSelectedColor = Color.parseColor("#ff33b5e5");
      }
 
      @Override
@@ -34,6 +45,11 @@ public class DeviceAdapter extends ArrayAdapter<Device> {
             socketLabel.setText(device.getName());
         } else {
             socketLabel.setText("");
+        }
+        if (mSelectedIndex != -1 && position == mSelectedIndex) {
+            v.setBackgroundColor(mSelectedColor);
+        } else {
+            v.setBackgroundColor(Color.TRANSPARENT);
         }
         // Return the completed view to render on screen
         return v;

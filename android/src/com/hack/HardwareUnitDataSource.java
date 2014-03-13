@@ -8,6 +8,7 @@ import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 
+import com.hack.HackDbContract.HackDevices;
 import com.hack.HackDbContract.HackHardwareUnits;
 
 public class HardwareUnitDataSource {
@@ -41,6 +42,14 @@ public class HardwareUnitDataSource {
       values.put(HackHardwareUnits.COLUMN_NAME_HARDWARE_UNIT_PORT_NUMBER, portNumber);
       long id = mDatabase.insert(HackHardwareUnits.TABLE_NAME, null, values);
       return id;
+    }
+    
+    public int deleteHardwareUnitById(long huId) {
+        int result = mDatabase.delete(
+                HackHardwareUnits.TABLE_NAME,
+                HackHardwareUnits._ID + " = " + huId,
+                null);
+        return result;
     }
     
     public ArrayList<HardwareUnit> getAllHardwareUnits() {

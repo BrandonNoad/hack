@@ -79,7 +79,9 @@ public class SingleUnitActivity extends Activity {
         socketGrid.setOnItemClickListener(new OnItemClickListener() {
             public void onItemClick(AdapterView parent, View v, int position, long id) {
                 Device device = (Device) parent.getItemAtPosition(position);
-                if (device != null) {
+                if (mActionMode != null) {
+                    return;
+                } else if (device != null) {
                     startDeviceDetailsActivity(device.getId());
                 } else {
                     startAddDeviceActivity(position);
@@ -98,6 +100,7 @@ public class SingleUnitActivity extends Activity {
                     // Start the CAB using the ActionMode.Callback defined above
                     mActionMode = SingleUnitActivity.this.startActionMode(mActionModeCallback);
                     v.setSelected(true);
+                    mDeviceAdapter.setSelectedIndex(position);  // set background colour
                     mSelectedDevice = device;
                     return true;                  
                 }
@@ -208,6 +211,7 @@ public class SingleUnitActivity extends Activity {
         @Override
         public void onDestroyActionMode(ActionMode mode) {
             mActionMode = null;
+            mDeviceAdapter.setSelectedIndex(-1);  // set background color back to transparent
         }
     };
 }

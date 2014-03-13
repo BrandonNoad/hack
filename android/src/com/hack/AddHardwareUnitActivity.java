@@ -5,9 +5,15 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.UUID;
 
+import com.hack.AllUnitsActivity.BluetoothDialogFragment;
+
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.app.DialogFragment;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.NavUtils;
@@ -26,6 +32,7 @@ public class AddHardwareUnitActivity extends Activity {
     private ConnectedThread mConnectedThread;
     private ConnectThread mConnectThread;
     private BluetoothDevice mBluetoothDevice;
+    private Button mAddHardwareUnitButton;
     
     private HardwareUnitDataSource mHardwareUnitDataSource;
 
@@ -39,21 +46,22 @@ public class AddHardwareUnitActivity extends Activity {
         mHardwareUnitDataSource = new HardwareUnitDataSource(this);
         mHardwareUnitDataSource.open();
         
-        Button addHardwareUnitButton = (Button) findViewById(R.id.add_hardware_unit_button);
+        mAddHardwareUnitButton = (Button) findViewById(R.id.add_hardware_unit_button);
         
-        addHardwareUnitButton.setOnClickListener(new OnClickListener() {
+        mAddHardwareUnitButton.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
                 addHardwareUnit();
             }
         });
         
+        // disable button until bluetooth connection is established
+        mAddHardwareUnitButton.setEnabled(false);
+        
         Bundle bundle = getIntent().getExtras();
         mBluetoothDevice = bundle.getParcelable(AllUnitsActivity.EXTRA_BT_DEVICE);
         
-        mConnectThread = new ConnectThread(mBluetoothDevice, this.ESPRUINO_UUID);
-        mConnectThread.start();             
-        Log.i("AllUnitsActivity - doClick()", "Waiting for ConnectThread");
-        
+        // start bluetooth connection
+        startBTConnection();
         
     }
 
@@ -126,15 +134,11 @@ public class AddHardwareUnitActivity extends Activity {
         mConnectedThread.cancel();
         mConnectThread.cancel();
         
-        // return to All Units Activity
-        Intent intent = new Intent(this, AllUnitsActivity.class);
-        startActivity(intent);
+        // return to all units activity
+        startAllUnitsActivity();
     }
     
-    private synchronized void manageConnectedSocket(BluetoothSocket btSocket) {
-        mConnectedThread = new ConnectedThread(btSocket);
-        mConnectedThread.start();       
-    }    
+    
     
     public class ConnectThread extends Thread {
         
@@ -164,6 +168,8 @@ public class AddHardwareUnitActivity extends Activity {
             } catch (IOException connectException) {
                 // Unable to connect; close the socket and get out
                 Log.i("ConnectThread", "Unable to connect.");
+                DialogFragment bluetoothConnectionErrorDialog = BluetoothConnectionErrorDialog.newInstance();
+                bluetoothConnectionErrorDialog.show(getFragmentManager(), "bluetooth_dialog");
                 try {
                     mmSocket.close();
                 } catch (IOException closeException) { 
@@ -187,6 +193,12 @@ public class AddHardwareUnitActivity extends Activity {
             }
         }
     }
+    
+    private synchronized void manageConnectedSocket(BluetoothSocket btSocket) {
+        mAddHardwareUnitButton.setEnabled(true);
+        mConnectedThread = new ConnectedThread(btSocket);
+        mConnectedThread.start();       
+    }   
     
     private class ConnectedThread extends Thread {
         private final BluetoothSocket mmSocket;
@@ -247,5 +259,53 @@ public class AddHardwareUnitActivity extends Activity {
             } catch (IOException e) { }
         }
     } 
+    
+    public void startBTConnection() {
+        if (mBluetoothDevice != null) {
+            mConnectThread = new ConnectThread(mBluetoothDevice, this.ESPRUINO_UUID);
+            mConnectThread.start();             
+            Log.i("AllUnitsActivity - doClick()", "Waiting for ConnectThread");
+        }
+        
+    }
+    
+    public void startAllUnitsActivity() {
+        // return to All Units Activity
+        Intent intent = new Intent(this, AllUnitsActivity.class);
+        startActivity(intent);
+    }
+    
+    public static class BluetoothConnectionErrorDialog extends DialogFragment { 
+        
+        public static BluetoothConnectionErrorDialog newInstance() {
+            BluetoothConnectionErrorDialog btFrag = new BluetoothConnectionErrorDialog();
+            btFrag.setCancelable(false);  // prevents dismiss on press outside dialog
+            return btFrag;
+        }
+
+        @Override
+        public Dialog onCreateDialog(Bundle savedInstanceState) {
+            
+            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+            
+            builder.setTitle(R.string.title_bt_connection_error);
+            
+            builder.setMessage(R.string.would_you_like_to_try_again);
+            
+            builder.setPositiveButton(R.string.yes,  new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {//                   
+                    ((AddHardwareUnitActivity) getActivity()).startBTConnection();
+                }
+            });
+            
+            builder.setNegativeButton(R.string.no,  new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {
+                    ((AddHardwareUnitActivity) getActivity()).startAllUnitsActivity();
+                }
+            });
+
+            return builder.create();
+        }
+    }
 
 }

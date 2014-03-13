@@ -24,5 +24,9 @@
     <string name="add">Add</string>
     <string name="access_point_name">Access Point Name</string>
     <string name="wpa2_key">WPA2 Key</string>
+    <string name="title_bt_connection_error">Bluetooth Connection Error</string>
+    <string name="would_you_like_to_try_again">Would you like to try again?</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
 
 </resources>

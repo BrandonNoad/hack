@@ -274,6 +274,7 @@ public class AllUnitsActivity extends Activity {
         
         public static BluetoothDialogFragment newInstance(String[] btDeviceNames) {
             BluetoothDialogFragment btFrag = new BluetoothDialogFragment();
+            btFrag.setCancelable(false);  // prevents dismiss on press outside dialog
             Bundle args = new Bundle();
             args.putStringArray("btDeviceNames", btDeviceNames);
             btFrag.setArguments(args);         
@@ -300,12 +301,6 @@ public class AllUnitsActivity extends Activity {
                     ((AllUnitsActivity) getActivity()).mSelectedBluetoothDevice = null;
                 }
             });
-            
-//            builder.setNeutralButton(R.string.scan,  new DialogInterface.OnClickListener() {
-//                public void onClick(DialogInterface dialog, int whichButton) {
-//                    ((AllUnitsActivity) getActivity()).doClick();
-//                }
-//            });
             
             builder.setSingleChoiceItems(btDeviceNames, -1, new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int which) {

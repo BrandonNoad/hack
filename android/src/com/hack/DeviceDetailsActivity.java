@@ -33,6 +33,7 @@ public class DeviceDetailsActivity extends Activity {
     private long mDeviceId;
     private Device mDevice;
     private DeviceDataSource mDeviceDataSource;
+    private long mSocketId;
     private int mDeviceState;
     
     private HardwareUnit mHardwareUnit;
@@ -75,6 +76,7 @@ public class DeviceDetailsActivity extends Activity {
             } else {
                 deviceStateToggle.setChecked(true);
             }
+            mSocketId = mDevice.getSocketId();
             mHardwareUnit = mHardwareUnitDataSource.getHardwareUnitById(mDevice.getHardwareUnitId());
             mBasePath = mHardwareUnit.getBasePath();
             mPortNumber = mHardwareUnit.getPortNumber();
@@ -138,7 +140,7 @@ public class DeviceDetailsActivity extends Activity {
         getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
         if (networkInfo != null && networkInfo.isConnected()) {
-            String url = "http://" + mBasePath + ":" + mPortNumber + "/on";
+            String url = "http://" + mBasePath + ":" + mPortNumber + "/hack/on?socket=" + mSocketId;
             Log.i("URL", url);
             // start async task
             new DownloadWebpageTask().execute(url);
@@ -154,7 +156,7 @@ public class DeviceDetailsActivity extends Activity {
         getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
         if (networkInfo != null && networkInfo.isConnected()) {
-            String url = "http://" + mBasePath + ":" + mPortNumber + "/off";
+            String url = "http://" + mBasePath + ":" + mPortNumber + "/hack/off?socket=" + mSocketId;
             Log.i("URL", url);
             // start async task
             new DownloadWebpageTask().execute(url);

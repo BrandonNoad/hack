@@ -27,7 +27,7 @@ var hardwareUnit = {
 
     // socket3 "SE"
     {
-      name: "socket3"
+      name: "socket3",
       pin: A0,
       state: 0,
     }
@@ -39,6 +39,24 @@ function toggleSocket(socketNumber, state) {
   var pin = hardwareUnit.sockets[socketNumber].pin;
   digitalWrite(pin, state);
   hardwareUnit.sockets[socketNumber].state = state;
+}
+
+/**
+ * 
+ */
+function doCommand(obj) {
+  var pathname = obj.pathname;
+  var socketNumber = parseInt(obj.query.socket, 10);
+  var state;
+
+  if (pathname == "/hack/on") {
+    state = 1;
+  } else if (pathname == "/hack/off") {
+    state = 0;
+  }
+
+  toggleSocket(socketNumber, state);
+
 }
 
 
@@ -64,17 +82,7 @@ function webHandler(req, res) {
    * pathname, search, port, and query */
   var urlObj = url.parse(req.url, true);
   
-  var pathname = urlObj.pathname;
-  var socketNumber = parseInt(urlObj.query.socket, 10);
-  var state;
-
-  if (pathname == "/hack/on") {
-    state = 1;
-  } else if (pathname == "/hack/off") {
-    state = 0;
-  }
-
-  toggleSocket(socketNumber, state);
+  doCommand(urlObj);
 
   // write response header
   res.writeHead(200 /* OK */, 
@@ -130,71 +138,75 @@ function webServerInit() {
 
 var command = "";
 
+var LISTEN = 0;
+var PARSE_CMD = 1;
+var SET_APN = 2;
+var SET_WPA = 3;
+var SET_PORT = 4;
+
 /* Changes the behaviour of the btHandler()
- *   0 - receive command
- *   1 - receive ACCESS_POINT_NAME
- *   2 - receive WPA2_KEY
- *   3 - receive PORT_NUMBER
+ *   LISTEN - receive command
+ *   SET_APN - receive ACCESS_POINT_NAME
+ *   SET_WPA - receive WPA2_KEY
+ *   SET_PORT - receive PORT_NUMBER
  */
-var btMode = 0;
+var btMode = LISTEN;
 
 function btHandler(e) {
-  if (btMode == 0) {  // receive command
+  if (btMode == LISTEN) {  // receive command
     if (e.data == " ") {
       command = "";
     } else {
       command += e.data;
       // handle event
-      if (command == "red_on") {
-        digitalWrite(LED1, 1);
+      if (command == "_toggle") {
+        btMode = PARSE_CMD;
         command = "";
-      } else if (command == "red_off") {
-        digitalWrite(LED1, 0);
+      } else if (command == "_set_ap") {
+        btMode = SET_APN;
         command = "";
-      } else if (command == "set_ap") {
-        btMode = 1;
+      } else if (command == "_set_wpa") {
+        btMode = SET_WPA;  
         command = "";
-      } else if (command == "set_wpa") {
-        btMode = 2;  
+      } else if (command == "_set_port") {
+        btMode = SET_PORT;
         command = "";
-      } else if (command == "set_port") {
-        btMode = 3;
-        command = "";
-      } else if (command == "save") {
+      } else if (command == "_save") {
         isWebServerSetUp = true;
         save();
         command = "";
       }
-        }
-  } else if (btMode == 1) {  //  receive ACCESS_POINT_NAME
+    }
+  } else if (btMode == PARSE_CMD) {
+    if (e.data == " ") {
+      var btObj = url.parse(command, true);
+      doCommand(btObj);
+      command = "";
+      btMode = LISTEN;
+    } else {
+      command += e.data;
+    }
+  } else if (btMode == SET_WPA) {  //  receive ACCESS_POINT_NAME
     if (e.data == "|") {
       ACCESS_POINT_NAME = command;
-      digitalWrite(LED1, 1);
       command = "";
-      btMode = 0;
+      btMode = LISTEN;
     } else {
       command += e.data;
     }
-  } else if (btMode == 2) {  //  receive WPA2_KEY 
+  } else if (btMode == SET_WPA) {  //  receive WPA2_KEY 
     if (e.data == "|") {
       WPA2_KEY = command;
-      digitalWrite(LED2, 1);
       command = "";
-      btMode = 0;
+      btMode = LISTEN;
     } else {
       command += e.data;
     }
-  } else if (btMode == 3) {  // receive PORT NUMBER
+  } else if (btMode == SET_PORT) {  // receive PORT NUMBER
     if (e.data == "|") {
       PORT_NUMBER = command;
-      digitalWrite(LED3, 1);
       command = "";
-      btMode = 0;
-      setTimeout(function(e) {
-        digitalWrite(LED1, 0);
-        digitalWrite(LED2, 0);
-        digitalWrite(LED3, 0);
-      }, 50);
+      btMode = LISTEN;
     } else {
       command += e.data;
     }
@@ -218,3 +230,15 @@ function onInit() {
  * (btHandler) gets called.
  */
 Serial1.onData(btHandler);
+
+/**
+ * Turns on all the LEDs, then turns them off.
+ */
+function cascadeLEDs() {
+  digitalWrite(LED1, 1);
+  digitalWrite(LED2, 1);
+  digitalWrite(LED3, 1);
+  digitalWrite(LED1, 0);
+  digitalWrite(LED2, 0);
+  digitalWrite(LED3, 0);
+}

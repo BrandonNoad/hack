@@ -7,7 +7,10 @@ import android.support.v4.app.NavUtils;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.inputmethod.EditorInfo;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.TextView.OnEditorActionListener;
@@ -54,6 +57,14 @@ public class AddDeviceActivity extends Activity {
                }
                return false;
            }
+        });
+        
+        Button addDeviceButton = (Button) findViewById(R.id.add_device_button);
+        addDeviceButton.setOnClickListener(new OnClickListener() {
+            public void onClick(View v) {
+                addDevice();
+                startSingleUnitActivity();
+            }
         });
     }
     

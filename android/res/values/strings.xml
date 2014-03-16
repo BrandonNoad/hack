@@ -28,5 +28,6 @@
     <string name="would_you_like_to_try_again">Would you like to try again?</string>
     <string name="yes">Yes</string>
     <string name="no">No</string>
+    <string name="set_time">Set Time</string>
 
 </resources>

@@ -9,9 +9,13 @@ import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.Calendar;
 
 import android.app.ActionBar;
 import android.app.Activity;
+import android.app.Dialog;
+import android.app.DialogFragment;
+import android.app.TimePickerDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.net.ConnectivityManager;
@@ -19,10 +23,15 @@ import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.NavUtils;
+import android.text.format.DateFormat;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.Button;
 import android.widget.CompoundButton;
+import android.widget.TimePicker;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
@@ -94,6 +103,16 @@ public class DeviceDetailsActivity extends Activity {
                 }
             }
         });
+        
+        Button showTimePickerButton = (Button) findViewById(R.id.setTimeButton);
+        
+        showTimePickerButton.setOnClickListener(new OnClickListener() {
+            public void onClick(View v) {
+                showTimePickerDialog();
+            }
+        });
+        
+        
     }
     
     // -- Action Bar
@@ -209,22 +228,51 @@ public class DeviceDetailsActivity extends Activity {
     // an InputStream. Finally, the InputStream is converted into a string, which is
     // displayed in the UI by the AsyncTask's onPostExecute method.
     private class DownloadWebpageTask extends AsyncTask<String, Void, String> {
-       @Override
-       protected String doInBackground(String... urls) {
+        @Override
+        protected String doInBackground(String... urls) {
              
-           // params comes from the execute() call: params[0] is the url.
-           try {
-               return downloadUrl(urls[0]);
-           } catch (IOException e) {
-               return "Unable to retrieve web page. URL may be invalid.";
-           }
-       }
-       // onPostExecute displays the results of the AsyncTask.
-       @Override
-       protected void onPostExecute(String result) {
-           // display response string
-           Toast.makeText(getApplicationContext(), result, 
-           Toast.LENGTH_LONG).show();     
-      }
-   }
+            // params comes from the execute() call: params[0] is the url.
+            try {
+                return downloadUrl(urls[0]);
+            } catch (IOException e) {
+                return "Unable to retrieve web page. URL may be invalid.";
+            }
+        }
+        // onPostExecute displays the results of the AsyncTask.
+        @Override
+        protected void onPostExecute(String result) {
+            // display response string
+            Toast.makeText(getApplicationContext(), result, 
+            Toast.LENGTH_LONG).show();     
+        }
+    }
+    
+    // -- Time Picker Dialog
+    
+    public void showTimePickerDialog() {
+        DialogFragment newFragment = new TimePickerFragment();
+        newFragment.show(getFragmentManager(), "datePicker");
+    }   
+    
+    
+    public static class TimePickerFragment extends DialogFragment
+    implements TimePickerDialog.OnTimeSetListener {
+
+        @Override
+        public Dialog onCreateDialog(Bundle savedInstanceState) {
+            // Use the current time as the default values for the picker
+            final Calendar c = Calendar.getInstance();
+            int hour = c.get(Calendar.HOUR_OF_DAY);
+            int minute = c.get(Calendar.MINUTE);
+            
+            // Create a new instance of TimePickerDialog and return it
+            return new TimePickerDialog(getActivity(), this, hour, minute,
+                                        DateFormat.is24HourFormat(getActivity()));
+        }
+        
+        public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
+        // Do something with the time chosen by the user
+        }
+    }
+    
 }

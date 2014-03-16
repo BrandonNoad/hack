@@ -162,13 +162,13 @@ public class AddHardwareUnitActivity extends Activity {
         
         if (mConnectedThread != null) {
             mConnectedThread.write(" ".getBytes());
-            mConnectedThread.write("set_ap".getBytes());
+            mConnectedThread.write("_set_apn".getBytes());
             mConnectedThread.write((accessPointName + "|").getBytes());
-            mConnectedThread.write("set_wpa".getBytes());
+            mConnectedThread.write("_set_wpa".getBytes());
             mConnectedThread.write((wpa2Key + "|").getBytes());
-            mConnectedThread.write("set_port".getBytes());
+            mConnectedThread.write("_set_port".getBytes());
             mConnectedThread.write((portNumber + "|").getBytes());
-            mConnectedThread.write("save".getBytes());
+            mConnectedThread.write("_save".getBytes());
         } else {
             Log.i("AddHardwareUnitActivity - addHardwareUnit()", "mConnectedThread is null");
         }

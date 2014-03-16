@@ -1,3 +1,142 @@
+// -- Global Object
+
+var settings = {
+  wifi: {
+    wlan: {}, // WiFi network adapter
+    status: "",
+    ssid: "",
+    wpa2key: "",
+    port: 80,
+    server: {},
+  },
+
+  bluetooth: {
+    LISTEN: 0,
+    PARSE_CMD: 1,
+    SET_APN: 2,
+    SET_WPA: 3,
+    SET_PORT: 4,
+    state: 0,
+    current: "",
+  },
+};
+
+
+// -- LED functions
+
+/**
+ * Turns off all the LEDs.
+ */
+function resetLEDs() {
+  clearInterval(); // This clears all intervals when no argument
+  digitalWrite(LED1, 0);
+  digitalWrite(LED2, 0);
+  digitalWrite(LED3, 0);
+}
+
+/**
+ * Repeatedly flash red LED
+ */
+
+function repeatRed() {
+  var enable = 0;
+
+  setInterval(function() {
+    enable = !enable;
+    digitalWrite(LED1, enable);
+  }, 1000);
+}
+
+/**
+ * Repeatedly flash green LED
+ */
+
+function repeatGreen() {
+  var enable = 0;
+
+  setInterval(function() {
+    enable = !enable;
+    digitalWrite(LED2, enable);
+  }, 1000);
+}
+
+/**
+ * Repeatedly flash blue LED
+ */
+
+function repeatBlue() {
+  var enable = 0;
+
+  setInterval(function() {
+    enable = !enable;
+    digitalWrite(LED3, enable);
+  }, 1000);
+}
+
+/**
+ * Pulse red LED
+ */
+
+function pulseRed() {
+  digitalWrite(LED1, 1);
+
+  setTimeout(function() {
+    digitalWrite(LED1, 0);
+  }, 750);
+}
+
+/**
+ * Pulse green LED
+ */
+
+function pulseGreen() {
+  digitalWrite(LED2, 1);
+
+  setTimeout(function() {
+    digitalWrite(LED2, 0);
+  }, 750);
+}
+
+/**
+ * Flash red LED
+ */
+
+function flashRed() {
+  digitalWrite(LED1, 1);
+
+  setTimeout(function() {
+    digitalWrite(LED1, 0);
+  }, 100);
+}
+
+/**
+ * Flash green LED
+ */
+
+function flashGreen() {
+  digitalWrite(LED2, 1);
+
+  setTimeout(function() {
+    digitalWrite(LED2, 0);
+  }, 100);
+}
+
+
+// -- Util
+
+function safeSave() {
+  // Reset wifi hardware
+  if (settings.wifi.status !== "") {
+    settings.wifi.wlan.disconnect();
+  }
+
+  // Reset LEDs
+  resetLEDs();
+
+  save();
+}
+
+
 // -- Hardware Unit Object
 
 var hardwareUnit = {
@@ -45,6 +184,9 @@ function toggleSocket(socketNumber, state) {
  * 
  */
 function doCommand(obj) {
+
+  flashGreen();
+
   var pathname = obj.pathname;
   var socketNumber = parseInt(obj.query.socket, 10);
   var state;
@@ -61,13 +203,6 @@ function doCommand(obj) {
 
 
 // -- Web Server
-
-var ACCESS_POINT_NAME = "";
-var WPA2_KEY = "";
-var PORT_NUMBER = 80;
-
-var wlan;  // WiFi network adapter
-var isWebServerSetUp = false;
 
 /**
  * Expects urls of the form:
@@ -96,39 +231,65 @@ function webHandler(req, res) {
   res.end();
 }
 
-
 /**
  * This function should turn on the red light, green light, and blue light in 
  * succession if the web serever is initialized successfully.
  */
 function webServerInit() {
-
+  resetLEDs();
   digitalWrite(LED1, 1);
-  
-  // load CC3000 module and get an instance of a WiFi network adapter
-  wlan = require("CC3000").connect();
 
+  settings.wifi.wlan = require("CC3000").connect();
   digitalWrite(LED2, 1);
      
   // connect to wireless network
-  wlan.connect(ACCESS_POINT_NAME, WPA2_KEY, function(status) {
+  settings.wifi.wlan.connect(settings.wifi.ssid, settings.wifi.wpa2key, function(status) {
     if (status == "dhcp") {
+      var ip = settings.wifi.wlan.getIP();
+      console.log("Got dhcp");
 
-      // print IP address to console
-      // console.log("IP address: " + wlan.getIP().ip);
+      if (typeof ip === "object") {
+        // print IP address to console
+        console.log("IP address: " + ip.ip);
+        digitalWrite(LED3, 1);
+      } else {
+        console.log("I don't have an IP address");
+
+        // Indicate bad state
+        resetLEDs();
+        repeatRed();
+
+        // Override normal status behaviour
+        settings.wifi.status = "expired";
+        return;
+      }
 
       // create web server
-      require("http").createServer(webHandler).listen(PORT_NUMBER);
-      
-      digitalWrite(LED3, 1);
-      
-      // turn off all lights
-      setTimeout(function(e) {
-        digitalWrite(LED1, 0);
-        digitalWrite(LED2, 0);
-        digitalWrite(LED3, 0);
-      }, 3000);
-      
+      settings.wifi.server = require("http").createServer(webHandler).listen(settings.wifi.port);
+
+      // Indicate good state
+      resetLEDs();
+      repeatBlue();
+    } else if (status == "disconnect" && settings.wifi.status == "dhcp") {
+      console.log("Got disconnect");
+      console.log("I lost my connection");
+
+      // Indicate bad state
+      resetLEDs();
+      repeatRed();
+      settings.wifi.status = status;
+    } else if (status == "disconnect" && settings.wifi.status != "expired") {
+      console.log("Got disconnect");
+      console.log("I lost my connection in a different way");
+
+      // Indicate bad state
+      resetLEDs();
+      repeatRed();
+      settings.wifi.status = status;
+    } else if (status == "connect") {
+      console.log("Got connect");
+    } else {
+      console.log("Got post-expire disconnect");
     }
   });
 }
@@ -136,93 +297,83 @@ function webServerInit() {
 
 // -- Bluetooth
 
-var command = "";
-
-var LISTEN = 0;
-var PARSE_CMD = 1;
-var SET_APN = 2;
-var SET_WPA = 3;
-var SET_PORT = 4;
-
 /* Changes the behaviour of the btHandler()
  *   LISTEN - receive command
  *   SET_APN - receive ACCESS_POINT_NAME
  *   SET_WPA - receive WPA2_KEY
  *   SET_PORT - receive PORT_NUMBER
  */
-var btMode = LISTEN;
 
 function btHandler(e) {
-  if (btMode == LISTEN) {  // receive command
+  if (settings.bluetooth.state == settings.bluetooth.LISTEN) {  // receive command
     if (e.data == " ") {
-      command = "";
+      settings.bluetooth.current = "";
     } else {
-      command += e.data;
+      settings.bluetooth.current = settings.bluetooth.current + e.data;
       // handle event
-      if (command == "_toggle") {
-        btMode = PARSE_CMD;
-        command = "";
-      } else if (command == "_set_ap") {
-        btMode = SET_APN;
-        command = "";
-      } else if (command == "_set_wpa") {
-        btMode = SET_WPA;  
-        command = "";
-      } else if (command == "_set_port") {
-        btMode = SET_PORT;
-        command = "";
-      } else if (command == "_save") {
-        isWebServerSetUp = true;
-        save();
-        command = "";
+      if (settings.bluetooth.current == "_toggle") {
+        settings.bluetooth.state = settings.bluetooth.PARSE_CMD;
+        settings.bluetooth.current = "";
+      } else if (settings.bluetooth.current == "_set_apn") {
+        settings.bluetooth.state = settings.bluetooth.SET_APN;
+        settings.bluetooth.current = "";
+      } else if (settings.bluetooth.current == "_set_wpa") {
+        settings.bluetooth.state = settings.bluetooth.SET_WPA;
+        settings.bluetooth.current = "";
+      } else if (settings.bluetooth.current == "_set_port") {
+        settings.bluetooth.state = settings.bluetooth.SET_PORT;
+        settings.bluetooth.current = "";
+      } else if (settings.bluetooth.current == "_save") {
+        settings.bluetooth.current = "";
+        safeSave();
       }
+
     }
-  } else if (btMode == PARSE_CMD) {
+  } else if (settings.bluetooth.state == settings.bluetooth.PARSE_CMD) {
     if (e.data == " ") {
-      var btObj = url.parse(command, true);
+      var btObj = url.parse(settings.bluetooth.current, true);
       doCommand(btObj);
-      command = "";
-      btMode = LISTEN;
+      settings.bluetooth.current = "";
+      settings.bluetooth.state = settings.bluetooth.LISTEN;
     } else {
-      command += e.data;
+      settings.bluetooth.current += e.data;
     }
-  } else if (btMode == SET_WPA) {  //  receive ACCESS_POINT_NAME
+  } else if (settings.bluetooth.state == settings.bluetooth.SET_APN) {  //  receive ACCESS_POINT_NAME
     if (e.data == "|") {
-      ACCESS_POINT_NAME = command;
-      command = "";
-      btMode = LISTEN;
+      settings.wifi.ssid = settings.bluetooth.current;
+      settings.bluetooth.current = "";
+      settings.bluetooth.state = settings.bluetooth.LISTEN;
     } else {
-      command += e.data;
+      settings.bluetooth.current += e.data;
     }
-  } else if (btMode == SET_WPA) {  //  receive WPA2_KEY 
+  } else if (settings.bluetooth.state == settings.bluetooth.SET_WPA) {  //  receive WPA2_KEY
     if (e.data == "|") {
-      WPA2_KEY = command;
-      command = "";
-      btMode = LISTEN;
+      settings.wifi.wpa2key = settings.bluetooth.current;
+      settings.bluetooth.current = "";
+      settings.bluetooth.state = settings.bluetooth.LISTEN;
     } else {
-      command += e.data;
+      settings.bluetooth.current += e.data;
     }
-  } else if (btMode == SET_PORT) {  // receive PORT NUMBER
+  } else if (settings.bluetooth.state == settings.bluetooth.SET_PORT) {  // receive PORT NUMBER
     if (e.data == "|") {
-      PORT_NUMBER = command;
-      command = "";
-      btMode = LISTEN;
+      settings.wifi.port = settings.bluetooth.current;
+      settings.bluetooth.current = "";
+      settings.bluetooth.state = settings.bluetooth.LISTEN;
     } else {
-      command += e.data;
+      settings.bluetooth.current += e.data;
     }
   }
 }
 
 
-// -- Util
+// -- Init
 
 /**
  * Special function called automatically when Espruino is powered on.
  */
 function onInit() {
-  if (isWebServerSetUp) {
-    webServerInit();
-  }
+  // Always want to try the webserver
+  webServerInit();
 }
 
 /**
@@ -230,15 +381,3 @@ function onInit() {
  * (btHandler) gets called.
  */
 Serial1.onData(btHandler);
-
-/**
- * Turns on all the LEDs, then turns them off.
- */
-function cascadeLEDs() {
-  digitalWrite(LED1, 1);
-  digitalWrite(LED2, 1);
-  digitalWrite(LED3, 1);
-  digitalWrite(LED1, 0);
-  digitalWrite(LED2, 0);
-  digitalWrite(LED3, 0);
-}

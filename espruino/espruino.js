@@ -82,7 +82,7 @@ function repeatLED(colour) {
  */
 
 function pulseLED(colour, time) {
-  if (colour in settings.LEDs) {
+  if (typeof settings.LEDs[colour] === "object") {
     digitalWrite(settings.LEDs[colour].pin, 1);
 
     setTimeout(function() {

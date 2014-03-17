@@ -35,7 +35,7 @@ public class SingleUnitActivity extends Activity {
     private long mHardwareUnitId;
     private ActionBar mActionBar;
     private Device mSelectedDevice = null;
-    private ActionMode mActionMode = null;    
+    private ActionMode mActionMode = null;
     
     // -- Initialize Activity
     

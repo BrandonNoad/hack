@@ -29,7 +29,22 @@ public class HackDbContract {
         public static final String COLUMN_NAME_SOCKET_ID = "socketId";
         public static final String COLUMN_NAME_DEVICE_NAME = "deviceName";
         public static final String COLUMN_NAME_DEVICE_STATE = "deviceState";
-        
+        public static final String COLUMN_NAME_DEVICE_TYPE_ID = "deviceTypeId";
+//        public static final String COLUMN_NAME_DEVICE_LAST_TIME_ON = "deviceLastTimeOn";
+        public static final String COLUMN_NAME_DEVICE_TOTAL_TIME_ON = "deviceTotalTimeOn";
     }
-
+    
+    public static abstract class HackDeviceTypes implements BaseColumns {
+        public static final String TABLE_NAME = "deviceTypes";
+        public static final String COLUMN_NAME_DEVICE_TYPE_NAME = "deviceTypeName";
+    }
+    
+    public static abstract class HackTimers implements BaseColumns {
+        public static final String TABLE_NAME = "timers";
+        public static final String COLUMN_NAME_DEVICE_ID = "deviceId";
+        public static final String COLUMN_NAME_TIMER_TIME_ON = "timeOn";
+        public static final String COLUMN_NAME_TIMER_TIME_OFF = "timeOff";
+        public static final String COLUMN_NAME_TIMER_IS_REPEATED = "isRepeated";
+    }
+    
 }

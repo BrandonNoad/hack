@@ -118,7 +118,7 @@ public class AddDeviceActivity extends Activity {
     public void addDevice() {
         EditText et = (EditText) findViewById(R.id.deviceNameEditText);
         String deviceName = et.getText().toString();
-        long deviceId = mDeviceDataSource.addDevice(mHardwareUnitId, mSocketId, deviceName);        
+        long deviceId = mDeviceDataSource.addDevice(mHardwareUnitId, mSocketId, deviceName, 1);
     }
     
 }

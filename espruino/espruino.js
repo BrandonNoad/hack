@@ -28,97 +28,67 @@ var settings = {
  * Turns off all the LEDs.
  */
 function resetLEDs() {
-  clearInterval(); // This clears all intervals when no argument
+  if (typeof settings.LEDs === "object") {
+    if (settings.LEDs["red"].interval !== null) {
+      clearInterval(settings.LEDs["red"].interval);
+    }
+    if (settings.LEDs["green"].interval !== null) {
+      clearInterval(settings.LEDs["green"].interval);
+    }
+    if (settings.LEDs["blue"].interval !== null) {
+      clearInterval(settings.LEDs["blue"].interval);
+    }
+  }
+
   digitalWrite(LED1, 0);
   digitalWrite(LED2, 0);
   digitalWrite(LED3, 0);
+
+  settings.LEDs = {};
+  settings.LEDs["red"] = {
+    interval: null,
+    enable: 0,
+    pin: LED1,
+  };
+
+  settings.LEDs["green"] = {
+    interval: null,
+    enable: 0,
+    pin: LED2,
+  };
+
+  settings.LEDs["blue"] = {
+    interval: null,
+    enable: 0,
+    pin: LED3,
+  };
 }
 
 /**
- * Repeatedly flash red LED
+ * Repeatedly flash an LED
  */
 
-function repeatRed() {
-  var enable = 0;
-
-  setInterval(function() {
-    enable = !enable;
-    digitalWrite(LED1, enable);
-  }, 1000);
+function repeatLED(colour) {
+  if (typeof settings.LEDs[colour] === "object") {
+    settings.LEDs[colour].interval = setInterval(function() {
+      settings.LEDs[colour].enable = !settings.LEDs[colour].enable;
+      digitalWrite(settings.LEDs[colour].pin, settings.LEDs[colour].enable);
+    }, 1000);
+  }
 }
 
 /**
- * Repeatedly flash green LED
+ * Pulse an LED
  */
 
-function repeatGreen() {
-  var enable = 0;
+function pulseLED(colour, time) {
+  if (colour in settings.LEDs) {
+    digitalWrite(settings.LEDs[colour].pin, 1);
 
-  setInterval(function() {
-    enable = !enable;
-    digitalWrite(LED2, enable);
-  }, 1000);
-}
-
-/**
- * Repeatedly flash blue LED
- */
-
-function repeatBlue() {
-  var enable = 0;
-
-  setInterval(function() {
-    enable = !enable;
-    digitalWrite(LED3, enable);
-  }, 1000);
-}
-
-/**
- * Pulse red LED
- */
-
-function pulseRed() {
-  digitalWrite(LED1, 1);
-
-  setTimeout(function() {
-    digitalWrite(LED1, 0);
-  }, 750);
-}
-
-/**
- * Pulse green LED
- */
-
-function pulseGreen() {
-  digitalWrite(LED2, 1);
-
-  setTimeout(function() {
-    digitalWrite(LED2, 0);
-  }, 750);
-}
-
-/**
- * Flash red LED
- */
-
-function flashRed() {
-  digitalWrite(LED1, 1);
-
-  setTimeout(function() {
-    digitalWrite(LED1, 0);
-  }, 100);
-}
-
-/**
- * Flash green LED
- */
-
-function flashGreen() {
-  digitalWrite(LED2, 1);
-
-  setTimeout(function() {
-    digitalWrite(LED2, 0);
-  }, 100);
+    setTimeout(function() {
+      digitalWrite(settings.LEDs[colour].pin, 0);
+    }, time);
+  }
 }
 
 
@@ -185,7 +155,7 @@ function toggleSocket(socketNumber, state) {
  */
 function doCommand(obj) {
 
-  flashGreen();
+  pulseLED("green", 100);
 
   var pathname = obj.pathname;
   var socketNumber = parseInt(obj.query.socket, 10);
@@ -257,7 +227,7 @@ function webServerInit() {
 
         // Indicate bad state
         resetLEDs();
-        repeatRed();
+        repeatLED("red");
 
         // Override normal status behaviour
         settings.wifi.status = "expired";
@@ -269,14 +239,14 @@ function webServerInit() {
 
       // Indicate good state
       resetLEDs();
-      repeatBlue();
+      repeatLED("blue");
     } else if (status == "disconnect" && settings.wifi.status == "dhcp") {
       console.log("Got disconnect");
       console.log("I lost my connection");
 
       // Indicate bad state
       resetLEDs();
-      repeatRed();
+      repeatLED("red");
       settings.wifi.status = status;
     } else if (status == "disconnect" && settings.wifi.status != "expired") {
       console.log("Got disconnect");
@@ -284,7 +254,7 @@ function webServerInit() {
 
       // Indicate bad state
       resetLEDs();
-      repeatRed();
+      repeatLED("red");
       settings.wifi.status = status;
     } else if (status == "connect") {
       console.log("Got connect");

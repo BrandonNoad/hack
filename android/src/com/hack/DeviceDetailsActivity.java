@@ -10,6 +10,8 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 
+import org.json.JSONObject;
+
 import android.app.ActionBar;
 import android.app.Activity;
 import android.content.Context;
@@ -33,7 +35,8 @@ import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class DeviceDetailsActivity extends Activity {
+public class DeviceDetailsActivity extends Activity
+                                   implements HackResponseCommand {
     
     // -- Constants
 
@@ -82,7 +85,7 @@ public class DeviceDetailsActivity extends Activity {
         mTimerDataSource = new TimerDataSource(this);
         mTimerDataSource.open();
         
-        mHttpConnectionManager = new HackHttpConnectionManager(this);
+        mHttpConnectionManager = new HackHttpConnectionManager(this, this);
         
         // get device id from previous activity
         Intent intent = getIntent();
@@ -273,6 +276,15 @@ public class DeviceDetailsActivity extends Activity {
             mEnableTimerButton.setVisibility(View.VISIBLE);
             
         }
+    }
+
+    @Override
+    public void onResponseReceived(JSONObject json) {
+        // display response string
+        Toast.makeText(this, 
+                       json.toString(), 
+                       Toast.LENGTH_LONG).show(); 
+        
     }
     
 }

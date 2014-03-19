@@ -24,9 +24,11 @@ import android.widget.Toast;
 public class HackHttpConnectionManager {
     
     private Context mContext;
+    private HackResponseCommand mCommand;
     
-    public HackHttpConnectionManager(Context context) {
+    public HackHttpConnectionManager(Context context, HackResponseCommand command) {
         mContext = context;
+        mCommand = command;
     }
     
     /**
@@ -105,10 +107,14 @@ public class HackHttpConnectionManager {
 
         // onPostExecute displays the results of the AsyncTask.
         @Override
-        protected void onPostExecute(String result) {
-            // display response string
-            Toast.makeText(mContext, result, 
-            Toast.LENGTH_LONG).show();     
+        protected void onPostExecute(String response) {
+            try {
+                mCommand.onResponseReceived(new JSONObject(response));
+            } catch (JSONException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+           
         }
     }
 

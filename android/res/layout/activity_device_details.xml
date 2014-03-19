@@ -74,15 +74,15 @@
             android:layout_height="wrap_content"
             android:layout_weight="0.5"
             android:text="@string/enable" />
-
-        <TextView
-            android:id="@+id/deviceTimerDetails"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="0.5"
-            android:text="Large Text"
-            android:textAppearance="?android:attr/textAppearanceLarge"
-            android:visibility="gone" />
     </LinearLayout>
+
+    <TextView
+        android:id="@+id/deviceTimerDetails"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_weight="0.5"
+        android:text="Large Text"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:visibility="gone" />
 
 </LinearLayout>

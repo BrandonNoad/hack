@@ -1,38 +1,25 @@
 package com.hack;
 
-import java.util.ArrayList;
-
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
-import android.database.SQLException;
-import android.database.sqlite.SQLiteDatabase;
 
 import com.hack.HackDbContract.HackDeviceTypes;
 import com.hack.HackDbContract.HackDevices;
-import com.hack.HackDbContract.HackHardwareUnits;
 
-public class DeviceDataSource {
+public class DeviceDataSource extends HackDataSource {
     
-    // Database fields
-    private SQLiteDatabase mDatabase;
-    private HackDbHelper mDbHelper;
-    private String[] mAllColumns = { 
-            "*"
-    };
-      
+    /**
+     * Ctor
+     */
     public DeviceDataSource(Context context) {
-      mDbHelper = new HackDbHelper(context);
+        super(context);
     }
 
-    public void open() throws SQLException {
-      mDatabase = mDbHelper.getWritableDatabase();
-    }
-
-    public void close() {
-      mDbHelper.close();
-    }
-
+    /**
+     * Add a new device to the database
+     * @return long - new device's id
+     */
     public long addDevice(long hardwareUnitId, long socketId, String name, long deviceTypeId) {
       ContentValues values = new ContentValues();
       values.put(HackDevices.COLUMN_NAME_HARDWARE_UNIT_ID, hardwareUnitId);
@@ -45,6 +32,10 @@ public class DeviceDataSource {
       return id;
     }
     
+    /**
+     * Delete a device from the database
+     * @return int - # of rows deleted
+     */
     public int deleteDeviceById(long deviceId) {
         int result = mDatabase.delete(
                 HackDevices.TABLE_NAME,
@@ -53,37 +44,15 @@ public class DeviceDataSource {
         return result;
     }
     
-//    public ArrayList<Device> getAllDevices() {
-//      ArrayList<Device> devices = new ArrayList<Device>();
-//      Cursor cursor = mDatabase.query(
-//              HackDevices.TABLE_NAME,
-//              mAllColumns, 
-//              null, 
-//              null, 
-//              null, 
-//              null, 
-//              null);
-//
-//      cursor.moveToFirst();
-//      while (!cursor.isAfterLast()) {
-//        long id = cursor.getLong(0);
-//        long hardwareUnitId = cursor.getLong(1);
-//        long socketId = cursor.getLong(2);
-//        String name = cursor.getString(3);
-//        int state = cursor.getInt(4);
-//        Device d = new Device(id, hardwareUnitId, socketId, name, state);
-//        devices.add(d);
-//        cursor.moveToNext();
-//      }
-//      // make sure to close the cursor
-//      cursor.close();
-//      return devices;
-//    }
-    
+    /**
+     * Retrieve a device given an id
+     * @return Device - the Device matching the id or null if no device with
+     *  given id.
+     */
     public Device getDeviceById(long id) {
         Cursor cursor = mDatabase.query(
                 HackDevices.TABLE_NAME + " LEFT OUTER JOIN " + HackDeviceTypes.TABLE_NAME + " ON (" + HackDevices.TABLE_NAME + ".deviceTypeId = " + HackDeviceTypes.TABLE_NAME + "._ID)",
-                mAllColumns, 
+                mColumns.toArray(new String[mColumns.size()]), 
                 HackDevices.TABLE_NAME + "." + HackDevices._ID + " = " + id,
                 null, 
                 null, 
@@ -106,10 +75,14 @@ public class DeviceDataSource {
         }
     }
     
+    /**
+     * Retrieve a device given a hardware id and a socket id
+     * @return Device - the Device matching the ids or null if no such device exists
+     */
     public Device getDevice(long hId, long sId) {
         Cursor cursor = mDatabase.query(
                 HackDevices.TABLE_NAME + " LEFT OUTER JOIN " + HackDeviceTypes.TABLE_NAME + " ON (" + HackDevices.TABLE_NAME + ".deviceTypeId = " + HackDeviceTypes.TABLE_NAME + "._ID)",
-                mAllColumns, 
+                mColumns.toArray(new String[mColumns.size()]), 
                 HackDevices.COLUMN_NAME_HARDWARE_UNIT_ID + " = " + hId + " " +
                 "AND " + HackDevices.COLUMN_NAME_SOCKET_ID + " = " + sId,
                 null, 

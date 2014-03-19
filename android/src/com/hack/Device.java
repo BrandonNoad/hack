@@ -8,7 +8,6 @@ public class Device {
     private String mName;
     private int mState;
     private String mType;
-    // private ? mLastTimeOn  would this be a date?
     private int mTotalTimeOn;
     
     public Device(long id, long hardwareUnitId, long socketId, String name, int state, String type, int totalTimeOn) {
@@ -25,20 +24,20 @@ public class Device {
         return mId;
     }
     
-    public String getName() {
-        return mName;
-    }
-    
-    public int getState() {
-        return mState;
+    public long getHardwareUnitId() {
+        return mHardwareUnitId;
     }
     
     public long getSocketId() {
         return mSocketId;
     }
     
-    public long getHardwareUnitId() {
-        return mHardwareUnitId;
+    public String getName() {
+        return mName;
+    }
+    
+    public int getState() {
+        return mState;
     }
     
     public String getType() {

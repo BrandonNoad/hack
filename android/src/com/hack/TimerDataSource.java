@@ -1,36 +1,24 @@
 package com.hack;
 
-import com.hack.HackDbContract.HackDeviceTypes;
-import com.hack.HackDbContract.HackDevices;
-import com.hack.HackDbContract.HackTimers;
-
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
-import android.database.SQLException;
-import android.database.sqlite.SQLiteDatabase;
 
-public class TimerDataSource {
+import com.hack.HackDbContract.HackTimers;
+
+public class TimerDataSource extends HackDataSource {
     
- // Database fields
-    private SQLiteDatabase mDatabase;
-    private HackDbHelper mDbHelper;
-    private String[] mAllColumns = { 
-            "*"
-    };
-      
+    /**
+     * Ctor
+     */
     public TimerDataSource(Context context) {
-      mDbHelper = new HackDbHelper(context);
+        super(context);
     }
 
-    public void open() throws SQLException {
-      mDatabase = mDbHelper.getWritableDatabase();
-    }
-
-    public void close() {
-      mDbHelper.close();
-    }
-    
+    /**
+     * Add a new timer
+     * @return long - id of new timer
+     */
     public long addTimer(long deviceId, String timeOn, String timeOff, boolean isRepeated) {
         ContentValues values = new ContentValues();
         values.put(HackTimers.COLUMN_NAME_DEVICE_ID, deviceId);
@@ -41,6 +29,10 @@ public class TimerDataSource {
         return id;
     }
     
+    /**
+     * Delete a timer
+     * @return int - number of rows deleted
+     */
     public int deleteTimerByDeviceId(long deviceId) {
         int result = mDatabase.delete(
                 HackTimers.TABLE_NAME,
@@ -49,10 +41,14 @@ public class TimerDataSource {
         return result;
     }
     
+    /**
+     * Retrieve a timer
+     * @return Timer or null if no Timer exists with given device id
+     */
     public Timer getTimerByDeviceId(long deviceId) {
         Cursor cursor = mDatabase.query(
                 HackTimers.TABLE_NAME,
-                mAllColumns, 
+                mColumns.toArray(new String[mColumns.size()]), 
                 HackTimers.COLUMN_NAME_DEVICE_ID + " = " + deviceId,
                 null, 
                 null, 
@@ -71,5 +67,5 @@ public class TimerDataSource {
             return null;
         }
     }
-
+    
 }

@@ -92,62 +92,54 @@ function pulseLED(colour, time) {
 }
 
 
-// -- Util
-
-function safeSave() {
-  // Reset wifi hardware
-  if (settings.wifi.status !== "") {
-    settings.wifi.wlan.disconnect();
-  }
-
-  // Reset LEDs
-  resetLEDs();
-
-  save();
-}
-
-
-// -- Hardware Unit Object
-
+// -- Outlet Object
+// Note: Electric relays use reverse logic of LEDs (0 is on, 1 is off)
 var hardwareUnit = {
   
-  sockets: [
+  outlets: [
     
-    // socket0 "NW"
+    // outlet0 "NW"
     {
-      name: "socket0",
+      name: "outlet0",
       pin: B14,
-      state: 0,
+      state: 1,
     },
 
-    // socket1 "NE"  
+    // outlet1 "NE"  
     {
-      name: "socket1",
+      name: "outlet1",
       pin: A1,
-      state: 0,
+      state: 1,
     },
 
-    // socket2 "SW"
+    // outlet2 "SW"
     {
-      name: "socket2",
+      name: "outlet2",
       pin: B13,
-      state: 0,
+      state: 1,
     },
 
-    // socket3 "SE"
+    // outlet3 "SE"
     {
-      name: "socket3",
+      name: "outlet3",
       pin: A0,
-      state: 0,
+      state: 1,
     }
 
   ]
 };
 
-function toggleSocket(socketNumber, state) {
-  var pin = hardwareUnit.sockets[socketNumber].pin;
+function setOutlet(outletNumber, state) {
+  var pin = hardwareUnit.outlets[outletNumber].pin;
   digitalWrite(pin, state);
-  hardwareUnit.sockets[socketNumber].state = state;
+  hardwareUnit.outlets[outletNumber].state = state;
+}
+
+function resetOutlets() {
+  for (var i = 0; i < 4; i++) {
+    hardwareUnit.outlets[i].state = 1;
+    setOutlet(i, 1);
+  }
 }
 
 /**
@@ -162,12 +154,12 @@ function doCommand(obj) {
   var state;
 
   if (pathname == "/hack/on") {
-    state = 1;
-  } else if (pathname == "/hack/off") {
     state = 0;
+  } else if (pathname == "/hack/off") {
+    state = 1;
   }
 
-  toggleSocket(socketNumber, state);
+  setOutlet(socketNumber, state);
 
 }
 
@@ -337,6 +329,25 @@ function btHandler(e) {
 
 
 // -- Init
+
+/**
+ * Wraps the built-in save to reset everything nicely before overwriting memory.
+ * This way an onInit() after save should behave more like onInit() after power cycle.
+ */
+function safeSave() {
+  // Reset wifi hardware
+  if (settings.wifi.status !== "") {
+    settings.wifi.wlan.disconnect();
+  }
+
+  // Reset LEDs
+  resetLEDs();
+
+  // Reset outlets
+  resetOutlets();
+
+  save();
+}
 
 /**
  * Special function called automatically when Espruino is powered on.

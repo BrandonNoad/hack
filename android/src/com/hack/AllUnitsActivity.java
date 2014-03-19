@@ -1,6 +1,7 @@
 package com.hack;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -37,7 +38,7 @@ public class AllUnitsActivity extends Activity {
     public static final int REQUEST_ENABLE_BT = 1;
     
     // espruino MAC address
-    private static final String ESPRUINO_MAC = "20:13:11:19:00:76";
+    private static final String[] ESPRUINO_MACS = new String[] {"20:13:11:19:00:76", "00:14:01:14:32:08", "00:14:01:32:39"};
     
     // -- Member Variables
     
@@ -262,7 +263,7 @@ public class AllUnitsActivity extends Activity {
     // -- Paired Bluetooth Devices Dialog
       
     public void doBluetoothDialogOkClick() {
-        if (mSelectedBluetoothDevice != null && mSelectedBluetoothDevice.getAddress().equals(ESPRUINO_MAC)) {
+        if (mSelectedBluetoothDevice != null && Arrays.asList(ESPRUINO_MACS).contains(mSelectedBluetoothDevice.getAddress())) {
             startAddHardwareUnitActivity();            
         } else {
             Toast.makeText(getApplicationContext(),

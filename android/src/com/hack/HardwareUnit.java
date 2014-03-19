@@ -44,7 +44,6 @@ public class HardwareUnit {
     
     public void setPortNumber(int portNumber) {
         mPortNumber = portNumber;
-    }
-    
+    }    
      
 }

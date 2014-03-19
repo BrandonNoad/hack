@@ -9,13 +9,9 @@ import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.Calendar;
 
 import android.app.ActionBar;
 import android.app.Activity;
-import android.app.Dialog;
-import android.app.DialogFragment;
-import android.app.TimePickerDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.net.ConnectivityManager;
@@ -23,34 +19,48 @@ import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.NavUtils;
-import android.text.format.DateFormat;
 import android.util.Log;
+import android.view.ActionMode;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.View.OnLongClickListener;
 import android.widget.Button;
 import android.widget.CompoundButton;
-import android.widget.TimePicker;
+import android.widget.Switch;
+import android.widget.TextView;
 import android.widget.Toast;
-import android.widget.ToggleButton;
 
 public class DeviceDetailsActivity extends Activity {
+    
+    // -- Constants
+
     
     // -- Member Variables 
     
     private long mDeviceId;
     private Device mDevice;
-    private DeviceDataSource mDeviceDataSource;
+    private DeviceDataSource mDeviceDataSource;    
     private long mSocketId;
     private int mDeviceState;
+    
+    private Button mEnableTimerButton;
+    private TextView mDeviceTimerDetails;
+    
     
     private HardwareUnit mHardwareUnit;
     private HardwareUnitDataSource mHardwareUnitDataSource;
     
+    private Timer mTimer;
+    private TimerDataSource mTimerDataSource;   
+    
     private String mBasePath = "";
     private int mPortNumber = 80;
+    
     private ActionBar mActionBar;
+    private ActionMode mActionMode = null;
 
     // -- Initialize Activity
     
@@ -62,18 +72,25 @@ public class DeviceDetailsActivity extends Activity {
         setupActionBar();
         mActionBar = getActionBar();
                 
-        // initialize memebers
+        // initialize members
         mDeviceDataSource = new DeviceDataSource(this);
         mDeviceDataSource.open();
         mHardwareUnitDataSource = new HardwareUnitDataSource(this);
         mHardwareUnitDataSource.open();
+        mTimerDataSource = new TimerDataSource(this);
+        mTimerDataSource.open();
         
         // get device id from previous activity
         Intent intent = getIntent();
         mDeviceId = intent.getLongExtra(SingleUnitActivity.EXTRA_DEVICE_ID, -1);
         
-        
-        ToggleButton deviceStateToggle = (ToggleButton) findViewById(R.id.deviceStateToggleButton);
+        mEnableTimerButton = (Button) findViewById(R.id.enableTimerButton);
+        mDeviceTimerDetails = (TextView) findViewById(R.id.deviceTimerDetails);
+        Switch deviceStateSwitch = (Switch) findViewById(R.id.deviceStateSwitch);
+        TextView deviceType = (TextView) findViewById(R.id.deviceType);
+        TextView deviceLastTimeOn = (TextView) findViewById(R.id.deviceLastTimeOn);
+        TextView deviceTotalTimeOn = (TextView) findViewById(R.id.deviceTotalTimeOn);
+        TextView devicePowerUsage = (TextView) findViewById(R.id.devicePowerUsage);
         
         // TODO: update device state from server response
         mDevice = mDeviceDataSource.getDeviceById(mDeviceId);
@@ -81,18 +98,38 @@ public class DeviceDetailsActivity extends Activity {
             mActionBar.setTitle(mDevice.getName());
             mDeviceState = mDevice.getState();
             if (mDeviceState == 0) {
-                deviceStateToggle.setChecked(false);
+                deviceStateSwitch.setChecked(false);
             } else {
-                deviceStateToggle.setChecked(true);
+                deviceStateSwitch.setChecked(true);
             }
             mSocketId = mDevice.getSocketId();
             mHardwareUnit = mHardwareUnitDataSource.getHardwareUnitById(mDevice.getHardwareUnitId());
             mBasePath = mHardwareUnit.getBasePath();
             mPortNumber = mHardwareUnit.getPortNumber();
+            
+            deviceType.setText(getString(R.string.type_colon) + " " + mDevice.getType());
+            deviceLastTimeOn.setText(getString(R.string.last_time_on_colon) + " " + "TODO");
+            
+            int totalTimeOn = mDevice.getTotalTimeOn();
+            int powerUsage = calculatePowerUsage(totalTimeOn);
+            deviceTotalTimeOn.setText(getString(R.string.total_time_on_colon) + " " + totalTimeOn);
+            devicePowerUsage.setText(getString(R.string.power_usage_colon) + " " + powerUsage);
+            
+            // get timer info
+            mTimer = mTimerDataSource.getTimerByDeviceId(mDeviceId);
+            
+            if (mTimer == null) {
+                mDeviceTimerDetails.setVisibility(View.GONE);
+                mEnableTimerButton.setVisibility(View.VISIBLE);
+            } else {
+                mEnableTimerButton.setVisibility(View.GONE);
+                mDeviceTimerDetails.setVisibility(View.VISIBLE);
+                mDeviceTimerDetails.setText("Turn ON between: " + mTimer.getTimeOn() + " - " + mTimer.getTimeOff());
+            }
         }
         
         // set up event listeners
-        deviceStateToggle.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+        deviceStateSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
@@ -104,15 +141,28 @@ public class DeviceDetailsActivity extends Activity {
             }
         });
         
-        Button showTimePickerButton = (Button) findViewById(R.id.setTimeButton);
-        
-        showTimePickerButton.setOnClickListener(new OnClickListener() {
-            public void onClick(View v) {
-                showTimePickerDialog();
+      mEnableTimerButton.setOnClickListener(new OnClickListener() {
+          public void onClick(View v) {
+              startSetTimerActivity();
+          }
+      });
+      
+      mDeviceTimerDetails.setOnLongClickListener(new OnLongClickListener() {
+
+        @Override
+        public boolean onLongClick(View v) {
+            
+            if (mActionMode != null) {
+                return false;
+            } else {                
+                // Start the CAB using the ActionMode.Callback defined above
+                mActionMode = DeviceDetailsActivity.this.startActionMode(mActionModeCallback);
+                return true;
             }
-        });
-        
-        
+        }
+          
+      });
+      
     }
     
     // -- Action Bar
@@ -148,6 +198,54 @@ public class DeviceDetailsActivity extends Activity {
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+    
+// -- Action Mode    
+    
+    private ActionMode.Callback mActionModeCallback = new ActionMode.Callback() {
+
+        // Called when the action mode is created; startActionMode() was called
+        @Override
+        public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+            // Inflate a menu resource providing context menu items
+            MenuInflater inflater = mode.getMenuInflater();
+            inflater.inflate(R.menu.context_menu, menu);
+            return true;
+        }
+
+        // Called each time the action mode is shown. Always called after onCreateActionMode, but
+        // may be called multiple times if the mode is invalidated.
+        @Override
+        public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
+            return false; // Return false if nothing is done
+        }
+
+        // Called when the user selects a contextual menu item
+        @Override
+        public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
+            switch (item.getItemId()) {
+                case R.id.action_delete:
+                    deleteTimer();
+                    mode.finish();
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        // Called when the user exits the action mode
+        @Override
+        public void onDestroyActionMode(ActionMode mode) {
+            mActionMode = null;
+        }
+    };
+    
+    // -- Intents
+    
+    public void startSetTimerActivity() {
+        Intent intent = new Intent(this, SetTimerActivity.class);
+        intent.putExtra(SingleUnitActivity.EXTRA_DEVICE_ID, mDeviceId);
+        startActivity(intent);
     }
   
     // -- Communicate with Espruino
@@ -247,31 +345,25 @@ public class DeviceDetailsActivity extends Activity {
         }
     }
     
-    // -- Time Picker Dialog
+   
     
-    public void showTimePickerDialog() {
-        DialogFragment newFragment = new TimePickerFragment();
-        newFragment.show(getFragmentManager(), "datePicker");
-    }   
+    // -- Misc
     
+    // TODO: derive this formula
+    public int calculatePowerUsage(int totalTimeOn) {
+        return totalTimeOn * 5;
+    }
     
-    public static class TimePickerFragment extends DialogFragment
-    implements TimePickerDialog.OnTimeSetListener {
-
-        @Override
-        public Dialog onCreateDialog(Bundle savedInstanceState) {
-            // Use the current time as the default values for the picker
-            final Calendar c = Calendar.getInstance();
-            int hour = c.get(Calendar.HOUR_OF_DAY);
-            int minute = c.get(Calendar.MINUTE);
+    public void deleteTimer() {
+        if (mTimer != null && mDevice != null) {
+            // delete timer from db
+            mTimerDataSource.deleteTimerByDeviceId(mDevice.getId());
+            mTimer = null;
             
-            // Create a new instance of TimePickerDialog and return it
-            return new TimePickerDialog(getActivity(), this, hour, minute,
-                                        DateFormat.is24HourFormat(getActivity()));
-        }
-        
-        public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
-        // Do something with the time chosen by the user
+            // show enable button
+            mDeviceTimerDetails.setVisibility(View.GONE);
+            mEnableTimerButton.setVisibility(View.VISIBLE);
+            
         }
     }
     

@@ -7,17 +7,29 @@ public class Device {
     private long mSocketId;
     private String mName;
     private int mState;
+    private String mType;
+    private int mTotalTimeOn;
     
-    public Device(long id, long hardwareUnitId, long socketId, String name, int state) {
+    public Device(long id, long hardwareUnitId, long socketId, String name, int state, String type, int totalTimeOn) {
         mId = id;
         mHardwareUnitId = hardwareUnitId;
         mSocketId = socketId;
         mName = name;
         mState = state;
+        mType = type;
+        mTotalTimeOn = totalTimeOn;
     }
     
     public long getId() {
         return mId;
+    }
+    
+    public long getHardwareUnitId() {
+        return mHardwareUnitId;
+    }
+    
+    public long getSocketId() {
+        return mSocketId;
     }
     
     public String getName() {
@@ -28,12 +40,13 @@ public class Device {
         return mState;
     }
     
-    public long getSocketId() {
-        return mSocketId;
+    public String getType() {
+        return mType;
     }
     
-    public long getHardwareUnitId() {
-        return mHardwareUnitId;
+    // hours? minutes?
+    public int getTotalTimeOn() {
+        return mTotalTimeOn;
     }
     
     public void setId(long id) {
@@ -46,5 +59,13 @@ public class Device {
     
     public void setState(int state) {
         mState = state;
+    }
+    
+    public void setType(String type) {
+        mType = type;
+    }
+    
+    public void setTotalTimeOn(int time) {
+        mTotalTimeOn = time;
     }
 }

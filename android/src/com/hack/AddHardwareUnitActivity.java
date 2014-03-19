@@ -37,6 +37,7 @@ public class AddHardwareUnitActivity extends Activity {
     private static final UUID ESPRUINO_UUID = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb");
     
     // -- Member Variables
+    
     private ConnectToBluetoothTask mConnectTask;
     private ConnectedThread mConnectedThread;
     private BluetoothDevice mBluetoothDevice;

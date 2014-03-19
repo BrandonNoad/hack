@@ -59,6 +59,14 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.hack.AllUnitsActivity" />
         </activity>
+        <activity
+            android:name="com.hack.SetTimerActivity"
+            android:label="@string/title_activity_set_timer"
+            android:parentActivityName="com.hack.DeviceDetailsActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.hack.DeviceDetailsActivity" />
+        </activity>
     </application>
 
 </manifest>

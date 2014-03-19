@@ -40,7 +40,7 @@ public class HackDbHelper extends SQLiteOpenHelper {
             HackHardwareUnits.COLUMN_NAME_HARDWARE_UNIT_BASE_PATH + ", " +
             HackHardwareUnits.COLUMN_NAME_HARDWARE_UNIT_PORT_NUMBER + 
         ") " +
-        "VALUES " + "('Test Unit', 'http://brandonnoad.com/', 80)";
+        "VALUES " + "('Test Unit', 'brandonnoad.com', 80)";
     
     // create sockets table
     private static final String SQL_CREATE_SOCKETS =

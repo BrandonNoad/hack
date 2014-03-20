@@ -1,5 +1,6 @@
 package com.hack;
 
+import android.app.ActionBar;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
@@ -8,10 +9,10 @@ import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.view.inputmethod.EditorInfo;
-import android.widget.Button;
+import android.widget.ArrayAdapter;
 import android.widget.EditText;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.TextView.OnEditorActionListener;
 
@@ -46,14 +47,34 @@ public class AddDeviceActivity extends Activity {
            }
         });
         
-//        Button addUnitButton = (Button) findViewById(R.id.add);
-//        addUnitButton.setOnClickListener(new OnClickListener() {
-//            public void onClick(View v) {
-//                addDevice();                
-//            }
-//        });
+        //create spinner
+        Spinner spinner = (Spinner) findViewById(R.id.spinner);
+        
+        //populate spinner with predefined types listed in hardware_types
+        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
+        R.array.hardware_types, android.R.layout.simple_spinner_item);
+        
+        //set layout of spinner
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinner.setAdapter(adapter);
         
         Intent intent = getIntent();
+        String parentName = intent.getStringExtra("parent");
+        
+        //This means we're coming from Device Details screen
+        if(parentName.equals("SingleUnitActivity")){
+        	
+        	//update action bar title
+        	setTitle("butt");
+        	
+        	//set EditText field to be the name of the device
+        	deviceNameET.setText("butt");
+        	
+        	//set default hardware type on spinner to be the type of the device
+        	//spinner.setPrompt("butt");
+        }
+        
+        //Intent intent = getIntent();
         mHardwareUnitId = intent.getLongExtra(SingleUnitActivity.EXTRA_HARDWARE_UNIT_ID, -1);
         mSocketId = intent.getLongExtra(SingleUnitActivity.EXTRA_SOCKET_ID, -1);        
     }
@@ -67,6 +88,8 @@ public class AddDeviceActivity extends Activity {
 
     }
 
+    public void saveNewDevice(View view){}
+    
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.

@@ -200,7 +200,11 @@ goStopButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListen
     public void startAddDeviceActivity(long socketId) {
         Intent intent = new Intent(this, AddDeviceActivity.class);
         intent.putExtra(EXTRA_HARDWARE_UNIT_ID, mHardwareUnitId);
-        intent.putExtra(EXTRA_SOCKET_ID, socketId);  
+        intent.putExtra(EXTRA_SOCKET_ID, socketId);
+        
+        //***************************added
+        intent.putExtra("parent", "SingleUnitActivity");
+        
         startActivity(intent);
     }
     

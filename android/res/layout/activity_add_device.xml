@@ -10,7 +10,7 @@
 
     <EditText
         android:id="@+id/deviceNameEditText"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true"
@@ -23,5 +23,19 @@
 
         <requestFocus />
     </EditText>
+    
+    <Spinner
+    android:id="@+id/spinner"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:layout_below="@id/deviceNameEditText" />
+    
+    <Button android:id="@+id/save_button"
+        	android:layout_width="wrap_content"
+        	android:layout_height="wrap_content"
+        	android:layout_below="@id/spinner"
+        	android:layout_alignRight="@id/spinner"
+        	android:text="@string/save_device"
+        	android:onClick="saveNewDevice" />
 
 </RelativeLayout>

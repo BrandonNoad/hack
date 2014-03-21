@@ -13,7 +13,6 @@
     <string name="title_activity_splash_screen">SplashScreen</string>
     <string name="hello_world">Hello world!</string>
     <string name="logo_title">Home Automation Control Kit</string>
-    <string name="title_activity_main">MainActivity</string>
     <string name="save_device">Save</string>
     <string-array name="hardware_types">
         <item>Stove</item>

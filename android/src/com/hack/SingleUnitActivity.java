@@ -202,7 +202,8 @@ goStopButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListen
         intent.putExtra(EXTRA_HARDWARE_UNIT_ID, mHardwareUnitId);
         intent.putExtra(EXTRA_SOCKET_ID, socketId);
         
-        //***************************added
+        //this is needed in order for AddDeviceActivity to know who is calling it:
+        //SingleUnitActivity or DeviceDetailsActivity
         intent.putExtra("parent", "SingleUnitActivity");
         
         startActivity(intent);

@@ -62,19 +62,18 @@ public class AddDeviceActivity extends Activity {
         String parentName = intent.getStringExtra("parent");
         
         //This means we're coming from Device Details screen
-        if(parentName.equals("SingleUnitActivity")){
+        if(parentName.equals("DeviceDetailsActivity")){
         	
         	//update action bar title
-        	setTitle("butt");
+        	setTitle("EditDevice");
         	
         	//set EditText field to be the name of the device
-        	deviceNameET.setText("butt");
+        	deviceNameET.setText("someName");
         	
         	//set default hardware type on spinner to be the type of the device
-        	//spinner.setPrompt("butt");
+        	
         }
         
-        //Intent intent = getIntent();
         mHardwareUnitId = intent.getLongExtra(SingleUnitActivity.EXTRA_HARDWARE_UNIT_ID, -1);
         mSocketId = intent.getLongExtra(SingleUnitActivity.EXTRA_SOCKET_ID, -1);        
     }
@@ -88,6 +87,7 @@ public class AddDeviceActivity extends Activity {
 
     }
 
+    //this is called when the "save" button is clicked
     public void saveNewDevice(View view){}
     
     @Override

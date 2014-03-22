@@ -15,7 +15,7 @@ public class HackApplication extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
-        mConnectionManager = new HackConnectionManager();
+        mConnectionManager = new HackConnectionManager(this);
     }
  
     @Override

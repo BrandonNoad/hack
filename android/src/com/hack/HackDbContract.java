@@ -18,6 +18,9 @@ public class HackDbContract {
         public static final String COLUMN_NAME_HARDWARE_UNIT_NAME = "hardwareUnitName";
         public static final String COLUMN_NAME_HARDWARE_UNIT_BASE_PATH = "hardwareUnitBasePath";
         public static final String COLUMN_NAME_HARDWARE_UNIT_PORT_NUMBER = "hardwareUnitPortNumber";
+        public static final String COLUMN_NAME_HARDWARE_UNIT_ACCESS_POINT_NAME = "hardwareUnitAccessPointName";
+        public static final String COLUMN_NAME_HARDWARE_UNIT_WPA2_KEY = "hardwareUnitWpa2Key";
+        public static final String COLUMN_NAME_HARDWARE_UNIT_BT_MAC = "hardwareUnitBtMac";
     }
     
     // sockets Table

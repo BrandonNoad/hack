@@ -6,12 +6,18 @@ public class HardwareUnit {
     private String mName;
     private String mBasePath;
     private int mPortNumber;
+    private String mAccessPointName;
+    private String mWpa2Key;
+    private String mBtMac;
     
-    public HardwareUnit(long id, String name, String basePath, int portNumber) {
+    public HardwareUnit(long id, String name, String basePath, int portNumber, String accessPointName, String wpa2Key, String btMac) {
         mId = id;
         mName = name;
         mBasePath = basePath;
-        mPortNumber = portNumber;               
+        mPortNumber = portNumber;
+        mAccessPointName = accessPointName;
+        mWpa2Key = wpa2Key;
+        mBtMac = btMac;
     }   
     
     public long getId() {
@@ -30,6 +36,18 @@ public class HardwareUnit {
         return mPortNumber;
     }
     
+    public String getAcessPointName() {
+        return mAccessPointName;
+    }
+    
+    public String getWpa2Key() {
+        return mWpa2Key;
+    }
+    
+    public String getBtMac() {
+        return mBtMac;
+    }
+    
     public void setId(long id) {
         mId = id;
     }
@@ -45,5 +63,13 @@ public class HardwareUnit {
     public void setPortNumber(int portNumber) {
         mPortNumber = portNumber;
     }    
+    
+    public void setAccessPointName(String accessPointName) {
+        mAccessPointName = accessPointName;
+    }
+    
+    public void setWpa2Key(String wpa2Key) {
+        mWpa2Key = wpa2Key;
+    }
      
 }

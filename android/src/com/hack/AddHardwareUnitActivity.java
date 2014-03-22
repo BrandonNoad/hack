@@ -151,8 +151,11 @@ public class AddHardwareUnitActivity extends Activity {
         
         // add new unit to db
         long huId = mHardwareUnitDataSource.addHardwareUnit(nameET.getText().toString(),
-                                                basePathET.getText().toString(),
-                                                Integer.parseInt(portNumberET.getText().toString()));
+                                                            basePathET.getText().toString(),
+                                                            Integer.parseInt(portNumberET.getText().toString()),
+                                                            "access point name",
+                                                            "wpa2key",
+                                                            "btMac");
         Log.i("AddHardwareUnitActivity - addHardwareUnit()", "unit Id: " + huId);
         
         // send details to espruino via BT

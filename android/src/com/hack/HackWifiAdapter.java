@@ -24,11 +24,9 @@ import android.widget.Toast;
 public class HackWifiAdapter extends HackConnectionAdapter {
     
     private Context mContext;
-    private HackCommand mCommand;
     
-    public HackWifiAdapter(Context context, HackCommand command) {
+    public HackWifiAdapter(Context context) {
         mContext = context;
-        mCommand = command;
     }
     
     /**
@@ -36,13 +34,13 @@ public class HackWifiAdapter extends HackConnectionAdapter {
      * @param url String - of the form: "http://basePath:PortNumber/hack/command?var=n"
      */
     // TODO: modify this to take a HackCommand object as param and pass to doInBackground()
-    public void submitRequest(String url) {
+    public void submitRequest(HackCommand command) {
         ConnectivityManager connMgr = (ConnectivityManager)
         mContext.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
         if (networkInfo != null && networkInfo.isConnected()) {
             // start async task
-            new HttpConnectionTask().execute(url);
+            new HttpConnectionTask().execute(command);
         } else {
             Toast.makeText(mContext.getApplicationContext(), 
                            "No network connection available", 
@@ -93,24 +91,29 @@ public class HackWifiAdapter extends HackConnectionAdapter {
      * has been established, the AsyncTask receives the response as an InputStream. Finally, 
      * the InputStream is converted into a JSON object, which is sent to the Activity in the 
      * AsyncTask's onPostExecute method. */
-    private class HttpConnectionTask extends AsyncTask<String, Void, String> {
+    private class HttpConnectionTask extends AsyncTask<HackCommand, Void, String> {
+        
+        private HackCommand mmCommand;
        
         @Override
-        protected String doInBackground(String... urls) {
+        protected String doInBackground(HackCommand... commandUrls) {
+            
+            mmCommand = commandUrls[0];
              
-            // urls comes from the execute() call: urls[0] is the url as a string.
+            // commandUrls comes from the execute() call: commandUrls[0].toUrl() is the url as a String.
             try {
-                return sendRequest(urls[0]);
+                return sendRequest(commandUrls[0].getUrl());
             } catch (IOException e) {
-                return "Unable to retrieve web page. URL may be invalid.";
+                return "{'success': '0', 'message': 'Unable to retrieve web page. URL may be invalid.'}";
             }
         }
 
         // onPostExecute displays the results of the AsyncTask.
         @Override
         protected void onPostExecute(String response) {
+            Log.i("HackWifiAdapter - onPostExecute()", "response: " + response);
             try {
-                mCommand.onResponseReceived(new JSONObject(response));
+                mmCommand.onResponseReceived(new JSONObject(response));
             } catch (JSONException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();

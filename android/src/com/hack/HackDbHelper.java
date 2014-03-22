@@ -28,7 +28,10 @@ public class HackDbHelper extends SQLiteOpenHelper {
             HackHardwareUnits._ID + " INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
             HackHardwareUnits.COLUMN_NAME_HARDWARE_UNIT_NAME + " " + TEXT_TYPE + ", " +
             HackHardwareUnits.COLUMN_NAME_HARDWARE_UNIT_BASE_PATH + " " + TEXT_TYPE + ", " +
-            HackHardwareUnits.COLUMN_NAME_HARDWARE_UNIT_PORT_NUMBER + " " + INT_TYPE +
+            HackHardwareUnits.COLUMN_NAME_HARDWARE_UNIT_PORT_NUMBER + " " + INT_TYPE + ", " +
+            HackHardwareUnits.COLUMN_NAME_HARDWARE_UNIT_ACCESS_POINT_NAME + " " + TEXT_TYPE + ", " +
+            HackHardwareUnits.COLUMN_NAME_HARDWARE_UNIT_WPA2_KEY + " " + TEXT_TYPE + ", " +
+            HackHardwareUnits.COLUMN_NAME_HARDWARE_UNIT_BT_MAC + " " + TEXT_TYPE  +
         ")";
     
     // add a hardwareUnit for testing purposes
@@ -38,9 +41,12 @@ public class HackDbHelper extends SQLiteOpenHelper {
         " (" + 
             HackHardwareUnits.COLUMN_NAME_HARDWARE_UNIT_NAME + ", " +
             HackHardwareUnits.COLUMN_NAME_HARDWARE_UNIT_BASE_PATH + ", " +
-            HackHardwareUnits.COLUMN_NAME_HARDWARE_UNIT_PORT_NUMBER + 
+            HackHardwareUnits.COLUMN_NAME_HARDWARE_UNIT_PORT_NUMBER + ", " +
+            HackHardwareUnits.COLUMN_NAME_HARDWARE_UNIT_ACCESS_POINT_NAME + ", " +
+            HackHardwareUnits.COLUMN_NAME_HARDWARE_UNIT_WPA2_KEY + ", " +
+            HackHardwareUnits.COLUMN_NAME_HARDWARE_UNIT_BT_MAC +
         ") " +
-        "VALUES " + "('Test Unit', 'brandonnoad.com', 80)";
+        "VALUES " + "('Test Unit', 'brandonnoad.com', 80, 'bbnoad', 'wpa2Key', 'BTMAC')";
     
     // create sockets table
     private static final String SQL_CREATE_SOCKETS =

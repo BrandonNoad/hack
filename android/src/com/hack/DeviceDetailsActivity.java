@@ -1,24 +1,11 @@
 package com.hack;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.io.UnsupportedEncodingException;
-import java.net.HttpURLConnection;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
-
 import org.json.JSONObject;
 
 import android.app.ActionBar;
 import android.app.Activity;
-import android.content.Context;
+import android.app.ProgressDialog;
 import android.content.Intent;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.NavUtils;
 import android.util.Log;
@@ -33,7 +20,6 @@ import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.Switch;
 import android.widget.TextView;
-import android.widget.Toast;
 
 public class DeviceDetailsActivity extends Activity {
     
@@ -44,28 +30,23 @@ public class DeviceDetailsActivity extends Activity {
     
     private long mDeviceId;
     private Device mDevice;
-    private DeviceDataSource mDeviceDataSource;    
+    private DeviceDataSource mDeviceDataSource;
     private long mSocketId;
     private int mDeviceState;
     
     private Button mEnableTimerButton;
     private TextView mDeviceTimerDetails;
     
-    
-    private HardwareUnit mHardwareUnit;
     private HardwareUnitDataSource mHardwareUnitDataSource;
     
     private Timer mTimer;
     private TimerDataSource mTimerDataSource;   
     
-    private String mBasePath = "";
-    private int mPortNumber = 80;
-    
     private ActionBar mActionBar;
     private ActionMode mActionMode = null;
     
-    private HackWifiAdapter mHttpConnectionManager;
-
+    private ProgressDialog mProgressDialog;
+    
     // -- Initialize Activity
     
     @Override
@@ -109,9 +90,6 @@ public class DeviceDetailsActivity extends Activity {
                 deviceStateSwitch.setChecked(true);
             }
             mSocketId = mDevice.getSocketId();
-            mHardwareUnit = mHardwareUnitDataSource.getHardwareUnitById(mDevice.getHardwareUnitId());
-            mBasePath = mHardwareUnit.getBasePath();
-            mPortNumber = mHardwareUnit.getPortNumber();
             
             deviceType.setText(getString(R.string.type_colon) + " " + mDevice.getType());
             deviceLastTimeOn.setText(getString(R.string.last_time_on_colon) + " " + "TODO");
@@ -139,14 +117,26 @@ public class DeviceDetailsActivity extends Activity {
             
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                String url = "http://" + mBasePath + ":" + mPortNumber + "/hack";
+                // disable switch
+                buttonView.setEnabled(false);
+                String url = "/hack";
                 if (isChecked) {
                     url += "/on?socket=" + mSocketId;
                 } else {
                     url += "/off?socket=" + mSocketId;
                 }
                 Log.i("DeviceDetailsActivity - onCheckChanged()", "Requested url: " + url);
-                mHttpConnectionManager.submitRequest(url);
+                
+                HardwareUnit unit = mHardwareUnitDataSource.getHardwareUnitById(mDevice.getHardwareUnitId());
+                HackConnectionManager connMgr = ((HackApplication) getApplicationContext()).getConnectionManager();                
+                connMgr.submitRequest(new HackCommand(unit, url) {
+                    
+                    @Override
+                    public void onResponseReceived(JSONObject json) {
+                        // TODO Auto-generated method stub
+                    }
+                    
+                });
             }
         });
         
@@ -276,14 +266,5 @@ public class DeviceDetailsActivity extends Activity {
             
         }
     }
-
-//    @Override
-//    public void onResponseReceived(JSONObject json) {
-//        // display response string
-//        Toast.makeText(this, 
-//                       json.toString(), 
-//                       Toast.LENGTH_LONG).show(); 
-//        
-//    }
     
 }

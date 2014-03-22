@@ -21,12 +21,12 @@ import android.os.AsyncTask;
 import android.util.Log;
 import android.widget.Toast;
 
-public class HackHttpConnectionManager {
+public class HackWifiAdapter {
     
     private Context mContext;
-    private HackResponseCommand mCommand;
+    private HackCommand mCommand;
     
-    public HackHttpConnectionManager(Context context, HackResponseCommand command) {
+    public HackWifiAdapter(Context context, HackCommand command) {
         mContext = context;
         mCommand = command;
     }

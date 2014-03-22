@@ -187,7 +187,7 @@ function webHandler(req, res) {
                );
 
   // write response body  
-  var responseBody = JSON.stringify(hardwareUnit.sockets[socketNumber]);
+  var responseBody = JSON.stringify(hardwareUnit);
   res.write(responseBody);
 
   res.end();

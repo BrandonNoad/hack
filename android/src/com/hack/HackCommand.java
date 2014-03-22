@@ -2,7 +2,7 @@ package com.hack;
 
 import org.json.JSONObject;
 
-public interface HackResponseCommand {
+public interface HackCommand {
     
     void onResponseReceived(JSONObject json);
 

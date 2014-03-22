@@ -35,8 +35,7 @@ import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class DeviceDetailsActivity extends Activity
-                                   implements HackResponseCommand {
+public class DeviceDetailsActivity extends Activity {
     
     // -- Constants
 
@@ -65,7 +64,7 @@ public class DeviceDetailsActivity extends Activity
     private ActionBar mActionBar;
     private ActionMode mActionMode = null;
     
-    private HackHttpConnectionManager mHttpConnectionManager;
+    private HackWifiAdapter mHttpConnectionManager;
 
     // -- Initialize Activity
     
@@ -85,7 +84,7 @@ public class DeviceDetailsActivity extends Activity
         mTimerDataSource = new TimerDataSource(this);
         mTimerDataSource.open();
         
-        mHttpConnectionManager = new HackHttpConnectionManager(this, this);
+//        mHttpConnectionManager = new HackWifiAdapter(this, this);
         
         // get device id from previous activity
         Intent intent = getIntent();
@@ -278,13 +277,13 @@ public class DeviceDetailsActivity extends Activity
         }
     }
 
-    @Override
-    public void onResponseReceived(JSONObject json) {
-        // display response string
-        Toast.makeText(this, 
-                       json.toString(), 
-                       Toast.LENGTH_LONG).show(); 
-        
-    }
+//    @Override
+//    public void onResponseReceived(JSONObject json) {
+//        // display response string
+//        Toast.makeText(this, 
+//                       json.toString(), 
+//                       Toast.LENGTH_LONG).show(); 
+//        
+//    }
     
 }

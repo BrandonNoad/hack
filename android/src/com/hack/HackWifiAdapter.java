@@ -21,7 +21,7 @@ import android.os.AsyncTask;
 import android.util.Log;
 import android.widget.Toast;
 
-public class HackWifiAdapter {
+public class HackWifiAdapter extends HackConnectionAdapter {
     
     private Context mContext;
     private HackCommand mCommand;
@@ -35,7 +35,8 @@ public class HackWifiAdapter {
      * 
      * @param url String - of the form: "http://basePath:PortNumber/hack/command?var=n"
      */
-    public void sendRequest(String url) {
+    // TODO: modify this to take a HackCommand object as param and pass to doInBackground()
+    public void submitRequest(String url) {
         ConnectivityManager connMgr = (ConnectivityManager)
         mContext.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
@@ -59,7 +60,7 @@ public class HackWifiAdapter {
         return new String(buffer);
     }
     
-    private String submitRequest(String strUrl) throws IOException {
+    private String sendRequest(String strUrl) throws IOException {
         InputStream is = null;
         try {
             URL url = new URI(strUrl).toURL();
@@ -99,7 +100,7 @@ public class HackWifiAdapter {
              
             // urls comes from the execute() call: urls[0] is the url as a string.
             try {
-                return submitRequest(urls[0]);
+                return sendRequest(urls[0]);
             } catch (IOException e) {
                 return "Unable to retrieve web page. URL may be invalid.";
             }

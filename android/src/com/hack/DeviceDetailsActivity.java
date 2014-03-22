@@ -146,7 +146,7 @@ public class DeviceDetailsActivity extends Activity {
                     url += "/off?socket=" + mSocketId;
                 }
                 Log.i("DeviceDetailsActivity - onCheckChanged()", "Requested url: " + url);
-                mHttpConnectionManager.sendRequest(url);
+                mHttpConnectionManager.submitRequest(url);
             }
         });
         

@@ -117,8 +117,6 @@ public class DeviceDetailsActivity extends Activity {
             
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                // disable switch
-                buttonView.setEnabled(false);
                 String url = "/hack";
                 if (isChecked) {
                     url += "/on?socket=" + mSocketId;
@@ -129,38 +127,44 @@ public class DeviceDetailsActivity extends Activity {
                 
                 HardwareUnit unit = mHardwareUnitDataSource.getHardwareUnitById(mDevice.getHardwareUnitId());
                 HackConnectionManager connMgr = ((HackApplication) getApplicationContext()).getConnectionManager();                
-                connMgr.submitRequest(new HackCommand(unit, url) {
+                connMgr.submitRequest(new HackCommand(DeviceDetailsActivity.this, unit, url) {
                     
                     @Override
-                    public void onResponseReceived(JSONObject json) {
-                        // TODO Auto-generated method stub
+                    public void onPostExecute(JSONObject json) {
+                        super.onPostExecute(json);
+                        
+                    }
+                    
+                    @Override
+                    public void onPreExecute() {
+                        super.onPreExecute();
                     }
                     
                 });
             }
         });
         
-      mEnableTimerButton.setOnClickListener(new OnClickListener() {
-          public void onClick(View v) {
-              startSetTimerActivity();
-          }
-      });
-      
-      mDeviceTimerDetails.setOnLongClickListener(new OnLongClickListener() {
-
-        @Override
-        public boolean onLongClick(View v) {
-            
-            if (mActionMode != null) {
-                return false;
-            } else {                
-                // Start the CAB using the ActionMode.Callback defined above
-                mActionMode = DeviceDetailsActivity.this.startActionMode(mActionModeCallback);
-                return true;
+        mEnableTimerButton.setOnClickListener(new OnClickListener() {
+            public void onClick(View v) {
+                startSetTimerActivity();
             }
-        }
+        });
           
-      });
+        mDeviceTimerDetails.setOnLongClickListener(new OnLongClickListener() {
+    
+          @Override
+          public boolean onLongClick(View v) {
+              
+              if (mActionMode != null) {
+                  return false;
+              } else {                
+                  // Start the CAB using the ActionMode.Callback defined above
+                  mActionMode = DeviceDetailsActivity.this.startActionMode(mActionModeCallback);
+                  return true;
+              }
+          }
+              
+        });
       
     }
     
@@ -246,7 +250,7 @@ public class DeviceDetailsActivity extends Activity {
         intent.putExtra(SingleUnitActivity.EXTRA_DEVICE_ID, mDeviceId);
         startActivity(intent);
     }
-  
+    
     // -- Misc
     
     // TODO: derive this formula

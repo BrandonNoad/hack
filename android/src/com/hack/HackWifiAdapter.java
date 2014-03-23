@@ -1,12 +1,11 @@
 package com.hack;
 
-import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.Reader;
-import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -40,7 +39,7 @@ public class HackWifiAdapter extends HackConnectionAdapter {
         NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
         if (networkInfo != null && networkInfo.isConnected()) {
             // start async task
-            new HttpConnectionTask().execute(command);
+            new HttpConnectionTask(command).execute(command);
         } else {
             Toast.makeText(mContext.getApplicationContext(), 
                            "No network connection available", 
@@ -48,42 +47,46 @@ public class HackWifiAdapter extends HackConnectionAdapter {
         }
     }
     
-    // Reads an InputStream and converts it to a String.
-    private String readInputStream(InputStream stream) throws IOException, UnsupportedEncodingException {
-        BufferedInputStream bufStream = new BufferedInputStream(stream);
-        Reader reader = null;
-        reader = new InputStreamReader(bufStream, "UTF-8");        
-        char[] buffer = new char[1024];
-        reader.read(buffer);
-        return new String(buffer);
-    }
-    
     private String sendRequest(String strUrl) throws IOException {
         InputStream is = null;
         try {
             URL url = new URI(strUrl).toURL();
             Log.i("HackHttpConnectionManager - submitRequest()", "URL: " + url.toString());
+            
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setReadTimeout(10000 /* milliseconds */);
-            conn.setConnectTimeout(15000 /* milliseconds */);
+            conn.setConnectTimeout(10000 /* milliseconds */);
             conn.setRequestMethod("GET");
             conn.setDoInput(true);
+            
             // start the query
             conn.connect();
-            int response = conn.getResponseCode();
-            Log.i("HackHttpConnectionManager - submitRequest()", "The response is: " + response);
-            is = conn.getInputStream();
-
-            // convert the InputStream into a string
-            String contentAsString = readInputStream(is);
-            return contentAsString;  
+            int status = conn.getResponseCode();
+            Log.i("HackHttpConnectionManager - submitRequest()", "The response is: " + status);
+            
+            switch (status) {
+            case 200:  // OK?
+            case 201:
+                BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                StringBuilder sb = new StringBuilder();
+                String line;
+                while ((line = br.readLine()) != null) {
+                    sb.append(line+"\n");
+                }
+                br.close();
+                String response = sb.toString();
+                Log.i("HackWifiAdapter - sendRequest()", "JSON response: " + response);
+                return response; 
+            }            
+              
+        } catch (MalformedURLException e) {
+            return "error";
         } catch (URISyntaxException e) {
             return "error";
-        } finally {  // make sure input stream is closed
-            if (is != null) {
-                is.close();
-            } 
+        } catch (IOException e) {
+            return "error";
         }
+        return null;
     }
     
     /* Uses AsyncTask to create a task away from the main UI thread. This task takes a 
@@ -94,11 +97,19 @@ public class HackWifiAdapter extends HackConnectionAdapter {
     private class HttpConnectionTask extends AsyncTask<HackCommand, Void, String> {
         
         private HackCommand mmCommand;
+        
+        public HttpConnectionTask(HackCommand command) {
+            super();
+            mmCommand = command;
+        }
+        
+        @Override
+        protected void onPreExecute() {
+            mmCommand.onPreExecute();
+        }
        
         @Override
         protected String doInBackground(HackCommand... commandUrls) {
-            
-            mmCommand = commandUrls[0];
              
             // commandUrls comes from the execute() call: commandUrls[0].toUrl() is the url as a String.
             try {
@@ -111,9 +122,9 @@ public class HackWifiAdapter extends HackConnectionAdapter {
         // onPostExecute displays the results of the AsyncTask.
         @Override
         protected void onPostExecute(String response) {
-            Log.i("HackWifiAdapter - onPostExecute()", "response: " + response);
+//            Log.i("HackWifiAdapter - onPostExecute()", "response: " + response);
             try {
-                mmCommand.onResponseReceived(new JSONObject(response));
+                mmCommand.onPostExecute(new JSONObject(response));
             } catch (JSONException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();

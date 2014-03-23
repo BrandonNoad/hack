@@ -48,7 +48,6 @@ public class HackWifiAdapter extends HackConnectionAdapter {
     }
     
     private String sendRequest(String strUrl) throws IOException {
-        InputStream is = null;
         try {
             URL url = new URI(strUrl).toURL();
             Log.i("HackHttpConnectionManager - submitRequest()", "URL: " + url.toString());
@@ -62,7 +61,7 @@ public class HackWifiAdapter extends HackConnectionAdapter {
             // start the query
             conn.connect();
             int status = conn.getResponseCode();
-            Log.i("HackHttpConnectionManager - submitRequest()", "The response is: " + status);
+            Log.i("HackHttpConnectionManager - submitRequest()", "The status is: " + status);
             
             switch (status) {
             case 200:  // OK?
@@ -80,11 +79,11 @@ public class HackWifiAdapter extends HackConnectionAdapter {
             }            
               
         } catch (MalformedURLException e) {
-            return "error";
+            return null;
         } catch (URISyntaxException e) {
-            return "error";
+            return null;
         } catch (IOException e) {
-            return "error";
+            return null;
         }
         return null;
     }
@@ -110,8 +109,7 @@ public class HackWifiAdapter extends HackConnectionAdapter {
        
         @Override
         protected String doInBackground(HackCommand... commandUrls) {
-             
-            // commandUrls comes from the execute() call: commandUrls[0].toUrl() is the url as a String.
+            // commandUrls comes from the execute() call: commandUrls[0].getUrl() is the url as a String.
             try {
                 return sendRequest(commandUrls[0].getUrl());
             } catch (IOException e) {
@@ -122,9 +120,13 @@ public class HackWifiAdapter extends HackConnectionAdapter {
         // onPostExecute displays the results of the AsyncTask.
         @Override
         protected void onPostExecute(String response) {
-//            Log.i("HackWifiAdapter - onPostExecute()", "response: " + response);
+            Log.i("HackWifiAdapter - onPostExecute()", "response: " + response);
             try {
-                mmCommand.onPostExecute(new JSONObject(response));
+                if (response != null) {
+                    mmCommand.onPostExecute(new JSONObject(response));
+                } else {
+                    mmCommand.onPostExecute(null);
+                }
             } catch (JSONException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();

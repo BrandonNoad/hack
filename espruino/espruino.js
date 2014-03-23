@@ -103,6 +103,8 @@ var hardwareUnit = {
       name: "outlet0",
       pin: B14,
       state: 1,
+      totalTimeOn: 0,
+      isTimer: false
     },
 
     // outlet1 "NE"  
@@ -110,6 +112,8 @@ var hardwareUnit = {
       name: "outlet1",
       pin: A1,
       state: 1,
+      totalTimeOn: 0,
+      isTimer: false
     },
 
     // outlet2 "SW"
@@ -117,6 +121,8 @@ var hardwareUnit = {
       name: "outlet2",
       pin: B13,
       state: 1,
+      totalTimeOn: 0,
+      isTimer: false
     },
 
     // outlet3 "SE"
@@ -124,6 +130,8 @@ var hardwareUnit = {
       name: "outlet3",
       pin: A0,
       state: 1,
+      totalTimeOn: 0,
+      isTimer: false
     }
 
   ]
@@ -139,8 +147,26 @@ function resetOutlets() {
   for (var i = 0; i < 4; i++) {
     hardwareUnit.outlets[i].state = 1;
     setOutlet(i, 1);
+    hardwareUnit.outlets[i].totalTimeOn = 0;
+    hardwareUnit.outlets[i].isTimer = false;
   }
 }
+
+function resetOutlet(outletNumber) {
+    hardwareUnit.outlets[outletNumber].state = 1;
+    setOutlet(outletNumber, 1);
+    hardwareUnit.outlets[outletNumber].totalTimeOn = 0;
+    hardwareUnit.outlets[outletNumber].isTimer = false;
+}
+
+function refresh(outletNumber) {  
+  hardwareUnit.outlets[outletNumber].totalTimeOn += 1;
+}
+
+function setTimer(outletNumber) {
+  hardwareUnit.outlets[outletNumber].isTimer = true;
+}
+
 
 /**
  * 
@@ -150,16 +176,27 @@ function doCommand(obj) {
   pulseLED("green", 100);
 
   var pathname = obj.pathname;
-  var socketNumber = parseInt(obj.query.socket, 10);
+  var socketNumber;
   var state;
 
   if (pathname == "/hack/on") {
-    state = 0;
+    state = 0;    
+    socketNumber = parseInt(obj.query.socket, 10);
+    setOutlet(socketNumber, state);
   } else if (pathname == "/hack/off") {
     state = 1;
-  }
-
-  setOutlet(socketNumber, state);
+    socketNumber = parseInt(obj.query.socket, 10);
+    setOutlet(socketNumber, state);
+  } else if (pathname == "/hack/refresh") {
+    socketNumber = parseInt(obj.query.socket, 10);
+    refresh(socketNumber);
+  } else if (pathname == "/hack/delete") {
+    socketNumber = parseInt(obj.query.socket, 10);
+    resetOutlet(socketNumber);
+  } else if (pathname == "/hack/setTimer") {
+    socketNumber = parseInt(obj.query.socket, 10);
+    setTimer(socketNumber);
+  } 
 
 }
 

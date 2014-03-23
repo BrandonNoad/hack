@@ -37,12 +37,6 @@ public abstract class HackCommand {
         mUrl = url;
     }
     
-    public void onPostExecute(JSONObject json) {
-        if (mProgressDialog != null) {
-            mProgressDialog.dismiss();
-        }
-    }
-    
     public void onPreExecute() {
         mProgressDialog = new ProgressDialog(mContext);
         mProgressDialog.setTitle("Sending Request...");
@@ -50,6 +44,12 @@ public abstract class HackCommand {
         mProgressDialog.setCancelable(false);
         mProgressDialog.setIndeterminate(true);
         mProgressDialog.show();
+    }
+    
+    public void onPostExecute(JSONObject json) {
+        if (mProgressDialog != null) {
+            mProgressDialog.dismiss();
+        }
     }
 
 }

@@ -25,12 +25,35 @@ public class DeviceDataSource extends HackDataSource {
       values.put(HackDevices.COLUMN_NAME_HARDWARE_UNIT_ID, hardwareUnitId);
       values.put(HackDevices.COLUMN_NAME_SOCKET_ID, socketId);
       values.put(HackDevices.COLUMN_NAME_DEVICE_NAME, name);
-      values.put(HackDevices.COLUMN_NAME_DEVICE_STATE, 0);
+      values.put(HackDevices.COLUMN_NAME_DEVICE_STATE, 1);  // 1 is off on the espruino
       values.put(HackDevices.COLUMN_NAME_DEVICE_TYPE_ID, deviceTypeId);
       values.put(HackDevices.COLUMN_NAME_DEVICE_TOTAL_TIME_ON, 0);
       long id = mDatabase.insert(HackDevices.TABLE_NAME, null, values);
       return id;
     }
+    
+    /**
+     * Update an existing device
+     * @return int result - the number of rows updated
+     */
+    public int updateDevice(long deviceId, int state) {
+        ContentValues values = new ContentValues();
+        values.put(HackDevices.COLUMN_NAME_DEVICE_STATE, state);
+        int result = mDatabase.update(HackDevices.TABLE_NAME, values, HackDevices._ID + " = " + deviceId, null);
+        return result;
+    }
+    
+    /**
+     * Update an existing device
+     * @return int result - the number of rows updated
+     */
+    public int updateDevice(long deviceId, String name) {
+        ContentValues values = new ContentValues();
+        values.put(HackDevices.COLUMN_NAME_DEVICE_NAME, name);
+        int result = mDatabase.update(HackDevices.TABLE_NAME, values, HackDevices._ID + " = " + deviceId, null);
+        return result;
+    }
+    
     
     /**
      * Delete a device from the database

@@ -2,11 +2,15 @@ package com.hack;
 
 import java.util.ArrayList;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import android.app.ActionBar;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.NavUtils;
+import android.util.Log;
 import android.view.ActionMode;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -24,6 +28,7 @@ public class SingleUnitActivity extends Activity {
     public final static String EXTRA_HARDWARE_UNIT_ID = "com.hack.HARDWARE_UNIT_ID";
     public final static String EXTRA_SOCKET_ID = "com.hack.SOCKET_ID";
     public final static String EXTRA_DEVICE_ID = "com.hack.DEVICE_ID";
+    public final static String EXTRA_TITLE = "com.hack.TITLE";
     public final static int NUM_SOCKETS = 4;
     
     // -- Member Variables
@@ -36,6 +41,8 @@ public class SingleUnitActivity extends Activity {
     private ActionBar mActionBar;
     private Device mSelectedDevice = null;
     private ActionMode mActionMode = null;
+    private HackConnectionManager mConnectionManager;
+    private HardwareUnit mHardwareUnit;
     
     // -- Initialize Activity
     
@@ -53,6 +60,8 @@ public class SingleUnitActivity extends Activity {
         mHardwareUnitDataSource.open();
         mDeviceDataSource = new DeviceDataSource(this);
         mDeviceDataSource.open();
+        
+        mConnectionManager = ((HackApplication) getApplicationContext()).getConnectionManager();
         
         // get hardware unit id from previous activity
         Intent intent = getIntent();
@@ -104,8 +113,8 @@ public class SingleUnitActivity extends Activity {
     }
     
     public void displayUnit(long unitId) {
-        HardwareUnit unit = mHardwareUnitDataSource.getHardwareUnitById(unitId);
-        mActionBar.setTitle(unit.getName());
+        mHardwareUnit = mHardwareUnitDataSource.getHardwareUnitById(unitId);
+        mActionBar.setTitle(mHardwareUnit.getName());
     }
     
     public void displayDevices(long unitId) {
@@ -157,7 +166,7 @@ public class SingleUnitActivity extends Activity {
         public boolean onCreateActionMode(ActionMode mode, Menu menu) {
             // Inflate a menu resource providing context menu items
             MenuInflater inflater = mode.getMenuInflater();
-            inflater.inflate(R.menu.context_menu, menu);
+            inflater.inflate(R.menu.single_unit_action_mode, menu);
             return true;
         }
 
@@ -192,9 +201,10 @@ public class SingleUnitActivity extends Activity {
     // -- Intents
     
     public void startAddDeviceActivity(long socketId) {
-        Intent intent = new Intent(this, AddDeviceActivity.class);
+        Intent intent = new Intent(this, AddDeviceActivity.class);        
         intent.putExtra(EXTRA_HARDWARE_UNIT_ID, mHardwareUnitId);
-        intent.putExtra(EXTRA_SOCKET_ID, socketId);  
+        intent.putExtra(EXTRA_SOCKET_ID, socketId);
+        intent.putExtra(EXTRA_TITLE, "Add New Device");
         startActivity(intent);
     }
     
@@ -207,10 +217,22 @@ public class SingleUnitActivity extends Activity {
     // -- Model
     
     public void deleteDevice(Device device) {
-        mDeviceDataSource.deleteDeviceById(device.getId());
-        mDevices.set((int) device.getSocketId(), null);
-        mDeviceAdapter.notifyDataSetChanged();
-        mSelectedDevice = null;
+        String url = "/hack/delete?socket=" + device.getSocketId();
+        mConnectionManager.submitRequest(new HackCommand(SingleUnitActivity.this, mHardwareUnit, url) {
+            
+            @Override
+            public void doSuccess(JSONObject data) {
+                if (data != null) {
+                    mDeviceDataSource.deleteDeviceById(mSelectedDevice.getId());
+                    mDevices.set((int) mSelectedDevice.getSocketId(), null);
+                    mDeviceAdapter.notifyDataSetChanged();
+                    mSelectedDevice = null;
+                }
+            }
+            
+        });
+        
+       
     }
     
 }

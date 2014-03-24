@@ -11,7 +11,6 @@
     <string name="action_new">New</string>
     <string name="title_add_new_device">Add New Device</string>
     <string name="title_activity_splash_screen">SplashScreen</string>
-    <string name="hello_world">Hello world!</string>
     <string name="logo_title">Home Automation Control Kit</string>
     <string name="save_device">Save</string>
     <string name="ok">OK</string>
@@ -45,6 +44,7 @@
     <string name="time_off">Time Off</string>
     <string name="repeat_daily_question">Repeat Daily?</string>
     <string name="save">Save</string>
+
     <string-array name="hardware_types">
         <item>Stove</item>
         <item>Light</item>
@@ -52,4 +52,5 @@
         <item>TV</item>
         <item>Toaster</item>
     </string-array>
+
 </resources>

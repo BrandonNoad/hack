@@ -11,8 +11,10 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.inputmethod.EditorInfo;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.TextView.OnEditorActionListener;
 
@@ -79,6 +81,20 @@ public class AddDeviceActivity extends Activity {
                return false;
            }
         });
+        
+        //create spinner
+        Spinner spinner = (Spinner) findViewById(R.id.spinner);
+        
+        //populate spinner with predefined types listed in hardware_types
+        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
+        R.array.hardware_types, android.R.layout.simple_spinner_item);
+        
+        //set layout of spinner
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinner.setAdapter(adapter);
+        
+        // TODO: set default hardware type on spinner to be the device's current
+        // type when editing devices
         
         Button addDeviceButton = (Button) findViewById(R.id.add_device_button);
         addDeviceButton.setOnClickListener(new OnClickListener() {

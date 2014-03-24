@@ -10,6 +10,9 @@
     <string name="title_hardware_units">Hardware Units</string>
     <string name="action_new">New</string>
     <string name="title_add_new_device">Add New Device</string>
+    <string name="title_activity_splash_screen">SplashScreen</string>
+    <string name="logo_title">Home Automation Control Kit</string>
+    <string name="save_device">Save</string>
     <string name="ok">OK</string>
     <string name="cancel">Cancel</string>
     <string name="title_select_hardware_unit">Select Hardware Unit</string>
@@ -44,5 +47,11 @@
     <string name="action_edit">Edit</string>
     <string name="action_refresh">Refresh</string>
     <string name="action_delete">Delete</string>
-
+    <string-array name="hardware_types">
+        <item>Stove</item>
+        <item>Light</item>
+        <item>Fridge</item>
+        <item>TV</item>
+        <item>Toaster</item>
+    </string-array>
 </resources>

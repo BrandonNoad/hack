@@ -139,7 +139,7 @@ public class AllUnitsActivity extends Activity {
         public boolean onCreateActionMode(ActionMode mode, Menu menu) {
             // Inflate a menu resource providing context menu items
             MenuInflater inflater = mode.getMenuInflater();
-            inflater.inflate(R.menu.context_menu, menu);
+            inflater.inflate(R.menu.all_units_action_mode, menu);
             return true;
         }
 

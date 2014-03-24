@@ -1,5 +1,6 @@
 package com.hack;
 
+import android.app.ActionBar;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
@@ -28,6 +29,8 @@ public class AddDeviceActivity extends Activity {
     private DeviceDataSource mDeviceDataSource;
     private long mHardwareUnitId;
     private long mSocketId;
+    private long mDeviceId;
+    private ActionBar mActionBar;
 
     // -- Initialize Activity
     
@@ -39,13 +42,25 @@ public class AddDeviceActivity extends Activity {
         setupActionBar();
         
         // initialize memebrs
+        mActionBar = getActionBar();   
         mDeviceDataSource = new DeviceDataSource(this);
         mDeviceDataSource.open();
         
         // get hardware unit id and socket id from previous activity
         Intent intent = getIntent();
+        
+        mDeviceId = intent.getLongExtra(SingleUnitActivity.EXTRA_DEVICE_ID, -1);
         mHardwareUnitId = intent.getLongExtra(SingleUnitActivity.EXTRA_HARDWARE_UNIT_ID, -1);
         mSocketId = intent.getLongExtra(SingleUnitActivity.EXTRA_SOCKET_ID, -1);
+        String title = intent.getStringExtra(SingleUnitActivity.EXTRA_TITLE);
+        
+        mActionBar.setTitle(title);
+        
+        if (mDeviceId != -1) {
+            Device device = mDeviceDataSource.getDeviceById(mDeviceId);
+            EditText deviceName = (EditText) findViewById(R.id.deviceNameEditText);
+            deviceName.setText(device.getName());
+        }
         
         // set up event listeners
         EditText deviceNameET = (EditText) findViewById(R.id.deviceNameEditText);        
@@ -53,8 +68,14 @@ public class AddDeviceActivity extends Activity {
            @Override
            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
                if (actionId == EditorInfo.IME_ACTION_DONE) {
-                   addDevice();
-                   startSingleUnitActivity();
+                   if (mDeviceId != -1) {
+                       updateDevice();
+                       startDeviceDetailsActivity(mDeviceId);
+                   } else {
+                       addDevice();
+                       startSingleUnitActivity();
+                   }
+                   
                    return true;
                }
                return false;
@@ -78,8 +99,13 @@ public class AddDeviceActivity extends Activity {
         Button addDeviceButton = (Button) findViewById(R.id.add_device_button);
         addDeviceButton.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
-                addDevice();
-                startSingleUnitActivity();
+                if (mDeviceId != -1) {
+                    updateDevice();
+                    startDeviceDetailsActivity(mDeviceId);
+                } else {
+                    addDevice();
+                    startSingleUnitActivity();
+                }
             }
         });
     }
@@ -129,6 +155,12 @@ public class AddDeviceActivity extends Activity {
         startActivity(intent);
     }
     
+    public void startDeviceDetailsActivity(long deviceId) {
+        Intent intent = new Intent(this, DeviceDetailsActivity.class);
+        intent.putExtra(SingleUnitActivity.EXTRA_DEVICE_ID, deviceId);
+        startActivity(intent);
+    }
+    
     // -- Model
     
     public void addDevice() {
@@ -137,4 +169,9 @@ public class AddDeviceActivity extends Activity {
         long deviceId = mDeviceDataSource.addDevice(mHardwareUnitId, mSocketId, deviceName, 1);
     }
     
+    public void updateDevice() {
+        EditText et = (EditText) findViewById(R.id.deviceNameEditText);
+        String deviceName = et.getText().toString();
+        mDeviceDataSource.updateDevice(mDeviceId, deviceName);
+    }
 }

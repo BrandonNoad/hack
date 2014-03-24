@@ -28,6 +28,10 @@ public class HackWifiAdapter extends HackConnectionAdapter {
         mContext = context;
     }
     
+    public String fail(String msg) {
+        return "{'success': 0, 'data': {}, 'message': '" + msg + "'}";
+    }
+    
     /**
      * 
      * @param url String - of the form: "http://basePath:PortNumber/hack/command?var=n"
@@ -42,13 +46,12 @@ public class HackWifiAdapter extends HackConnectionAdapter {
             new HttpConnectionTask(command).execute(command);
         } else {
             Toast.makeText(mContext.getApplicationContext(), 
-                           "No network connection available", 
+                           "No network connection available.", 
                            Toast.LENGTH_LONG).show();
         }
     }
     
     private String sendRequest(String strUrl) throws IOException {
-        InputStream is = null;
         try {
             URL url = new URI(strUrl).toURL();
             Log.i("HackHttpConnectionManager - submitRequest()", "URL: " + url.toString());
@@ -62,7 +65,7 @@ public class HackWifiAdapter extends HackConnectionAdapter {
             // start the query
             conn.connect();
             int status = conn.getResponseCode();
-            Log.i("HackHttpConnectionManager - submitRequest()", "The response is: " + status);
+            Log.i("HackHttpConnectionManager - submitRequest()", "The status is: " + status);
             
             switch (status) {
             case 200:  // OK?
@@ -80,11 +83,11 @@ public class HackWifiAdapter extends HackConnectionAdapter {
             }            
               
         } catch (MalformedURLException e) {
-            return "error";
+            return fail("Error. Malformed URL. Please try again.");
         } catch (URISyntaxException e) {
-            return "error";
+            return fail("Error. URI Syntax Exception. Please try again.");
         } catch (IOException e) {
-            return "error";
+            return fail("Error. Unable to connect to server. Please try again.");
         }
         return null;
     }
@@ -105,31 +108,25 @@ public class HackWifiAdapter extends HackConnectionAdapter {
         
         @Override
         protected void onPreExecute() {
-            mmCommand.onPreExecute();
+            mmCommand.showProgressDialog();
         }
        
         @Override
         protected String doInBackground(HackCommand... commandUrls) {
-             
-            // commandUrls comes from the execute() call: commandUrls[0].toUrl() is the url as a String.
+            // commandUrls comes from the execute() call: commandUrls[0].getUrl() is the url as a String.
             try {
                 return sendRequest(commandUrls[0].getUrl());
             } catch (IOException e) {
-                return "{'success': '0', 'message': 'Unable to retrieve web page. URL may be invalid.'}";
+                return fail("Unable to connect to server. URL may be invalid.");
             }
         }
 
         // onPostExecute displays the results of the AsyncTask.
         @Override
         protected void onPostExecute(String response) {
-//            Log.i("HackWifiAdapter - onPostExecute()", "response: " + response);
-            try {
-                mmCommand.onPostExecute(new JSONObject(response));
-            } catch (JSONException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-           
+            mmCommand.hideProgressDialog();
+            Log.i("HackWifiAdapter - onPostExecute()", "response: " + response);
+            mmCommand.onPostExecute(response);
         }
     }
 

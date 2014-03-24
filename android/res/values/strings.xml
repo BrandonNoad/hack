@@ -14,6 +14,37 @@
     <string name="hello_world">Hello world!</string>
     <string name="logo_title">Home Automation Control Kit</string>
     <string name="save_device">Save</string>
+    <string name="ok">OK</string>
+    <string name="cancel">Cancel</string>
+    <string name="title_select_hardware_unit">Select Hardware Unit</string>
+    <string name="paired_devices">Paried Devices</string>
+    <string name="available_devices">Available Devices</string>
+    <string name="scan">Scan</string>
+    <string name="title_activity_add_hardware_unit">AddHardwareUnitActivity</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="hardware_unit_name">Hardware Unit Name</string>
+    <string name="base_path">Base Path</string>
+    <string name="port_number">Port Number</string>
+    <string name="add">Add</string>
+    <string name="access_point_name">Access Point Name</string>
+    <string name="wpa2_key">WPA2 Key</string>
+    <string name="title_bt_connection_error">Bluetooth Connection Error</string>
+    <string name="would_you_like_to_try_again">Would you like to try again?</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+    <string name="set_time">Set Time</string>
+    <string name="name_colon">Name:</string>
+    <string name="type_colon">Type:</string>
+    <string name="last_time_on_colon">Last Time On:</string>
+    <string name="total_time_on_colon">Total Time On:</string>
+    <string name="power_usage_colon">Power Usage:</string>
+    <string name="timer_colon">Timer:</string>
+    <string name="enable">Enable</string>
+    <string name="title_activity_set_timer">SetTimerActivity</string>
+    <string name="time_on">Time On</string>
+    <string name="time_off">Time Off</string>
+    <string name="repeat_daily_question">Repeat Daily?</string>
+    <string name="save">Save</string>
     <string-array name="hardware_types">
         <item>Stove</item>
         <item>Light</item>
@@ -21,5 +52,4 @@
         <item>TV</item>
         <item>Toaster</item>
     </string-array>
-
 </resources>

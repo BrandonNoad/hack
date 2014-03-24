@@ -18,12 +18,18 @@ import android.widget.TextView.OnEditorActionListener;
 
 public class AddDeviceActivity extends Activity {
     
+    // -- Constants
+    
     public final static String EXTRA_UNIT_ID = "com.hack.UNIT_ID";
+    
+    // -- Member Variables
     
     private DeviceDataSource mDeviceDataSource;
     private long mHardwareUnitId;
     private long mSocketId;
 
+    // -- Initialize Activity
+    
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -31,16 +37,23 @@ public class AddDeviceActivity extends Activity {
         // Show the Up button in the action bar.
         setupActionBar();
         
+        // initialize memebrs
         mDeviceDataSource = new DeviceDataSource(this);
         mDeviceDataSource.open();
         
-        EditText deviceNameET = (EditText) findViewById(R.id.deviceNameEditText);
+        // get hardware unit id and socket id from previous activity
+        Intent intent = getIntent();
+        mHardwareUnitId = intent.getLongExtra(SingleUnitActivity.EXTRA_HARDWARE_UNIT_ID, -1);
+        mSocketId = intent.getLongExtra(SingleUnitActivity.EXTRA_SOCKET_ID, -1);
         
+        // set up event listeners
+        EditText deviceNameET = (EditText) findViewById(R.id.deviceNameEditText);        
         deviceNameET.setOnEditorActionListener(new OnEditorActionListener(){
            @Override
            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
                if (actionId == EditorInfo.IME_ACTION_DONE) {
                    addDevice();
+                   startSingleUnitActivity();
                    return true;
                }
                return false;
@@ -58,33 +71,25 @@ public class AddDeviceActivity extends Activity {
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinner.setAdapter(adapter);
         
-        Intent intent = getIntent();
-        String parentName = intent.getStringExtra("parent");
+        // TODO: set default hardware type on spinner to be the device's current
+        // type when editing devices
         
-        //This means we're coming from Device Details screen
-        if(parentName.equals("DeviceDetailsActivity")){
-        	
-        	//update action bar title
-        	setTitle("EditDevice");
-        	
-        	//set EditText field to be the name of the device
-        	deviceNameET.setText("someName");
-        	
-        	//set default hardware type on spinner to be the type of the device
-        	
-        }
-        
-        mHardwareUnitId = intent.getLongExtra(SingleUnitActivity.EXTRA_HARDWARE_UNIT_ID, -1);
-        mSocketId = intent.getLongExtra(SingleUnitActivity.EXTRA_SOCKET_ID, -1);        
+        Button addDeviceButton = (Button) findViewById(R.id.add_device_button);
+        addDeviceButton.setOnClickListener(new OnClickListener() {
+            public void onClick(View v) {
+                addDevice();
+                startSingleUnitActivity();
+            }
+        });
     }
+    
+    // -- Action Bar
 
     /**
      * Set up the {@link android.app.ActionBar}.
      */
     private void setupActionBar() {
-
         getActionBar().setDisplayHomeAsUpEnabled(true);
-
     }
 
     //this is called when the "save" button is clicked
@@ -93,7 +98,7 @@ public class AddDeviceActivity extends Activity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.add_unit, menu);
+        getMenuInflater().inflate(R.menu.add_device, menu);
         return true;
     }
 
@@ -108,20 +113,30 @@ public class AddDeviceActivity extends Activity {
             //
             // http://developer.android.com/design/patterns/navigation.html#up-vs-back
             //
+            
+            // make sure we pass in the hardware unit id
             Intent upIntent = NavUtils.getParentActivityIntent(this);
-            upIntent.putExtra(AllUnitsActivity.EXTRA_UNIT_ID, mHardwareUnitId);            
+            upIntent.putExtra(AllUnitsActivity.EXTRA_UNIT_ID, mHardwareUnitId);
             NavUtils.navigateUpTo(this, upIntent);
             return true;
         }
         return super.onOptionsItemSelected(item);
     }
-
-    public void addDevice() {
+    
+    // -- Intents
+    
+    public void startSingleUnitActivity() {
         Intent intent = new Intent(this, SingleUnitActivity.class);
-        EditText et = (EditText) findViewById(R.id.deviceNameEditText);
-        String deviceName = et.getText().toString();
-        long deviceId = mDeviceDataSource.addDevice(mHardwareUnitId, mSocketId, deviceName);
         intent.putExtra(EXTRA_UNIT_ID, mHardwareUnitId);  // pass back hardware unit id
         startActivity(intent);
     }
+    
+    // -- Model
+    
+    public void addDevice() {
+        EditText et = (EditText) findViewById(R.id.deviceNameEditText);
+        String deviceName = et.getText().toString();
+        long deviceId = mDeviceDataSource.addDevice(mHardwareUnitId, mSocketId, deviceName, 1);
+    }
+    
 }

@@ -105,14 +105,11 @@ public class DeviceDetailsActivity extends Activity {
                 mConnectionManager.submitRequest(new HackCommand(DeviceDetailsActivity.this, mHardwareUnit, url) {
                     
                     @Override
-                    public void onPostExecute(JSONObject json) {
-                        // close progress dialog
-                        super.onPostExecute(json);
-                        
-                        if (json != null) {
+                    public void doSuccess(JSONObject data) {
+                        if (data != null) {
                             int newState = 0;
                             try {
-                                newState = json.getJSONArray("outlets").getJSONObject((int) mSocketId).getInt("state");
+                                newState = data.getJSONArray("outlets").getJSONObject((int) mSocketId).getInt("state");
                                 Log.i("DeviceDetailsActivity - onPostExecute()", "new state: " + newState);
                             } catch (JSONException e) {
                                 // TODO Auto-generated catch block
@@ -193,14 +190,11 @@ public class DeviceDetailsActivity extends Activity {
                 mConnectionManager.submitRequest(new HackCommand(DeviceDetailsActivity.this, mHardwareUnit, url) {
                     
                     @Override
-                    public void onPostExecute(JSONObject json) {
-                        // close progress dialog
-                        super.onPostExecute(json);
-                        
-                        if (json != null) {
+                    public void doSuccess(JSONObject data) {
+                        if (data != null) {
                             int newState = 0;
                             try {
-                                newState = json.getJSONArray("outlets").getJSONObject((int) mSocketId).getInt("state");
+                                newState = data.getJSONArray("outlets").getJSONObject((int) mSocketId).getInt("state");
                                 Log.i("DeviceDetailsActivity - onPostExecute()", "new state: " + newState);
                             } catch (JSONException e) {
                                 // TODO Auto-generated catch block

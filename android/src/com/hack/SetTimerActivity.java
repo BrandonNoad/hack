@@ -201,11 +201,8 @@ implements TimePickerDialog.OnTimeSetListener {
         mConnectionManager.submitRequest(new HackCommand(SetTimerActivity.this, mHardwareUnit, url) {
             
             @Override
-            public void onPostExecute(JSONObject json) {
-                // close progress dialog
-                super.onPostExecute(json);
-                
-                if (json != null) {
+            public void doSuccess(JSONObject data) {
+                if (data != null) {
                     String timeOn = mTimeOnEditText.getText().toString();
                     String timeOff = mTimeOffEditText.getText().toString();
                     boolean isRepeated = mIsRepeatedCheckBox.isChecked();        

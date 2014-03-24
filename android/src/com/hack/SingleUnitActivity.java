@@ -221,16 +221,12 @@ public class SingleUnitActivity extends Activity {
         mConnectionManager.submitRequest(new HackCommand(SingleUnitActivity.this, mHardwareUnit, url) {
             
             @Override
-            public void onPostExecute(JSONObject json) {
-                // close progress dialog
-                super.onPostExecute(json);
-                
-                if (json != null) {
+            public void doSuccess(JSONObject data) {
+                if (data != null) {
                     mDeviceDataSource.deleteDeviceById(mSelectedDevice.getId());
                     mDevices.set((int) mSelectedDevice.getSocketId(), null);
                     mDeviceAdapter.notifyDataSetChanged();
                     mSelectedDevice = null;
-                    
                 }
             }
             

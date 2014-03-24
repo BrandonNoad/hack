@@ -28,6 +28,10 @@ public class HackWifiAdapter extends HackConnectionAdapter {
         mContext = context;
     }
     
+    public String fail(String msg) {
+        return "{'success': 0, 'data': {}, 'message': '" + msg + "'}";
+    }
+    
     /**
      * 
      * @param url String - of the form: "http://basePath:PortNumber/hack/command?var=n"
@@ -42,7 +46,7 @@ public class HackWifiAdapter extends HackConnectionAdapter {
             new HttpConnectionTask(command).execute(command);
         } else {
             Toast.makeText(mContext.getApplicationContext(), 
-                           "No network connection available", 
+                           "No network connection available.", 
                            Toast.LENGTH_LONG).show();
         }
     }
@@ -79,11 +83,11 @@ public class HackWifiAdapter extends HackConnectionAdapter {
             }            
               
         } catch (MalformedURLException e) {
-            return null;
+            return fail("Error. Malformed URL. Please try again.");
         } catch (URISyntaxException e) {
-            return null;
+            return fail("Error. URI Syntax Exception. Please try again.");
         } catch (IOException e) {
-            return null;
+            return fail("Error. Unable to connect to server. Please try again.");
         }
         return null;
     }
@@ -104,7 +108,7 @@ public class HackWifiAdapter extends HackConnectionAdapter {
         
         @Override
         protected void onPreExecute() {
-            mmCommand.onPreExecute();
+            mmCommand.showProgressDialog();
         }
        
         @Override
@@ -113,25 +117,16 @@ public class HackWifiAdapter extends HackConnectionAdapter {
             try {
                 return sendRequest(commandUrls[0].getUrl());
             } catch (IOException e) {
-                return "{'success': '0', 'message': 'Unable to retrieve web page. URL may be invalid.'}";
+                return fail("Unable to connect to server. URL may be invalid.");
             }
         }
 
         // onPostExecute displays the results of the AsyncTask.
         @Override
         protected void onPostExecute(String response) {
+            mmCommand.hideProgressDialog();
             Log.i("HackWifiAdapter - onPostExecute()", "response: " + response);
-            try {
-                if (response != null) {
-                    mmCommand.onPostExecute(new JSONObject(response));
-                } else {
-                    mmCommand.onPostExecute(null);
-                }
-            } catch (JSONException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-           
+            mmCommand.onPostExecute(response);
         }
     }
 

@@ -196,8 +196,11 @@ function doCommand(obj) {
   } else if (pathname == "/hack/setTimer") {
     socketNumber = parseInt(obj.query.socket, 10);
     setTimer(socketNumber);
+  } else {
+    return false;
   } 
 
+  return true;
 }
 
 
@@ -216,7 +219,7 @@ function webHandler(req, res) {
    * pathname, search, port, and query */
   var urlObj = url.parse(req.url, true);
   
-  doCommand(urlObj);
+  var result = doCommand(urlObj);
 
   // write response header
   res.writeHead(200 /* OK */, 
@@ -224,7 +227,19 @@ function webHandler(req, res) {
                );
 
   // write response body  
-  var responseBody = JSON.stringify(hardwareUnit);
+  var response = {
+    "success": 0,
+    "data": {},
+    "message": "Error. Invalid command. Please try again."
+  };
+
+  if (result) {
+    response["success"] = 1;
+    response["data"] = hardwareUnit;
+    response["message"] = "Success!";
+  }
+
+  var responseBody = JSON.stringify(response);
   res.write(responseBody);
 
   res.end();

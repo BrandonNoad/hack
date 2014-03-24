@@ -93,9 +93,6 @@ public class AddDeviceActivity extends Activity {
         getActionBar().setDisplayHomeAsUpEnabled(true);
     }
 
-    //this is called when the "save" button is clicked
-    public void saveNewDevice(View view){}
-    
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.

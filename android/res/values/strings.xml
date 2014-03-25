@@ -47,11 +47,11 @@
     <string name="action_edit">Edit</string>
     <string name="action_refresh">Refresh</string>
     <string name="action_delete">Delete</string>
+
     <string-array name="hardware_types">
-        <item>Stove</item>
+        <item>Simple</item>
         <item>Light</item>
-        <item>Fridge</item>
-        <item>TV</item>
-        <item>Toaster</item>
+        <item>Heat/Cool</item>
     </string-array>
+
 </resources>

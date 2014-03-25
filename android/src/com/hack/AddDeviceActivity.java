@@ -11,6 +11,8 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.inputmethod.EditorInfo;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -30,6 +32,11 @@ public class AddDeviceActivity extends Activity {
     private long mHardwareUnitId;
     private long mSocketId;
     private long mDeviceId;
+    private Device mDevice = null;
+    
+    private Spinner mDeviceTypeSpinner;
+    private ArrayAdapter<CharSequence> mDeviceTypeAdapter;
+    private int mSelectedDeviceTypeId = 1;
     private ActionBar mActionBar;
 
     // -- Initialize Activity
@@ -56,11 +63,32 @@ public class AddDeviceActivity extends Activity {
         
         mActionBar.setTitle(title);
         
+        // create spinner
+        mDeviceTypeSpinner = (Spinner) findViewById(R.id.deviceTypeSpinner);
+        
+        //populate spinner with predefined types listed in hardware_types
+        mDeviceTypeAdapter = ArrayAdapter.createFromResource(this,
+                                                             R.array.hardware_types, 
+                                                             android.R.layout.simple_spinner_item);
+        
+        // set layout of spinner
+        mDeviceTypeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        mDeviceTypeSpinner.setAdapter(mDeviceTypeAdapter);
+        
         if (mDeviceId != -1) {
-            Device device = mDeviceDataSource.getDeviceById(mDeviceId);
-            EditText deviceName = (EditText) findViewById(R.id.deviceNameEditText);
-            deviceName.setText(device.getName());
+            mDevice = mDeviceDataSource.getDeviceById(mDeviceId);
+            if (mDevice != null) {
+                // fill in device name
+                EditText deviceName = (EditText) findViewById(R.id.deviceNameEditText);
+                deviceName.setText(mDevice.getName());
+                deviceName.setSelection(mDevice.getName().length());
+                // change spinner selection
+                mDeviceTypeSpinner.setSelection(mDeviceTypeAdapter.getPosition(mDevice.getType()));
+            }
+            
         }
+        
+        
         
         // set up event listeners
         EditText deviceNameET = (EditText) findViewById(R.id.deviceNameEditText);        
@@ -82,20 +110,28 @@ public class AddDeviceActivity extends Activity {
            }
         });
         
-        //create spinner
-        Spinner spinner = (Spinner) findViewById(R.id.spinner);
+        // set spinner event listener
+        mDeviceTypeSpinner.setOnItemSelectedListener(new OnItemSelectedListener() {
+
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view,
+                    int pos, long id) {
+                /* This is a bit of a hack, but should work for now since:
+                 *  position 0 == Simple == deviceTypeId 1
+                 *  position 1 == Light == deviceTypeId 2
+                 *  position 2 == Heat/Cool == deviceTypeId 3
+                 */
+                mSelectedDeviceTypeId = pos + 1;                
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> arg0) {
+                // default to simple
+                mSelectedDeviceTypeId = 1;
+                
+            }});
         
-        //populate spinner with predefined types listed in hardware_types
-        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
-        R.array.hardware_types, android.R.layout.simple_spinner_item);
-        
-        //set layout of spinner
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spinner.setAdapter(adapter);
-        
-        // TODO: set default hardware type on spinner to be the device's current
-        // type when editing devices
-        
+           
         Button addDeviceButton = (Button) findViewById(R.id.add_device_button);
         addDeviceButton.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
@@ -166,12 +202,12 @@ public class AddDeviceActivity extends Activity {
     public void addDevice() {
         EditText et = (EditText) findViewById(R.id.deviceNameEditText);
         String deviceName = et.getText().toString();
-        long deviceId = mDeviceDataSource.addDevice(mHardwareUnitId, mSocketId, deviceName, 1);
+        long deviceId = mDeviceDataSource.addDevice(mHardwareUnitId, mSocketId, deviceName, mSelectedDeviceTypeId);
     }
     
     public void updateDevice() {
         EditText et = (EditText) findViewById(R.id.deviceNameEditText);
         String deviceName = et.getText().toString();
-        mDeviceDataSource.updateDevice(mDeviceId, deviceName);
+        mDeviceDataSource.updateDevice(mDeviceId, deviceName, mSelectedDeviceTypeId);
     }
 }

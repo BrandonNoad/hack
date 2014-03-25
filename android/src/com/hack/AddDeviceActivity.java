@@ -2,6 +2,8 @@ package com.hack;
 
 import android.app.ActionBar;
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.NavUtils;
@@ -38,6 +40,7 @@ public class AddDeviceActivity extends Activity {
     private ArrayAdapter<CharSequence> mDeviceTypeAdapter;
     private int mSelectedDeviceTypeId = 1;
     private ActionBar mActionBar;
+    private EditText deviceNameET;
 
     // -- Initialize Activity
     
@@ -52,6 +55,10 @@ public class AddDeviceActivity extends Activity {
         mActionBar = getActionBar();   
         mDeviceDataSource = new DeviceDataSource(this);
         mDeviceDataSource.open();
+        
+        /**************************added***********************************/
+        deviceNameET = (EditText) findViewById(R.id.deviceNameEditText);
+        
         
         // get hardware unit id and socket id from previous activity
         Intent intent = getIntent();
@@ -91,7 +98,10 @@ public class AddDeviceActivity extends Activity {
         
         
         // set up event listeners
-        EditText deviceNameET = (EditText) findViewById(R.id.deviceNameEditText);        
+        
+        /***********************removed******************************/
+        
+        
         deviceNameET.setOnEditorActionListener(new OnEditorActionListener(){
            @Override
            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
@@ -135,6 +145,34 @@ public class AddDeviceActivity extends Activity {
         Button addDeviceButton = (Button) findViewById(R.id.add_device_button);
         addDeviceButton.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
+            	
+            	
+            	/*****************added***************************/
+            	//grab the text from the EditText object
+            	String  editText = deviceNameET.getText().toString();
+            	if(editText.isEmpty()){//the field is empty
+            		
+            		//create an alert dialog
+            		AlertDialog.Builder alertDialog = new AlertDialog.Builder(AddDeviceActivity.this);
+            		
+            		//set the message to be displayed
+                    alertDialog.setMessage(R.string.dialog_message);
+                    
+                    //set the behaviour of the button
+                    alertDialog.setPositiveButton(R.string.okay, new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+                            dialog.dismiss();
+                        }
+                    });
+
+                    //display the alert dialog
+                    AlertDialog alert = alertDialog.create();
+                    alert.show();
+                    return;
+            	}
+            	/****************************************************************************/
+            	
+            	
                 if (mDeviceId != -1) {
                     updateDevice();
                     startDeviceDetailsActivity(mDeviceId);

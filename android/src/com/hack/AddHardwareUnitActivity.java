@@ -149,6 +149,39 @@ public class AddHardwareUnitActivity extends Activity {
         EditText basePathET = (EditText) findViewById(R.id.editTextBasePath);
         EditText portNumberET = (EditText) findViewById(R.id.editTextPortNumber);
         
+        /********************************added***************************************/
+        //grab the text from all the EditText objects
+        String  nameETText = nameET.getText().toString();
+        String  accessPointNameETText = accessPointNameET.getText().toString();
+        String  wpa2KeyETText = wpa2KeyET.getText().toString();
+        String  basePathETText = basePathET.getText().toString();
+        String  portNumberETText = portNumberET.getText().toString();
+        
+    	if(nameETText.isEmpty() || accessPointNameETText.isEmpty() || wpa2KeyETText.isEmpty() ||
+    			basePathETText.isEmpty() || portNumberETText.isEmpty()){//at least one field is empty
+    		
+    		//create an alert dialog
+    		AlertDialog.Builder alertDialog = new AlertDialog.Builder(AddHardwareUnitActivity.this);
+    		
+    		//set the message to be displayed
+            alertDialog.setMessage(R.string.dialog_message);
+            
+            //set behaviour of the button
+            alertDialog.setPositiveButton(R.string.okay, new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int id) {
+                    dialog.dismiss();
+                }
+            });
+
+            //display the alert dialog
+            AlertDialog alert = alertDialog.create();
+            alert.show();
+            return;
+    	}
+        
+    	/***********************************************************************************/
+    	
+    	
         // add new unit to db
         long huId = mHardwareUnitDataSource.addHardwareUnit(nameET.getText().toString(),
                                                             basePathET.getText().toString(),

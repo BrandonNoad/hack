@@ -6,9 +6,11 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.DialogFragment;
 import android.app.TimePickerDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.NavUtils;
@@ -92,6 +94,33 @@ implements TimePickerDialog.OnTimeSetListener {
         
         setTimerSaveButton.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
+            	
+            	/*****************added***************************/
+            	//grab the text from the EditText object
+            	String  timeOffText = mTimeOffEditText.getText().toString();
+            	String  timeOnText = mTimeOnEditText.getText().toString();
+            	if(timeOnText.isEmpty() || timeOffText.isEmpty()){//one of the the fields is empty
+            		
+            		//create an alert dialog
+            		AlertDialog.Builder alertDialog = new AlertDialog.Builder(SetTimerActivity.this);
+            		
+            		//set the message to be displayed
+                    alertDialog.setMessage(R.string.dialog_message);
+                    
+                    //set the behaviour of the button
+                    alertDialog.setPositiveButton(R.string.okay, new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+                            dialog.dismiss();
+                        }
+                    });
+
+                    //display the alert dialog
+                    AlertDialog alert = alertDialog.create();
+                    alert.show();
+                    return;
+            	}
+            	/****************************************************************************/
+            	
                 addTimer();
                
             }

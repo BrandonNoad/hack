@@ -47,9 +47,10 @@ public class DeviceDataSource extends HackDataSource {
      * Update an existing device
      * @return int result - the number of rows updated
      */
-    public int updateDevice(long deviceId, String name) {
+    public int updateDevice(long deviceId, String name, long deviceTypeId) {
         ContentValues values = new ContentValues();
         values.put(HackDevices.COLUMN_NAME_DEVICE_NAME, name);
+        values.put(HackDevices.COLUMN_NAME_DEVICE_TYPE_ID, deviceTypeId);
         int result = mDatabase.update(HackDevices.TABLE_NAME, values, HackDevices._ID + " = " + deviceId, null);
         return result;
     }

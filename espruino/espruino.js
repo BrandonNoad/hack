@@ -95,6 +95,8 @@ function pulseLED(colour, time) {
 // -- Outlet Object
 // Note: Electric relays use reverse logic of LEDs (0 is on, 1 is off)
 var hardwareUnit = {
+
+  currentTime: 0,
   
   outlets: [
     
@@ -104,6 +106,8 @@ var hardwareUnit = {
       pin: B14,
       state: 1,
       totalTimeOn: 0,
+      onSince: -1,
+      lastTimeUpdated: 0,
       isTimer: false
     },
 
@@ -113,6 +117,8 @@ var hardwareUnit = {
       pin: A1,
       state: 1,
       totalTimeOn: 0,
+      onSince: -1,
+      lastTimeUpdated: 0,
       isTimer: false
     },
 
@@ -122,6 +128,8 @@ var hardwareUnit = {
       pin: B13,
       state: 1,
       totalTimeOn: 0,
+      onSince: -1,
+      lastTimeUpdated: 0,
       isTimer: false
     },
 
@@ -131,6 +139,8 @@ var hardwareUnit = {
       pin: A0,
       state: 1,
       totalTimeOn: 0,
+      onSince: -1,
+      lastTimeUpdated: 0,
       isTimer: false
     }
 
@@ -139,15 +149,42 @@ var hardwareUnit = {
 
 function setOutlet(outletNumber, state) {
   var pin = hardwareUnit.outlets[outletNumber].pin;
-  digitalWrite(pin, state);
-  hardwareUnit.outlets[outletNumber].state = state;
+  var oldState = hardwareUnit.outlets[outletNumber].state;
+  var now = getTime();
+  
+  if (oldState !== state) {
+    
+    digitalWrite(pin, state);
+    hardwareUnit.outlets[outletNumber].state = state;
+    
+    if (state === 0) {  // turn on from off
+      hardwareUnit.outlets[outletNumber].onSince = now;
+      hardwareUnit.outlets[outletNumber].lastTimeUpdated = now;
+    } else {  // turn off from on
+      hardwareUnit.outlets[outletNumber].onSince = -1;
+      hardwareUnit.outlets[outletNumber].totalTimeOn += (now - hardwareUnit.outlets[outletNumber].lastTimeUpdated);
+      hardwareUnit.outlets[outletNumber].lastTimeUpdated = now;
+    }
+
+  } else {
+    
+    if (state === 0) {  // turn on from on
+      hardwareUnit.outlets[outletNumber].totalTimeOn += (now - hardwareUnit.outlets[outletNumber].lastTimeUpdated);
+      hardwareUnit.outlets[outletNumber].lastTimeUpdated = now;
+    } else {  // turn off from off
+      hardwareUnit.outlets[outletNumber].lastTimeUpdated = now;
+    }
+
+  }
 }
 
-function resetOutlets() {
+function resetAllOutlets() {
   for (var i = 0; i < 4; i++) {
     hardwareUnit.outlets[i].state = 1;
     setOutlet(i, 1);
     hardwareUnit.outlets[i].totalTimeOn = 0;
+    hardwareUnit.outlets[i].onSince = -1;
+    hardwareUnit.outlets[i].lastTimeUpdated = 0;
     hardwareUnit.outlets[i].isTimer = false;
   }
 }
@@ -156,11 +193,20 @@ function resetOutlet(outletNumber) {
     hardwareUnit.outlets[outletNumber].state = 1;
     setOutlet(outletNumber, 1);
     hardwareUnit.outlets[outletNumber].totalTimeOn = 0;
+     hardwareUnit.outlets[i].onSince = -1;
+    hardwareUnit.outlets[i].lastTimeUpdated = 0;
     hardwareUnit.outlets[outletNumber].isTimer = false;
 }
 
-function refresh(outletNumber) {  
-  hardwareUnit.outlets[outletNumber].totalTimeOn += 1;
+function refreshAllOutlets() {
+  for (var i = 0; i < 4; i++) {
+    var state = hardwareUnit.outlets[i].state;
+    var now = getTime();
+    if (state === 0) {  // on?
+      hardwareUnit.outlets[i].totalTimeOn += (now - hardwareUnit.outlets[i].lastTimeUpdated);
+    }    
+    hardwareUnit.outlets[i].lastTimeUpdated = now;
+  }  
 }
 
 function setTimer(outletNumber) {
@@ -188,8 +234,7 @@ function doCommand(obj) {
     socketNumber = parseInt(obj.query.socket, 10);
     setOutlet(socketNumber, state);
   } else if (pathname == "/hack/refresh") {
-    socketNumber = parseInt(obj.query.socket, 10);
-    refresh(socketNumber);
+    refreshAllOutlets();
   } else if (pathname == "/hack/delete") {
     socketNumber = parseInt(obj.query.socket, 10);
     resetOutlet(socketNumber);
@@ -198,8 +243,9 @@ function doCommand(obj) {
     setTimer(socketNumber);
   } else {
     return false;
-  } 
-
+  }
+  // update current time 
+  hardwareUnit.currentTime = getTime();
   return true;
 }
 
@@ -396,7 +442,7 @@ function safeSave() {
   resetLEDs();
 
   // Reset outlets
-  resetOutlets();
+  resetAllOutlets();
 
   save();
 }

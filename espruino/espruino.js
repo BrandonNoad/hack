@@ -159,8 +159,8 @@ function resetOutlet(outletNumber) {
     hardwareUnit.outlets[outletNumber].isTimer = false;
 }
 
-function refresh(outletNumber) {  
-  hardwareUnit.outlets[outletNumber].totalTimeOn += 1;
+function refreshAllOutlets() {  
+  // do stuff
 }
 
 function setTimer(outletNumber) {
@@ -188,8 +188,7 @@ function doCommand(obj) {
     socketNumber = parseInt(obj.query.socket, 10);
     setOutlet(socketNumber, state);
   } else if (pathname == "/hack/refresh") {
-    socketNumber = parseInt(obj.query.socket, 10);
-    refresh(socketNumber);
+    refreshAllOutlets();
   } else if (pathname == "/hack/delete") {
     socketNumber = parseInt(obj.query.socket, 10);
     resetOutlet(socketNumber);

@@ -1,11 +1,14 @@
 package com.hack;
 
+import java.util.ArrayList;
+
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 
 import com.hack.HackDbContract.HackDeviceTypes;
 import com.hack.HackDbContract.HackDevices;
+import com.hack.HackDbContract.HackHardwareUnits;
 
 public class DeviceDataSource extends HackDataSource {
     
@@ -128,6 +131,36 @@ public class DeviceDataSource extends HackDataSource {
         } else {
             return null;
         }
+    }
+    
+    public ArrayList<Device> getAllDevicesForHardwareUnit(long hardwareUnitId) {
+        ArrayList<Device> devices = new ArrayList<Device>();     
+        Cursor cursor = mDatabase.query(
+                HackDevices.TABLE_NAME + " LEFT OUTER JOIN " + HackDeviceTypes.TABLE_NAME + " ON (" + HackDevices.TABLE_NAME + ".deviceTypeId = " + HackDeviceTypes.TABLE_NAME + "._ID)",
+                mColumns.toArray(new String[mColumns.size()]), 
+                HackDevices.COLUMN_NAME_HARDWARE_UNIT_ID + " = " + hardwareUnitId, 
+                null, 
+                null, 
+                null, 
+                null);
+
+        cursor.moveToFirst();
+        while (!cursor.isAfterLast()) {
+            long deviceId = cursor.getLong(0);
+            long huId = cursor.getLong(1);
+            long socketId = cursor.getLong(2);
+            String name = cursor.getString(3);
+            int state = cursor.getInt(4);
+            long deviceTypeId = cursor.getLong(5);
+            int totalTimeOn = cursor.getInt(6);
+            String type = cursor.getString(8);
+            Device d = new Device(deviceId, huId, socketId, name, state, type, totalTimeOn);
+            devices.add(d);
+          cursor.moveToNext();
+        }
+        // make sure to close the cursor
+        cursor.close();
+        return devices;
     }
 
 }

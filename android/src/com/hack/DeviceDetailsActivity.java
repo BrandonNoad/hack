@@ -1,5 +1,7 @@
 package com.hack;
 
+import java.util.ArrayList;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -51,6 +53,8 @@ public class DeviceDetailsActivity extends Activity {
     private ProgressDialog mProgressDialog;
     private HardwareUnit mHardwareUnit;
     private HackConnectionManager mConnectionManager;
+    
+    private boolean isCheckedChangeEnabled = true;
   
     
     // -- Initialize Activity
@@ -94,36 +98,48 @@ public class DeviceDetailsActivity extends Activity {
             
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                String url = "/hack";
-                if (isChecked) {
-                    url += "/on?socket=" + mSocketId;
-                } else {
-                    url += "/off?socket=" + mSocketId;
-                }
-                Log.i("DeviceDetailsActivity - onCheckChanged()", "Requested url: " + url);
-               
-                mConnectionManager.submitRequest(new HackCommand(DeviceDetailsActivity.this, mHardwareUnit, url) {
-                    
-                    @Override
-                    public void doSuccess(JSONObject data) {
-                        if (data != null) {
-                            int newState = 0;
-                            try {
-                                newState = data.getJSONArray("outlets").getJSONObject((int) mSocketId).getInt("state");
-                                Log.i("DeviceDetailsActivity - onPostExecute()", "new state: " + newState);
-                            } catch (JSONException e) {
-                                // TODO Auto-generated catch block
-                                e.printStackTrace();
-                            }
-                            // update db
-                            // TODO: change updateDevice to update totaltime on and last time on
-                            mDeviceDataSource.updateDevice(mDeviceId, newState);
-                            updateDeviceStatistics();
-                            Log.i("DeviceDetailsActivity - onPostExecute","device statistics updated");
-                        }
+                if (isCheckedChangeEnabled) {
+                    String url = "/hack";
+                    if (isChecked) {
+                        url += "/on?socket=" + mSocketId;
+                    } else {
+                        url += "/off?socket=" + mSocketId;
                     }
-                    
-                });
+                    Log.i("DeviceDetailsActivity - onCheckChanged()", "Requested url: " + url);
+                   
+                    mConnectionManager.submitRequest(new HackCommand(DeviceDetailsActivity.this, mHardwareUnit, url) {
+                        
+                        @Override
+                        public void doSuccess(JSONObject data) {
+                            if (data != null) {
+                                int newState = 0;
+                                try {
+                                    newState = data.getJSONArray("outlets").getJSONObject((int) mSocketId).getInt("state");
+                                    Log.i("DeviceDetailsActivity - onPostExecute()", "new state: " + newState);
+                                } catch (JSONException e) {
+                                    // TODO Auto-generated catch block
+                                    e.printStackTrace();
+                                }
+                                // update db
+                                // TODO: change updateDevice to update totaltime on and last time on
+                                mDeviceDataSource.updateDevice(mDeviceId, newState);
+                                updateDeviceStatistics();
+                                Log.i("DeviceDetailsActivity - onPostExecute","device statistics updated");
+                            }
+                        }
+                        
+                        @Override
+                        public void doFail(String message) {
+                            super.doFail(message);
+                            // change switch back to its old position
+                            // temporarily disable event listener so we can switch it back without firing event
+                            isCheckedChangeEnabled = false;
+                            mDeviceStateSwitch.toggle();
+                            isCheckedChangeEnabled = true;
+                        }
+                        
+                    });
+                }
             }
         });
         
@@ -186,23 +202,27 @@ public class DeviceDetailsActivity extends Activity {
                 startEditDeviceActivity();
                 break;
             case R.id.action_refresh:
-                String url = "/hack/refresh?socket=" + mSocketId;
+                String url = "/hack/refresh";
                 mConnectionManager.submitRequest(new HackCommand(DeviceDetailsActivity.this, mHardwareUnit, url) {
                     
                     @Override
                     public void doSuccess(JSONObject data) {
                         if (data != null) {
-                            int newState = 0;
-                            try {
-                                newState = data.getJSONArray("outlets").getJSONObject((int) mSocketId).getInt("state");
-                                Log.i("DeviceDetailsActivity - onPostExecute()", "new state: " + newState);
-                            } catch (JSONException e) {
-                                // TODO Auto-generated catch block
-                                e.printStackTrace();
+                           ArrayList<Device> devices = mDeviceDataSource.getAllDevicesForHardwareUnit(mHardwareUnit.getId());
+                            for (Device d : devices) {
+                                Log.i("DeviceDetailsActivity - Refresh - doSuccess()", "refreshing device at socket: " + d.getSocketId());
+                                int newState = 0;
+                                try {
+                                    newState = data.getJSONArray("outlets").getJSONObject((int) d.getSocketId()).getInt("state");
+                                    Log.i("DeviceDetailsActivity - onPostExecute()", "new state: " + newState);
+                                } catch (JSONException e) {
+                                    // TODO Auto-generated catch block
+                                    e.printStackTrace();
+                                }
+                                // update db
+                                // TODO: change updateDevice to update totaltime on and last time on
+                                mDeviceDataSource.updateDevice(d.getId(), newState);
                             }
-                            // update db
-                            // TODO: change updateDevice to update totaltime on and last time on
-                            mDeviceDataSource.updateDevice(mDeviceId, newState);
                             updateDeviceStatistics();
                             Log.i("DeviceDetailsActivity - onPostExecute","device statistics updated");
                         }

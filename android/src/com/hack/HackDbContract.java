@@ -38,6 +38,7 @@ public class HackDbContract {
         public static final String COLUMN_NAME_DEVICE_STATE = "deviceState";
         public static final String COLUMN_NAME_DEVICE_TYPE_ID = "deviceTypeId";
         public static final String COLUMN_NAME_DEVICE_TOTAL_TIME_ON = "deviceTotalTimeOn";
+        public static final String COLUMN_NAME_DEVICE_ON_SINCE_TIME = "deviceOnSinceTime";
     }
     
     // deviceTypes Table

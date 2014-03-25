@@ -106,7 +106,7 @@ var hardwareUnit = {
       pin: B14,
       state: 1,
       totalTimeOn: 0,
-      onSince: -1,
+      onSinceTime: -1,
       lastTimeUpdated: 0,
       isTimer: false
     },
@@ -117,7 +117,7 @@ var hardwareUnit = {
       pin: A1,
       state: 1,
       totalTimeOn: 0,
-      onSince: -1,
+      onSinceTime: -1,
       lastTimeUpdated: 0,
       isTimer: false
     },
@@ -128,7 +128,7 @@ var hardwareUnit = {
       pin: B13,
       state: 1,
       totalTimeOn: 0,
-      onSince: -1,
+      onSinceTime: -1,
       lastTimeUpdated: 0,
       isTimer: false
     },
@@ -139,7 +139,7 @@ var hardwareUnit = {
       pin: A0,
       state: 1,
       totalTimeOn: 0,
-      onSince: -1,
+      onSinceTime: -1,
       lastTimeUpdated: 0,
       isTimer: false
     }
@@ -158,10 +158,10 @@ function setOutlet(outletNumber, state) {
     hardwareUnit.outlets[outletNumber].state = state;
     
     if (state === 0) {  // turn on from off
-      hardwareUnit.outlets[outletNumber].onSince = now;
+      hardwareUnit.outlets[outletNumber].onSinceTime = now;
       hardwareUnit.outlets[outletNumber].lastTimeUpdated = now;
     } else {  // turn off from on
-      hardwareUnit.outlets[outletNumber].onSince = -1;
+      hardwareUnit.outlets[outletNumber].onSinceTime = -1;
       hardwareUnit.outlets[outletNumber].totalTimeOn += (now - hardwareUnit.outlets[outletNumber].lastTimeUpdated);
       hardwareUnit.outlets[outletNumber].lastTimeUpdated = now;
     }
@@ -183,7 +183,7 @@ function resetAllOutlets() {
     hardwareUnit.outlets[i].state = 1;
     setOutlet(i, 1);
     hardwareUnit.outlets[i].totalTimeOn = 0;
-    hardwareUnit.outlets[i].onSince = -1;
+    hardwareUnit.outlets[i].onSinceTime = -1;
     hardwareUnit.outlets[i].lastTimeUpdated = 0;
     hardwareUnit.outlets[i].isTimer = false;
   }
@@ -193,8 +193,8 @@ function resetOutlet(outletNumber) {
     hardwareUnit.outlets[outletNumber].state = 1;
     setOutlet(outletNumber, 1);
     hardwareUnit.outlets[outletNumber].totalTimeOn = 0;
-     hardwareUnit.outlets[i].onSince = -1;
-    hardwareUnit.outlets[i].lastTimeUpdated = 0;
+    hardwareUnit.outlets[outletNumber].onSinceTime = -1;
+    hardwareUnit.outlets[outletNumber].lastTimeUpdated = 0;
     hardwareUnit.outlets[outletNumber].isTimer = false;
 }
 

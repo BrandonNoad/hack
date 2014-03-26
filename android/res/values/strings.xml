@@ -47,6 +47,8 @@
     <string name="action_edit">Edit</string>
     <string name="action_refresh">Refresh</string>
     <string name="action_delete">Delete</string>
+    <string name="dialog_message">Please Fill In All Fields</string>
+    <string name="okay">Okay</string>
 
     <string-array name="hardware_types">
         <item>Simple</item>

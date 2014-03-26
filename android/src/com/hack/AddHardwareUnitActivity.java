@@ -3,7 +3,6 @@ package com.hack;
 import org.json.JSONObject;
 
 import android.app.Activity;
-import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -23,125 +22,126 @@ public class AddHardwareUnitActivity extends Activity {
 	public class SyncWifiCommand extends HackCommand {
 		public SyncWifiCommand(HardwareUnit unit, Context context) {
 			super(unit, "", context);
-			
+
 			String url = "/hack/sync?name=" + unit.getName() +
-									"&ap=" + unit.getAcessPointName() +
-									"&key=" + unit.getWpa2Key() +
-									"&basePath=" + unit.getBasePath() +
-									"&port=" + String.valueOf(unit.getPortNumber());
-			
+					"&ap=" + unit.getAcessPointName() +
+					"&key=" + unit.getWpa2Key() +
+					"&basePath=" + unit.getBasePath() +
+					"&port=" + String.valueOf(unit.getPortNumber());
+
 			setUrl(url);
 		}
 
 		@Override
 		public void onResponseReceived(JSONObject json) {
 			super.onResponseReceived(json);
-			
+
 			Toast toast = Toast.makeText(getBaseContext(), "Response: " + json.toString(), Toast.LENGTH_LONG);
 			toast.show();
-			
-	        // return to all units activity
-	        startAllUnitsActivity();
-	        
-	        // a Dispatcher from ConnectionManager dies here
+
+			// return to all units activity
+			startAllUnitsActivity();
+
+			// a Dispatcher from ConnectionManager dies here
 		}
 	}
-	
-    // -- Constants
-    
-    // -- Member Variables
-	
-    private Button mAddHardwareUnitButton;
-    private HardwareUnitDataSource mHardwareUnitDataSource;
-    //private BluetoothDevice mChosenBluetooth;
 
-    // -- Initialize Activity
+	// -- Constants
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_add_hardware_unit);
+	// -- Member Variables
 
-        setupActionBar();  // show "up" button in action bar
-        
-        // initialize members
-        mHardwareUnitDataSource = new HardwareUnitDataSource(this);
-        mHardwareUnitDataSource.open();        
-        mAddHardwareUnitButton = (Button) findViewById(R.id.add_hardware_unit_button);
-        
-        // get BluetoothDevice passed in from previoius activity
-        //Bundle bundle = getIntent().getExtras();
-        //mChosenBluetooth = bundle.getParcelable(AllUnitsActivity.EXTRA_BT_DEVICE);
-        
-        // set up event listeners
-        mAddHardwareUnitButton.setOnClickListener(new OnClickListener() {
-            public void onClick(View v) {
-                addHardwareUnit();
-            }
-        });
-    }
-    
-    // -- Action Bar
+	private Button mAddHardwareUnitButton;
+	private HardwareUnitDataSource mHardwareUnitDataSource;
+	//private BluetoothDevice mChosenBluetooth;
 
-    /**
-     * Set up the {@link android.app.ActionBar}.
-     */
-    private void setupActionBar() {
-        getActionBar().setDisplayHomeAsUpEnabled(true);
-    }
+	// -- Initialize Activity
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.add_hardware_unit, menu);
-        return true;
-    }
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.activity_add_hardware_unit);
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-        case android.R.id.home:
-            // This ID represents the Home or Up button. In the case of this
-            // activity, the Up button is shown. Use NavUtils to allow users
-            // to navigate up one level in the application structure. For
-            // more details, see the Navigation pattern on Android Design:
-            //
-            // http://developer.android.com/design/patterns/navigation.html#up-vs-back
-            //
-            NavUtils.navigateUpFromSameTask(this);
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
-    }
+		setupActionBar();  // show "up" button in action bar
 
-    // -- Intents
-    
-    public void startAllUnitsActivity() {
-        // return to All Units Activity
-        Intent intent = new Intent(this, AllUnitsActivity.class);
-        startActivity(intent);
-    }
-    
-    // -- UI Actions
-    
-    @Override
-    public void onBackPressed()
-    {
-        super.onBackPressed();
-    }
-    
-    public void addHardwareUnit() {
-        String unitName = ((EditText)findViewById(R.id.editTextHardwareUnitName)).getText().toString();
-        String apName = ((EditText)findViewById(R.id.editTextAccessPointName)).getText().toString();
-        String key = ((EditText)findViewById(R.id.editTextWpa2Key)).getText().toString();
-        String basePath = ((EditText)findViewById(R.id.editTextBasePath)).getText().toString();
-        String port = ((EditText)findViewById(R.id.editTextPortNumber)).getText().toString();
-        
-        // add new unit to db
-        long huId = mHardwareUnitDataSource.addHardwareUnit(unitName, basePath, Integer.parseInt(port), apName, key, "");
-        
-        // send discover command
-        SyncWifiCommand command = new SyncWifiCommand(mHardwareUnitDataSource.getHardwareUnitById(huId), this);
-        command.send();
-    }
+		// initialize members
+		mHardwareUnitDataSource = new HardwareUnitDataSource(this);
+		mHardwareUnitDataSource.open();
+		mAddHardwareUnitButton = (Button) findViewById(R.id.add_hardware_unit_button);
+
+		// get BluetoothDevice passed in from previoius activity
+		//Bundle bundle = getIntent().getExtras();
+		//mChosenBluetooth = bundle.getParcelable(AllUnitsActivity.EXTRA_BT_DEVICE);
+
+		// set up event listeners
+		mAddHardwareUnitButton.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				addHardwareUnit();
+			}
+		});
+	}
+
+	// -- Action Bar
+
+	/**
+	 * Set up the {@link android.app.ActionBar}.
+	 */
+	private void setupActionBar() {
+		getActionBar().setDisplayHomeAsUpEnabled(true);
+	}
+
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		// Inflate the menu; this adds items to the action bar if it is present.
+		getMenuInflater().inflate(R.menu.add_hardware_unit, menu);
+		return true;
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+		case android.R.id.home:
+			// This ID represents the Home or Up button. In the case of this
+			// activity, the Up button is shown. Use NavUtils to allow users
+			// to navigate up one level in the application structure. For
+			// more details, see the Navigation pattern on Android Design:
+			//
+			// http://developer.android.com/design/patterns/navigation.html#up-vs-back
+			//
+			NavUtils.navigateUpFromSameTask(this);
+			return true;
+		}
+		return super.onOptionsItemSelected(item);
+	}
+
+	// -- Intents
+
+	public void startAllUnitsActivity() {
+		// return to All Units Activity
+		Intent intent = new Intent(this, AllUnitsActivity.class);
+		startActivity(intent);
+	}
+
+	// -- UI Actions
+
+	@Override
+	public void onBackPressed()
+	{
+		super.onBackPressed();
+	}
+
+	public void addHardwareUnit() {
+		String unitName = ((EditText)findViewById(R.id.editTextHardwareUnitName)).getText().toString();
+		String apName = ((EditText)findViewById(R.id.editTextAccessPointName)).getText().toString();
+		String key = ((EditText)findViewById(R.id.editTextWpa2Key)).getText().toString();
+		String basePath = ((EditText)findViewById(R.id.editTextBasePath)).getText().toString();
+		String port = ((EditText)findViewById(R.id.editTextPortNumber)).getText().toString();
+
+		// add new unit to db
+		long huId = mHardwareUnitDataSource.addHardwareUnit(unitName, basePath, Integer.parseInt(port), apName, key, "");
+
+		// send discover command
+		SyncWifiCommand command = new SyncWifiCommand(mHardwareUnitDataSource.getHardwareUnitById(huId), this);
+		command.send();
+	}
 }

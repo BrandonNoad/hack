@@ -129,7 +129,7 @@ public class DeviceDetailsActivity extends Activity {
                 
                 HardwareUnit unit = mHardwareUnitDataSource.getHardwareUnitById(mDevice.getHardwareUnitId());
                 HackConnectionManager connMgr = ((HackApplication) getApplicationContext()).getConnectionManager();                
-                connMgr.submitRequest(new HackCommand(unit, url) {
+                connMgr.submitRequest(new HackCommand(unit, url, getApplicationContext()) {
                     
                     @Override
                     public void onResponseReceived(JSONObject json) {

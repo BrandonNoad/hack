@@ -121,8 +121,9 @@ public class AllUnitsActivity extends Activity {
         // handle presses on the action bar items
         switch (item.getItemId()) {
             case R.id.action_new:  // new hardware unit
-                mSelectedBluetoothDevice = null;
-                initializeBluetooth();
+                //mSelectedBluetoothDevice = null;
+                //initializeBluetooth();
+            	startAddHardwareUnitActivity();
                 return true;            
             default:
                 return super.onOptionsItemSelected(item);
@@ -182,7 +183,7 @@ public class AllUnitsActivity extends Activity {
     
     public void startAddHardwareUnitActivity() {
         Intent intent = new Intent(this, AddHardwareUnitActivity.class);
-        intent.putExtra(EXTRA_BT_DEVICE, mSelectedBluetoothDevice);
+        //intent.putExtra(EXTRA_BT_DEVICE, mSelectedBluetoothDevice);
         startActivity(intent);
     }
     

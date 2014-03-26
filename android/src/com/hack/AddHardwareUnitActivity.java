@@ -1,12 +1,13 @@
 package com.hack;
 
+import org.json.JSONObject;
+
 import android.app.Activity;
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.NavUtils;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -15,22 +16,45 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
-/**
- * This activity establishes a Bluetooth connection with a HACK hardware unit
- * and displays a form allowing the user to add a new hardware unit. The form
- * details are sent to the HACK hardware unit via Bluetooth, which initializes
- * the HACK harware unit web server.
- */
+
 public class AddHardwareUnitActivity extends Activity {
-    
+
+	// -- Commands this class may send
+	public class SyncWifiCommand extends HackCommand {
+		public SyncWifiCommand(HardwareUnit unit, Context context) {
+			super(unit, "", context);
+			
+			String url = "/hack/sync?name=" + unit.getName() +
+									"&ap=" + unit.getAcessPointName() +
+									"&key=" + unit.getWpa2Key() +
+									"&basePath=" + unit.getBasePath() +
+									"&port=" + String.valueOf(unit.getPortNumber());
+			
+			setUrl(url);
+		}
+
+		@Override
+		public void onResponseReceived(JSONObject json) {
+			super.onResponseReceived(json);
+			
+			Toast toast = Toast.makeText(getBaseContext(), "Response: " + json.toString(), Toast.LENGTH_LONG);
+			toast.show();
+			
+	        // return to all units activity
+	        startAllUnitsActivity();
+	        
+	        // a Dispatcher from ConnectionManager dies here
+		}
+	}
+	
     // -- Constants
     
     // -- Member Variables
-    
+	
     private Button mAddHardwareUnitButton;
     private HardwareUnitDataSource mHardwareUnitDataSource;
-    private BluetoothDevice mChosenBluetooth;
-    
+    //private BluetoothDevice mChosenBluetooth;
+
     // -- Initialize Activity
 
     @Override
@@ -46,8 +70,8 @@ public class AddHardwareUnitActivity extends Activity {
         mAddHardwareUnitButton = (Button) findViewById(R.id.add_hardware_unit_button);
         
         // get BluetoothDevice passed in from previoius activity
-        Bundle bundle = getIntent().getExtras();
-        mChosenBluetooth = bundle.getParcelable(AllUnitsActivity.EXTRA_BT_DEVICE);
+        //Bundle bundle = getIntent().getExtras();
+        //mChosenBluetooth = bundle.getParcelable(AllUnitsActivity.EXTRA_BT_DEVICE);
         
         // set up event listeners
         mAddHardwareUnitButton.setOnClickListener(new OnClickListener() {
@@ -107,34 +131,17 @@ public class AddHardwareUnitActivity extends Activity {
     }
     
     public void addHardwareUnit() {
-        EditText nameET = (EditText) findViewById(R.id.editTextHardwareUnitName);
-        EditText accessPointNameET = (EditText) findViewById(R.id.editTextAccessPointName);
-        EditText wpa2KeyET = (EditText) findViewById(R.id.editTextWpa2Key);
-        EditText basePathET = (EditText) findViewById(R.id.editTextBasePath);
-        EditText portNumberET = (EditText) findViewById(R.id.editTextPortNumber);
+        String unitName = ((EditText)findViewById(R.id.editTextHardwareUnitName)).getText().toString();
+        String apName = ((EditText)findViewById(R.id.editTextAccessPointName)).getText().toString();
+        String key = ((EditText)findViewById(R.id.editTextWpa2Key)).getText().toString();
+        String basePath = ((EditText)findViewById(R.id.editTextBasePath)).getText().toString();
+        String port = ((EditText)findViewById(R.id.editTextPortNumber)).getText().toString();
         
         // add new unit to db
-        long huId = mHardwareUnitDataSource.addHardwareUnit(nameET.getText().toString(),
-                                                            basePathET.getText().toString(),
-                                                            Integer.parseInt(portNumberET.getText().toString()),
-                                                            accessPointNameET.getText().toString(),
-                                                            wpa2KeyET.getText().toString(),
-                                                            mChosenBluetooth.getAddress());
-        Log.i("AddHardwareUnitActivity - addHardwareUnit()", "unit Id: " + huId);
-
-        String accessPointName = accessPointNameET.getText().toString();
-        String wpa2Key = wpa2KeyET.getText().toString();
-        String portNumber = portNumberET.getText().toString();
-        Log.i("AddHardwareUnitActivity - addHardwareUnit()", "Access Point: " + accessPointName + ", WPA2 Key: " + wpa2Key + ", Port Number: " + portNumber);
+        long huId = mHardwareUnitDataSource.addHardwareUnit(unitName, basePath, Integer.parseInt(port), apName, key, "");
         
-        Context context = getApplicationContext();
-        CharSequence text = "BT MAC: " + mChosenBluetooth.getAddress() + " UNIT NAME: " + nameET.getText() + " AP NAME: " + accessPointName + " KEY: " + wpa2Key + " PORT: " + portNumber;
-        int duration = Toast.LENGTH_LONG;
-
-        Toast toast = Toast.makeText(context, text, duration);
-        toast.show();
-        
-        // return to all units activity
-        startAllUnitsActivity();
+        // send discover command
+        SyncWifiCommand command = new SyncWifiCommand(mHardwareUnitDataSource.getHardwareUnitById(huId), this);
+        command.send();
     }
 }

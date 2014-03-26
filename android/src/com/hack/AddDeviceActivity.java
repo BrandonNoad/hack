@@ -55,8 +55,6 @@ public class AddDeviceActivity extends Activity {
         mActionBar = getActionBar();   
         mDeviceDataSource = new DeviceDataSource(this);
         mDeviceDataSource.open();
-        
-        /**************************added***********************************/
         deviceNameET = (EditText) findViewById(R.id.deviceNameEditText);
         
         
@@ -98,10 +96,6 @@ public class AddDeviceActivity extends Activity {
         
         
         // set up event listeners
-        
-        /***********************removed******************************/
-        
-        
         deviceNameET.setOnEditorActionListener(new OnEditorActionListener(){
            @Override
            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
@@ -145,9 +139,7 @@ public class AddDeviceActivity extends Activity {
         Button addDeviceButton = (Button) findViewById(R.id.add_device_button);
         addDeviceButton.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
-            	
-            	
-            	/*****************added***************************/
+          
             	//grab the text from the EditText object
             	String  editText = deviceNameET.getText().toString();
             	if(editText.isEmpty()){//the field is empty
@@ -169,9 +161,7 @@ public class AddDeviceActivity extends Activity {
                     AlertDialog alert = alertDialog.create();
                     alert.show();
                     return;
-            	}
-            	/****************************************************************************/
-            	
+            	}  	
             	
                 if (mDeviceId != -1) {
                     updateDevice();

@@ -95,7 +95,6 @@ implements TimePickerDialog.OnTimeSetListener {
         setTimerSaveButton.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
             	
-            	/*****************added***************************/
             	//grab the text from the EditText object
             	String  timeOffText = mTimeOffEditText.getText().toString();
             	String  timeOnText = mTimeOnEditText.getText().toString();
@@ -119,8 +118,6 @@ implements TimePickerDialog.OnTimeSetListener {
                     alert.show();
                     return;
             	}
-            	/****************************************************************************/
-            	
                 addTimer();
                
             }

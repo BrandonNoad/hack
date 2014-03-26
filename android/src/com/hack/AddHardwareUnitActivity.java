@@ -149,7 +149,6 @@ public class AddHardwareUnitActivity extends Activity {
         EditText basePathET = (EditText) findViewById(R.id.editTextBasePath);
         EditText portNumberET = (EditText) findViewById(R.id.editTextPortNumber);
         
-        /********************************added***************************************/
         //grab the text from all the EditText objects
         String  nameETText = nameET.getText().toString();
         String  accessPointNameETText = accessPointNameET.getText().toString();
@@ -178,9 +177,6 @@ public class AddHardwareUnitActivity extends Activity {
             alert.show();
             return;
     	}
-        
-    	/***********************************************************************************/
-    	
     	
         // add new unit to db
         long huId = mHardwareUnitDataSource.addHardwareUnit(nameET.getText().toString(),

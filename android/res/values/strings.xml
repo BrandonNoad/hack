@@ -10,6 +10,9 @@
     <string name="title_hardware_units">Hardware Units</string>
     <string name="action_new">New</string>
     <string name="title_add_new_device">Add New Device</string>
+    <string name="title_activity_splash_screen">SplashScreen</string>
+    <string name="logo_title">Home Automation Control Kit</string>
+    <string name="save_device">Save</string>
     <string name="ok">OK</string>
     <string name="cancel">Cancel</string>
     <string name="title_select_hardware_unit">Select Hardware Unit</string>
@@ -31,15 +34,26 @@
     <string name="set_time">Set Time</string>
     <string name="name_colon">Name:</string>
     <string name="type_colon">Type:</string>
-    <string name="last_time_on_colon">Last Time On:</string>
+    <string name="on_since_colon">On Since:</string>
     <string name="total_time_on_colon">Total Time On:</string>
     <string name="power_usage_colon">Power Usage:</string>
     <string name="timer_colon">Timer:</string>
     <string name="enable">Enable</string>
-    <string name="title_activity_set_timer">SetTimerActivity</string>
+    <string name="title_activity_set_timer">Set Timer</string>
     <string name="time_on">Time On</string>
     <string name="time_off">Time Off</string>
     <string name="repeat_daily_question">Repeat Daily?</string>
     <string name="save">Save</string>
+    <string name="action_edit">Edit</string>
+    <string name="action_refresh">Refresh</string>
+    <string name="action_delete">Delete</string>
+    <string name="dialog_message">Please Fill In All Fields</string>
+    <string name="okay">Okay</string>
+
+    <string-array name="hardware_types">
+        <item>Simple</item>
+        <item>Light</item>
+        <item>Heat/Cool</item>
+    </string-array>
 
 </resources>

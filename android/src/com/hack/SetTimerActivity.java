@@ -2,10 +2,15 @@ package com.hack;
 
 import java.util.Calendar;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.DialogFragment;
 import android.app.TimePickerDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.NavUtils;
@@ -30,11 +35,16 @@ implements TimePickerDialog.OnTimeSetListener {
     
     // -- Member variables
     private TimerDataSource mTimerDataSource;
+    private HardwareUnitDataSource mHardwareUnitDataSource;
+    private DeviceDataSource mDeviceDataSource;
     private EditText mSelectedEditText;
     private EditText mTimeOnEditText;
     private EditText mTimeOffEditText;
     private CheckBox mIsRepeatedCheckBox;
     private long mDeviceId;
+    private Device mDevice;
+    private HardwareUnit mHardwareUnit;
+    private HackConnectionManager mConnectionManager;
 
     // -- Initialize Activity
     
@@ -47,10 +57,18 @@ implements TimePickerDialog.OnTimeSetListener {
         
         mTimerDataSource = new TimerDataSource(this);
         mTimerDataSource.open();
+        mDeviceDataSource = new DeviceDataSource(this);
+        mDeviceDataSource.open();
+        mHardwareUnitDataSource = new HardwareUnitDataSource(this);
+        mHardwareUnitDataSource.open();
         
         // get device id from previous activity
         Intent intent = getIntent();
         mDeviceId = intent.getLongExtra(SingleUnitActivity.EXTRA_DEVICE_ID, -1);
+        mDevice = mDeviceDataSource.getDeviceById(mDeviceId);
+        mHardwareUnit = mHardwareUnitDataSource.getHardwareUnitById(mDevice.getHardwareUnitId());
+        
+        mConnectionManager = ((HackApplication) getApplicationContext()).getConnectionManager();
         
         // set up event listeners
         mIsRepeatedCheckBox = (CheckBox) findViewById(R.id.repeatCheckBox);
@@ -76,8 +94,32 @@ implements TimePickerDialog.OnTimeSetListener {
         
         setTimerSaveButton.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
+            	
+            	//grab the text from the EditText object
+            	String  timeOffText = mTimeOffEditText.getText().toString();
+            	String  timeOnText = mTimeOnEditText.getText().toString();
+            	if(timeOnText.isEmpty() || timeOffText.isEmpty()){//one of the the fields is empty
+            		
+            		//create an alert dialog
+            		AlertDialog.Builder alertDialog = new AlertDialog.Builder(SetTimerActivity.this);
+            		
+            		//set the message to be displayed
+                    alertDialog.setMessage(R.string.dialog_message);
+                    
+                    //set the behaviour of the button
+                    alertDialog.setPositiveButton(R.string.okay, new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+                            dialog.dismiss();
+                        }
+                    });
+
+                    //display the alert dialog
+                    AlertDialog alert = alertDialog.create();
+                    alert.show();
+                    return;
+            	}
                 addTimer();
-                startDeviceDetailsActivity();
+               
             }
         });
         
@@ -181,10 +223,21 @@ implements TimePickerDialog.OnTimeSetListener {
 // -- Model
     
     public void addTimer() {
-        String timeOn = mTimeOnEditText.getText().toString();
-        String timeOff = mTimeOffEditText.getText().toString();
-        boolean isRepeated = mIsRepeatedCheckBox.isChecked();        
-        long timerId = mTimerDataSource.addTimer(mDeviceId, timeOn, timeOff, isRepeated);
+        String url = "/hack/setTimer?socket=" + mDevice.getSocketId();
+        mConnectionManager.submitRequest(new HackCommand(SetTimerActivity.this, mHardwareUnit, url) {
+            
+            @Override
+            public void doSuccess(JSONObject data) {
+                if (data != null) {
+                    String timeOn = mTimeOnEditText.getText().toString();
+                    String timeOff = mTimeOffEditText.getText().toString();
+                    boolean isRepeated = mIsRepeatedCheckBox.isChecked();        
+                    long timerId = mTimerDataSource.addTimer(mDeviceId, timeOn, timeOff, isRepeated);
+                    startDeviceDetailsActivity();
+                }
+            }
+        });
+        
     }
 
 }

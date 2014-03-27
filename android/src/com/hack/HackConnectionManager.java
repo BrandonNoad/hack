@@ -7,11 +7,10 @@ public class HackConnectionManager {
     
     private HackWifiAdapter mWifiAdapter;
     private HackBluetoothAdapter mBluetoothAdapter;
-    private Context mContext;
     
-    public HackConnectionManager(Context context) {
+    public HackConnectionManager() {
         super();
-        mWifiAdapter = new HackWifiAdapter(context);
+        mWifiAdapter = new HackWifiAdapter();
 //        mBluetoothAdapter = new HackBluetoothAdapter(context);s
     }
     

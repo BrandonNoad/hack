@@ -38,6 +38,11 @@ public abstract class HackCommand {
         mUrl = url;
     }
     
+    public Context getContext() {
+        return mContext;
+    }
+    
+    
     public void showProgressDialog() {
         mProgressDialog = new ProgressDialog(mContext);
         mProgressDialog.setTitle("Sending Request...");

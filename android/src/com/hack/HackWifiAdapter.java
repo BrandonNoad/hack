@@ -22,12 +22,6 @@ import android.widget.Toast;
 
 public class HackWifiAdapter extends HackConnectionAdapter {
     
-    private Context mContext;
-    
-    public HackWifiAdapter(Context context) {
-        mContext = context;
-    }
-    
     public String fail(String msg) {
         return "{'success': 0, 'data': {}, 'message': '" + msg + "'}";
     }
@@ -38,14 +32,13 @@ public class HackWifiAdapter extends HackConnectionAdapter {
      */
     // TODO: modify this to take a HackCommand object as param and pass to doInBackground()
     public void submitRequest(HackCommand command) {
-        ConnectivityManager connMgr = (ConnectivityManager)
-        mContext.getSystemService(Context.CONNECTIVITY_SERVICE);
+        ConnectivityManager connMgr = (ConnectivityManager) command.getContext().getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
         if (networkInfo != null && networkInfo.isConnected()) {
             // start async task
             new HttpConnectionTask(command).execute(command);
         } else {
-            Toast.makeText(mContext.getApplicationContext(), 
+            Toast.makeText(command.getContext().getApplicationContext(), 
                            "No network connection available.", 
                            Toast.LENGTH_LONG).show();
         }

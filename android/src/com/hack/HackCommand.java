@@ -5,6 +5,7 @@ import org.json.JSONObject;
 
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.util.Log;
 import android.widget.Toast;
 
 public abstract class HackCommand {
@@ -90,6 +91,7 @@ public abstract class HackCommand {
     abstract void doSuccess(JSONObject data);
 
     public void doFail(String message) {
+        Log.i("HackComand - doFail()", "message: " + message);
         // show toast
         Toast.makeText(mContext.getApplicationContext(),  // must use application context
                        message,

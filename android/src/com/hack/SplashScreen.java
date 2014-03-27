@@ -16,10 +16,10 @@ public class SplashScreen extends Activity {
             public void run() {
                  
                 try {
-                    //sleep for 5 seconds
-                    sleep(5 * 1000);
+                    //sleep for 3 seconds
+                    sleep(3 * 1000);
                      
-                    //after 5 seconds redirect to AllUnitsActivity
+                    //after 3 seconds redirect to AllUnitsActivity
                     Intent intent = new Intent(getBaseContext(), AllUnitsActivity.class);
                     startActivity(intent);
                      

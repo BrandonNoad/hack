@@ -1,11 +1,14 @@
 package com.hack;
 
+import java.util.ArrayList;
+
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 
 import com.hack.HackDbContract.HackDeviceTypes;
 import com.hack.HackDbContract.HackDevices;
+import com.hack.HackDbContract.HackHardwareUnits;
 
 public class DeviceDataSource extends HackDataSource {
     
@@ -28,23 +31,26 @@ public class DeviceDataSource extends HackDataSource {
       values.put(HackDevices.COLUMN_NAME_DEVICE_STATE, 1);  // 1 is off on the espruino
       values.put(HackDevices.COLUMN_NAME_DEVICE_TYPE_ID, deviceTypeId);
       values.put(HackDevices.COLUMN_NAME_DEVICE_TOTAL_TIME_ON, 0);
+      values.put(HackDevices.COLUMN_NAME_DEVICE_ON_SINCE_TIME, -1);
       long id = mDatabase.insert(HackDevices.TABLE_NAME, null, values);
       return id;
     }
     
     /**
-     * Update an existing device
+     * Update an existing device. Used when updating devices after a request.
      * @return int result - the number of rows updated
      */
-    public int updateDevice(long deviceId, int state) {
+    public int updateDevice(long deviceId, int state, long totalTimeOn, long onSinceTime) {
         ContentValues values = new ContentValues();
         values.put(HackDevices.COLUMN_NAME_DEVICE_STATE, state);
+        values.put(HackDevices.COLUMN_NAME_DEVICE_TOTAL_TIME_ON, totalTimeOn);
+        values.put(HackDevices.COLUMN_NAME_DEVICE_ON_SINCE_TIME, onSinceTime);
         int result = mDatabase.update(HackDevices.TABLE_NAME, values, HackDevices._ID + " = " + deviceId, null);
         return result;
     }
     
     /**
-     * Update an existing device
+     * Update an existing device. Used when editing devices.
      * @return int result - the number of rows updated
      */
     public int updateDevice(long deviceId, String name, long deviceTypeId) {
@@ -90,9 +96,10 @@ public class DeviceDataSource extends HackDataSource {
             String name = cursor.getString(3);
             int state = cursor.getInt(4);
             long deviceTypeId = cursor.getLong(5);
-            int totalTimeOn = cursor.getInt(6);
-            String type = cursor.getString(8);
-            Device d = new Device(deviceId, hardwareUnitId, socketId, name, state, type, totalTimeOn);
+            long totalTimeOn = cursor.getLong(6);
+            long onSinceTime = cursor.getLong(7);
+            String type = cursor.getString(9);
+            Device d = new Device(deviceId, hardwareUnitId, socketId, name, state, deviceTypeId, type, totalTimeOn, onSinceTime);
             return d;
         } else {
             return null;
@@ -121,13 +128,45 @@ public class DeviceDataSource extends HackDataSource {
             String name = cursor.getString(3);
             int state = cursor.getInt(4);
             long deviceTypeId = cursor.getLong(5);
-            int totalTimeOn = cursor.getInt(6);
-            String type = cursor.getString(8);
-            Device d = new Device(deviceId, hardwareUnitId, socketId, name, state, type, totalTimeOn);
+            long totalTimeOn = cursor.getLong(6);
+            long onSinceTime = cursor.getLong(7);
+            String type = cursor.getString(9);
+            Device d = new Device(deviceId, hardwareUnitId, socketId, name, state, deviceTypeId, type, totalTimeOn, onSinceTime);
             return d;
         } else {
             return null;
         }
+    }
+    
+    public ArrayList<Device> getAllDevicesForHardwareUnit(long hardwareUnitId) {
+        ArrayList<Device> devices = new ArrayList<Device>();     
+        Cursor cursor = mDatabase.query(
+                HackDevices.TABLE_NAME + " LEFT OUTER JOIN " + HackDeviceTypes.TABLE_NAME + " ON (" + HackDevices.TABLE_NAME + ".deviceTypeId = " + HackDeviceTypes.TABLE_NAME + "._ID)",
+                mColumns.toArray(new String[mColumns.size()]), 
+                HackDevices.COLUMN_NAME_HARDWARE_UNIT_ID + " = " + hardwareUnitId, 
+                null, 
+                null, 
+                null, 
+                null);
+
+        cursor.moveToFirst();
+        while (!cursor.isAfterLast()) {
+            long deviceId = cursor.getLong(0);
+            long huId = cursor.getLong(1);
+            long socketId = cursor.getLong(2);
+            String name = cursor.getString(3);
+            int state = cursor.getInt(4);
+            long deviceTypeId = cursor.getLong(5);
+            long totalTimeOn = cursor.getLong(6);
+            long onSinceTime = cursor.getLong(7);
+            String type = cursor.getString(9);
+            Device d = new Device(deviceId, hardwareUnitId, socketId, name, state, deviceTypeId, type, totalTimeOn, onSinceTime);
+            devices.add(d);
+          cursor.moveToNext();
+        }
+        // make sure to close the cursor
+        cursor.close();
+        return devices;
     }
 
 }

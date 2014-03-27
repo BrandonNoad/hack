@@ -34,7 +34,7 @@
     <string name="set_time">Set Time</string>
     <string name="name_colon">Name:</string>
     <string name="type_colon">Type:</string>
-    <string name="last_time_on_colon">Last Time On:</string>
+    <string name="on_since_colon">On Since:</string>
     <string name="total_time_on_colon">Total Time On:</string>
     <string name="power_usage_colon">Power Usage:</string>
     <string name="timer_colon">Timer:</string>

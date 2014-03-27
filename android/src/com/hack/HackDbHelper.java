@@ -84,7 +84,8 @@ public class HackDbHelper extends SQLiteOpenHelper {
             HackDevices.COLUMN_NAME_DEVICE_NAME + " " + TEXT_TYPE + ", " +
             HackDevices.COLUMN_NAME_DEVICE_STATE + " " + INT_TYPE + ", " +
             HackDevices.COLUMN_NAME_DEVICE_TYPE_ID + " " + INT_TYPE + ", " +
-            HackDevices.COLUMN_NAME_DEVICE_TOTAL_TIME_ON + " " + INT_TYPE +
+            HackDevices.COLUMN_NAME_DEVICE_TOTAL_TIME_ON + " " + INT_TYPE + ", " +
+            HackDevices.COLUMN_NAME_DEVICE_ON_SINCE_TIME + " " + INT_TYPE +            
         ")";
     
     // create timers table

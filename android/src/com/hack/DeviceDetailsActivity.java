@@ -27,15 +27,15 @@ import android.widget.Switch;
 import android.widget.TextView;
 
 public class DeviceDetailsActivity extends Activity {
-    
+
     // -- Member Variables 
-    
+
     private long mDeviceId;
     private Device mDevice;
     private DeviceDataSource mDeviceDataSource;
     private long mSocketId;
     private int mDeviceState;
-    
+
     private Button mEnableTimerButton;
     private TextView mDeviceTimerDetails;
     private Switch mDeviceStateSwitch;
@@ -43,33 +43,32 @@ public class DeviceDetailsActivity extends Activity {
     private TextView mDeviceOnSinceTime;
     private TextView mDeviceTotalTimeOn;
     private TextView mDevicePowerUsage;
-    
+
     private HardwareUnitDataSource mHardwareUnitDataSource;
-    
+
     private Timer mTimer;
     private TimerDataSource mTimerDataSource;   
-    
+
     private ActionBar mActionBar;
     private ActionMode mActionMode = null;
-    
+
     private ProgressDialog mProgressDialog;
     private HardwareUnit mHardwareUnit;
-    private HackConnectionManager mConnectionManager;
-    
+
     private boolean isCheckedChangeEnabled = true;
-  
-    
+
+
     // -- Initialize Activity
-    
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_device_details);
-        
+
         // Show the Up button in the action bar.
         setupActionBar();
         mActionBar = getActionBar();
-                
+
         // initialize members
         mDeviceDataSource = new DeviceDataSource(this);
         mDeviceDataSource.open();
@@ -77,11 +76,11 @@ public class DeviceDetailsActivity extends Activity {
         mHardwareUnitDataSource.open();
         mTimerDataSource = new TimerDataSource(this);
         mTimerDataSource.open();
-        
+
         // get device id from previous activity
         Intent intent = getIntent();
         mDeviceId = intent.getLongExtra(SingleUnitActivity.EXTRA_DEVICE_ID, -1);
-        
+
         mEnableTimerButton = (Button) findViewById(R.id.enableTimerButton);
         mDeviceTimerDetails = (TextView) findViewById(R.id.deviceTimerDetails);
         mDeviceStateSwitch = (Switch) findViewById(R.id.deviceStateSwitch);
@@ -89,31 +88,30 @@ public class DeviceDetailsActivity extends Activity {
         mDeviceOnSinceTime = (TextView) findViewById(R.id.deviceLastTimeOn);
         mDeviceTotalTimeOn = (TextView) findViewById(R.id.deviceTotalTimeOn);
         mDevicePowerUsage = (TextView) findViewById(R.id.devicePowerUsage);        
-       
-        mConnectionManager = ((HackApplication) getApplicationContext()).getConnectionManager();
-        
+
         // update stats
         updateDeviceStatistics();
-        
+
         // set up event listeners
         mDeviceStateSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            
+
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if (isCheckedChangeEnabled) {
-                    String url = "/hack";
+                    String url = "http://" + mHardwareUnit.getBasePath() + ":" + mHardwareUnit.getPortNumber() + "/hack";
                     if (isChecked) {
                         url += "/on?socket=" + mSocketId;
                     } else {
                         url += "/off?socket=" + mSocketId;
                     }
                     Log.i("DeviceDetailsActivity - onCheckChanged()", "Requested url: " + url);
-                   
-                    mConnectionManager.submitRequest(new HackCommand(DeviceDetailsActivity.this, mHardwareUnit, url) {
-                        
+
+                    HackCommand toggleCommand = new HackCommand(DeviceDetailsActivity.this, mHardwareUnit, url) {
+
                         @Override
-                        public void doSuccess(JSONObject data) {
-                            if (data != null) {
+                        public void doSuccess(JSONObject data, String message) {
+                            super.doSuccess(data, message);
+                            if (data != null) {                                
                                 int newState = 0;
                                 long totalTimeOn = 0; // milliseconds
                                 long onSinceTime = 0; // milliseconds
@@ -125,16 +123,16 @@ public class DeviceDetailsActivity extends Activity {
                                     totalTimeOn = outlet.getLong("totalTimeOn");
                                     onSinceTime = outlet.getLong("onSinceTime");
                                     Log.i("DeviceDetailsActivity - onPostExecute()", "new state: " + newState + 
-                                                                                   ", current time: " + espruinoCurrentTime + 
-                                                                                   ", total time on: " + totalTimeOn +
-                                                                                   ", on since time: " + onSinceTime);
+                                            ", current time: " + espruinoCurrentTime + 
+                                            ", total time on: " + totalTimeOn +
+                                            ", on since time: " + onSinceTime);
                                 } catch (JSONException e) {
                                     // TODO Auto-generated catch block
                                     e.printStackTrace();
                                 }
                                 // update db
                                 // TODO: change updateDevice to update totaltime on and last time on
-                                
+
                                 // time conversion
                                 long now = new Date().getTime();
                                 long actualOnSinceTime;
@@ -148,7 +146,7 @@ public class DeviceDetailsActivity extends Activity {
                                 Log.i("DeviceDetailsActivity - onPostExecute","device statistics updated");
                             }
                         }
-                        
+
                         @Override
                         public void doFail(String message) {
                             super.doFail(message);
@@ -158,38 +156,41 @@ public class DeviceDetailsActivity extends Activity {
                             mDeviceStateSwitch.toggle();
                             isCheckedChangeEnabled = true;
                         }
-                        
-                    });
+
+                    };
+
+                    // send command
+                    toggleCommand.send();
                 }
             }
         });
-        
+
         mEnableTimerButton.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
                 startSetTimerActivity();
             }
         });
-          
+
         mDeviceTimerDetails.setOnLongClickListener(new OnLongClickListener() {
-    
-          @Override
-          public boolean onLongClick(View v) {
-              
-              if (mActionMode != null) {
-                  return false;
-              } else {                
-                  // Start the CAB using the ActionMode.Callback defined above
-                  mActionMode = DeviceDetailsActivity.this.startActionMode(mActionModeCallback);
-                  return true;
-              }
-          }
-              
+
+            @Override
+            public boolean onLongClick(View v) {
+
+                if (mActionMode != null) {
+                    return false;
+                } else {                
+                    // Start the CAB using the ActionMode.Callback defined above
+                    mActionMode = DeviceDetailsActivity.this.startActionMode(mActionModeCallback);
+                    return true;
+                }
+            }
+
         });
-      
+
     }
-    
+
     // -- Action Bar
-    
+
     /**
      * Set up the {@link android.app.ActionBar}.
      */
@@ -207,74 +208,79 @@ public class DeviceDetailsActivity extends Activity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-            case android.R.id.home:
-                // This ID represents the Home or Up button. In the case of this
-                // activity, the Up button is shown. Use NavUtils to allow users
-                // to navigate up one level in the application structure. For
-                // more details, see the Navigation pattern on Android Design:
-                //
-                // http://developer.android.com/design/patterns/navigation.html#up-vs-back
-                //
-                Intent upIntent = NavUtils.getParentActivityIntent(this);
-                upIntent.putExtra(AllUnitsActivity.EXTRA_UNIT_ID, mDevice.getHardwareUnitId());
-                NavUtils.navigateUpTo(this, upIntent);
-                return true;
-            case R.id.action_edit:
-                startEditDeviceActivity();
-                break;
-            case R.id.action_refresh:
-                String url = "/hack/refresh";
-                mConnectionManager.submitRequest(new HackCommand(DeviceDetailsActivity.this, mHardwareUnit, url) {
-                    
-                    @Override
-                    public void doSuccess(JSONObject data) {
-                        if (data != null) {
-                           ArrayList<Device> devices = mDeviceDataSource.getAllDevicesForHardwareUnit(mHardwareUnit.getId());
-                            for (Device d : devices) {
-                                Log.i("DeviceDetailsActivity - Refresh - doSuccess()", "refreshing device at socket: " + d.getSocketId());
-                                int newState = 0;
-                                long totalTimeOn = 0; // milliseconds
-                                long onSinceTime = 0; // milliseconds
-                                long espruinoCurrentTime = 0; // milliseconds
-                                try {
-                                    espruinoCurrentTime = data.getLong("currentTime");
-                                    JSONObject outlet = data.getJSONArray("outlets").getJSONObject((int) d.getSocketId());
-                                    newState = outlet.getInt("state");                                    
-                                    totalTimeOn = outlet.getLong("totalTimeOn");
-                                    onSinceTime = outlet.getLong("onSinceTime");
-                                    Log.i("DeviceDetailsActivity - onPostExecute()", "new state: " + newState + 
-                                                                                   ", current time: " + espruinoCurrentTime + 
-                                                                                   ", total time on: " + totalTimeOn +
-                                                                                   ", on since time: " + onSinceTime);                                
-                                } catch (JSONException e) {
-                                    // TODO Auto-generated catch block
-                                    e.printStackTrace();
-                                }
-                                // update db
-                                // TODO: change updateDevice to update totaltime on and last time on
-                                // time conversion
-                                long now = new Date().getTime();
-                                long actualOnSinceTime;
-                                if (onSinceTime != -1) {
-                                    actualOnSinceTime = now - ((espruinoCurrentTime - onSinceTime) * 1000);
-                                } else {
-                                    actualOnSinceTime = -1;
-                                }                               
-                                mDeviceDataSource.updateDevice(d.getId(), newState, totalTimeOn, actualOnSinceTime);
+        case android.R.id.home:
+            // This ID represents the Home or Up button. In the case of this
+            // activity, the Up button is shown. Use NavUtils to allow users
+            // to navigate up one level in the application structure. For
+            // more details, see the Navigation pattern on Android Design:
+            //
+            // http://developer.android.com/design/patterns/navigation.html#up-vs-back
+            //
+            Intent upIntent = NavUtils.getParentActivityIntent(this);
+            upIntent.putExtra(AllUnitsActivity.EXTRA_UNIT_ID, mDevice.getHardwareUnitId());
+            NavUtils.navigateUpTo(this, upIntent);
+            return true;
+        case R.id.action_edit:
+            startEditDeviceActivity();
+            break;
+        case R.id.action_refresh:
+            String url = "http://" + mHardwareUnit.getBasePath() + ":" + mHardwareUnit.getPortNumber() + "/hack/refresh";
+            HackCommand refreshCommand = new HackCommand(DeviceDetailsActivity.this, mHardwareUnit, url) {
+
+                @Override
+                public void doSuccess(JSONObject data, String message) {
+                    super.doSuccess(data, message);
+                    if (data != null) {
+                        ArrayList<Device> devices = mDeviceDataSource.getAllDevicesForHardwareUnit(mHardwareUnit.getId());
+                        for (Device d : devices) {
+                            Log.i("DeviceDetailsActivity - Refresh - doSuccess()", "refreshing device at socket: " + d.getSocketId());
+                            int newState = 0;
+                            long totalTimeOn = 0; // milliseconds
+                            long onSinceTime = 0; // milliseconds
+                            long espruinoCurrentTime = 0; // milliseconds
+                            try {
+                                espruinoCurrentTime = data.getLong("currentTime");
+                                JSONObject outlet = data.getJSONArray("outlets").getJSONObject((int) d.getSocketId());
+                                newState = outlet.getInt("state");                                    
+                                totalTimeOn = outlet.getLong("totalTimeOn");
+                                onSinceTime = outlet.getLong("onSinceTime");
+                                Log.i("DeviceDetailsActivity - onPostExecute()", "new state: " + newState + 
+                                        ", current time: " + espruinoCurrentTime + 
+                                        ", total time on: " + totalTimeOn +
+                                        ", on since time: " + onSinceTime);                                
+                            } catch (JSONException e) {
+                                // TODO Auto-generated catch block
+                                e.printStackTrace();
                             }
-                            updateDeviceStatistics();
-                            Log.i("DeviceDetailsActivity - onPostExecute","device statistics updated");
+                            // update db
+                            // TODO: change updateDevice to update totaltime on and last time on
+                            // time conversion
+                            long now = new Date().getTime();
+                            long actualOnSinceTime;
+                            if (onSinceTime != -1) {
+                                actualOnSinceTime = now - ((espruinoCurrentTime - onSinceTime) * 1000);
+                            } else {
+                                actualOnSinceTime = -1;
+                            }                               
+                            mDeviceDataSource.updateDevice(d.getId(), newState, totalTimeOn, actualOnSinceTime);
                         }
+                        updateDeviceStatistics();
+                        Log.i("DeviceDetailsActivity - onPostExecute","device statistics updated");
                     }
-                    
-                });
-                break;
+                }
+
+            };
+
+            // send command
+            refreshCommand.send();
+
+            break;
         }
         return super.onOptionsItemSelected(item);
     }
-    
-// -- Action Mode    
-    
+
+    // -- Action Mode    
+
     private ActionMode.Callback mActionModeCallback = new ActionMode.Callback() {
 
         // Called when the action mode is created; startActionMode() was called
@@ -297,12 +303,12 @@ public class DeviceDetailsActivity extends Activity {
         @Override
         public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
             switch (item.getItemId()) {
-                case R.id.action_delete:
-                    deleteTimer();
-                    mode.finish();
-                    return true;
-                default:
-                    return false;
+            case R.id.action_delete:
+                deleteTimer();
+                mode.finish();
+                return true;
+            default:
+                return false;
             }
         }
 
@@ -312,15 +318,15 @@ public class DeviceDetailsActivity extends Activity {
             mActionMode = null;
         }
     };
-    
+
     // -- Intents
-    
+
     public void startSetTimerActivity() {
         Intent intent = new Intent(this, SetTimerActivity.class);
         intent.putExtra(SingleUnitActivity.EXTRA_DEVICE_ID, mDeviceId);
         startActivity(intent);
     }
-    
+
     public void startEditDeviceActivity() {
         if (mDevice != null) {
             Intent intent = new Intent(this, AddDeviceActivity.class);
@@ -331,46 +337,46 @@ public class DeviceDetailsActivity extends Activity {
             startActivity(intent);
         }
     }
-    
+
     // -- Misc
-    
+
     // kWh
     public long calculatePowerUsage(long totalTimeOn, long deviceTypeId) {
         int multFactor = 1;
         switch ((int) deviceTypeId) {
-            case 1: // simple
-                multFactor = 200;
-                break;
-            case 2: 
-                multFactor = 60;
-                break;
-            case 3:
-                multFactor = 1000;
-                break;
-            default:
-                break;
+        case 1: // simple
+            multFactor = 200;
+            break;
+        case 2: 
+            multFactor = 60;
+            break;
+        case 3:
+            multFactor = 1000;
+            break;
+        default:
+            break;
         }
-        
+
         return ((totalTimeOn / 360) * multFactor) / 1000; 
     }
-    
+
     public void deleteTimer() {
         if (mTimer != null && mDevice != null) {
             // delete timer from db
             mTimerDataSource.deleteTimerByDeviceId(mDevice.getId());
             mTimer = null;
-            
+
             // show enable button
             mDeviceTimerDetails.setVisibility(View.GONE);
             mEnableTimerButton.setVisibility(View.VISIBLE);
-            
+
         }
     }
-    
+
     public void updateDeviceStatistics() {
         if (mDeviceDataSource != null) {
             mDevice = mDeviceDataSource.getDeviceById(mDeviceId);
-            
+
             if (mDevice != null) {
                 mHardwareUnit = mHardwareUnitDataSource.getHardwareUnitById(mDevice.getHardwareUnitId());
                 mSocketId = mDevice.getSocketId();
@@ -417,5 +423,5 @@ public class DeviceDetailsActivity extends Activity {
             }
         }
     }
-    
+
 }

@@ -13,135 +13,130 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.Toast;
-
 
 public class AddHardwareUnitActivity extends Activity {
 
-	// -- Commands this class may send
-	public class SyncWifiCommand extends HackCommand {
-		public SyncWifiCommand(HardwareUnit unit, Context context) {
-			super(unit, "", context);
+    // -- Commands this class may send
+    public class SyncWifiCommand extends HackCommand {
+        public SyncWifiCommand(HardwareUnit unit, Context context) {
+            super(context, unit, "");
 
-			String url = "/hack/sync?name=" + unit.getName() +
-					"&ap=" + unit.getAcessPointName() +
-					"&key=" + unit.getWpa2Key() +
-					"&basePath=" + unit.getBasePath() +
-					"&port=" + String.valueOf(unit.getPortNumber());
+            String url = "http://noop/hack/sync?name=" + unit.getName() +
+                    "&ap=" + unit.getAcessPointName() +
+                    "&key=" + unit.getWpa2Key() +
+                    "&basePath=" + unit.getBasePath() +
+                    "&port=" + String.valueOf(unit.getPortNumber());
 
-			setUrl(url);
-		}
+            setUrl(url);
+        }
 
-		@Override
-		public void onResponseReceived(JSONObject json) {
-			super.onResponseReceived(json);
 
-			Toast toast = Toast.makeText(getBaseContext(), "Response: " + json.toString(), Toast.LENGTH_LONG);
-			toast.show();
+        @Override
+        public void doSuccess(JSONObject data, String message) {
+            super.doSuccess(data, message);
+            // should we wait for success before we update the db?
+            // return to all units activity
+            startAllUnitsActivity();
+        }
+    }
 
-			// return to all units activity
-			startAllUnitsActivity();
+    // -- Constants
 
-			// a Dispatcher from ConnectionManager dies here
-		}
-	}
+    // -- Member Variables
 
-	// -- Constants
+    private Button mAddHardwareUnitButton;
+    private HardwareUnitDataSource mHardwareUnitDataSource;
+    //private BluetoothDevice mChosenBluetooth;
 
-	// -- Member Variables
+    // -- Initialize Activity
 
-	private Button mAddHardwareUnitButton;
-	private HardwareUnitDataSource mHardwareUnitDataSource;
-	//private BluetoothDevice mChosenBluetooth;
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_add_hardware_unit);
 
-	// -- Initialize Activity
+        setupActionBar();  // show "up" button in action bar
 
-	@Override
-	protected void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-		setContentView(R.layout.activity_add_hardware_unit);
+        // initialize members
+        mHardwareUnitDataSource = new HardwareUnitDataSource(this);
+        mHardwareUnitDataSource.open();
+        mAddHardwareUnitButton = (Button) findViewById(R.id.add_hardware_unit_button);
 
-		setupActionBar();  // show "up" button in action bar
+        // get BluetoothDevice passed in from previoius activity
+        //Bundle bundle = getIntent().getExtras();
+        //mChosenBluetooth = bundle.getParcelable(AllUnitsActivity.EXTRA_BT_DEVICE);
 
-		// initialize members
-		mHardwareUnitDataSource = new HardwareUnitDataSource(this);
-		mHardwareUnitDataSource.open();
-		mAddHardwareUnitButton = (Button) findViewById(R.id.add_hardware_unit_button);
+        // set up event listeners
+        mAddHardwareUnitButton.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                addHardwareUnit();
+            }
+        });
+    }
 
-		// get BluetoothDevice passed in from previoius activity
-		//Bundle bundle = getIntent().getExtras();
-		//mChosenBluetooth = bundle.getParcelable(AllUnitsActivity.EXTRA_BT_DEVICE);
+    // -- Action Bar
 
-		// set up event listeners
-		mAddHardwareUnitButton.setOnClickListener(new OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				addHardwareUnit();
-			}
-		});
-	}
+    /**
+     * Set up the {@link android.app.ActionBar}.
+     */
+    private void setupActionBar() {
+        getActionBar().setDisplayHomeAsUpEnabled(true);
+    }
 
-	// -- Action Bar
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.add_hardware_unit, menu);
+        return true;
+    }
 
-	/**
-	 * Set up the {@link android.app.ActionBar}.
-	 */
-	private void setupActionBar() {
-		getActionBar().setDisplayHomeAsUpEnabled(true);
-	}
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+        case android.R.id.home:
+            // This ID represents the Home or Up button. In the case of this
+            // activity, the Up button is shown. Use NavUtils to allow users
+            // to navigate up one level in the application structure. For
+            // more details, see the Navigation pattern on Android Design:
+            //
+            // http://developer.android.com/design/patterns/navigation.html#up-vs-back
+            //
+            NavUtils.navigateUpFromSameTask(this);
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
 
-	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
-		// Inflate the menu; this adds items to the action bar if it is present.
-		getMenuInflater().inflate(R.menu.add_hardware_unit, menu);
-		return true;
-	}
+    // -- Intents
 
-	@Override
-	public boolean onOptionsItemSelected(MenuItem item) {
-		switch (item.getItemId()) {
-		case android.R.id.home:
-			// This ID represents the Home or Up button. In the case of this
-			// activity, the Up button is shown. Use NavUtils to allow users
-			// to navigate up one level in the application structure. For
-			// more details, see the Navigation pattern on Android Design:
-			//
-			// http://developer.android.com/design/patterns/navigation.html#up-vs-back
-			//
-			NavUtils.navigateUpFromSameTask(this);
-			return true;
-		}
-		return super.onOptionsItemSelected(item);
-	}
+    public void startAllUnitsActivity() {
+        // return to All Units Activity
+        Intent intent = new Intent(this, AllUnitsActivity.class);
+        startActivity(intent);
+    }
 
-	// -- Intents
+    // -- UI Actions
 
-	public void startAllUnitsActivity() {
-		// return to All Units Activity
-		Intent intent = new Intent(this, AllUnitsActivity.class);
-		startActivity(intent);
-	}
+    @Override
+    public void onBackPressed()
+    {
+        super.onBackPressed();
+    }
 
-	// -- UI Actions
+    public void addHardwareUnit() {
+        String unitName = ((EditText)findViewById(R.id.editTextHardwareUnitName)).getText().toString();
+        String apName = ((EditText)findViewById(R.id.editTextAccessPointName)).getText().toString();
+        String key = ((EditText)findViewById(R.id.editTextWpa2Key)).getText().toString();
+        String basePath = ((EditText)findViewById(R.id.editTextBasePath)).getText().toString();
+        String port = ((EditText)findViewById(R.id.editTextPortNumber)).getText().toString();
 
-	@Override
-	public void onBackPressed()
-	{
-		super.onBackPressed();
-	}
+        // add new unit to db
+        // should we wait until we get a successful response back from espruino before adding? i.e. do in command doSuccess() instead?
+        long huId = mHardwareUnitDataSource.addHardwareUnit(unitName, basePath, Integer.parseInt(port), apName, key, "");
 
-	public void addHardwareUnit() {
-		String unitName = ((EditText)findViewById(R.id.editTextHardwareUnitName)).getText().toString();
-		String apName = ((EditText)findViewById(R.id.editTextAccessPointName)).getText().toString();
-		String key = ((EditText)findViewById(R.id.editTextWpa2Key)).getText().toString();
-		String basePath = ((EditText)findViewById(R.id.editTextBasePath)).getText().toString();
-		String port = ((EditText)findViewById(R.id.editTextPortNumber)).getText().toString();
-
-		// add new unit to db
-		long huId = mHardwareUnitDataSource.addHardwareUnit(unitName, basePath, Integer.parseInt(port), apName, key, "");
-
-		// send discover command
-		SyncWifiCommand command = new SyncWifiCommand(mHardwareUnitDataSource.getHardwareUnitById(huId), this);
-		command.send();
-	}
+        // send discover command
+        HackCommand syncWifiCommand = new SyncWifiCommand(mHardwareUnitDataSource.getHardwareUnitById(huId), this);
+        syncWifiCommand.send();
+    }
 }

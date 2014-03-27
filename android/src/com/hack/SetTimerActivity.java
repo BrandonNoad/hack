@@ -2,7 +2,6 @@ package com.hack;
 
 import java.util.Calendar;
 
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.app.Activity;
@@ -26,13 +25,13 @@ import android.widget.TimePicker;
 
 public class SetTimerActivity extends Activity
 implements TimePickerDialog.OnTimeSetListener {
-    
+
     // -- Constants
-    
+
     public static final String EXTRA_TIME_ON = "com.hack.TIME_ON";
     public static final String EXTRA_TIME_OFF = "com.hack.TIME_OFF";
     public static final String EXTRA_IS_REPEATED = "com.hack.IS_REPEATED";
-    
+
     // -- Member variables
     private TimerDataSource mTimerDataSource;
     private HardwareUnitDataSource mHardwareUnitDataSource;
@@ -47,65 +46,65 @@ implements TimePickerDialog.OnTimeSetListener {
     private HackConnectionManager mConnectionManager;
 
     // -- Initialize Activity
-    
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_set_timer);
         // Show the Up button in the action bar.
         setupActionBar();
-        
+
         mTimerDataSource = new TimerDataSource(this);
         mTimerDataSource.open();
         mDeviceDataSource = new DeviceDataSource(this);
         mDeviceDataSource.open();
         mHardwareUnitDataSource = new HardwareUnitDataSource(this);
         mHardwareUnitDataSource.open();
-        
+
         // get device id from previous activity
         Intent intent = getIntent();
         mDeviceId = intent.getLongExtra(SingleUnitActivity.EXTRA_DEVICE_ID, -1);
         mDevice = mDeviceDataSource.getDeviceById(mDeviceId);
         mHardwareUnit = mHardwareUnitDataSource.getHardwareUnitById(mDevice.getHardwareUnitId());
-        
+
         mConnectionManager = ((HackApplication) getApplicationContext()).getConnectionManager();
-        
+
         // set up event listeners
         mIsRepeatedCheckBox = (CheckBox) findViewById(R.id.repeatCheckBox);
         mTimeOnEditText = (EditText) findViewById(R.id.timeOnEditText);
         mTimeOffEditText = (EditText) findViewById(R.id.timeOffEditText);
         Button setTimerSaveButton = (Button) findViewById(R.id.setTimerSaveButton);
-        
+
         mTimeOnEditText.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
                 mSelectedEditText = (EditText) v;
                 showTimePickerDialog();
-                
+
             }
         });
-        
+
         mTimeOffEditText.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
                 mSelectedEditText = (EditText) v;
                 showTimePickerDialog();
-                
+
             }
         });
-        
+
         setTimerSaveButton.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
-            	
-            	//grab the text from the EditText object
-            	String  timeOffText = mTimeOffEditText.getText().toString();
-            	String  timeOnText = mTimeOnEditText.getText().toString();
-            	if(timeOnText.isEmpty() || timeOffText.isEmpty()){//one of the the fields is empty
-            		
-            		//create an alert dialog
-            		AlertDialog.Builder alertDialog = new AlertDialog.Builder(SetTimerActivity.this);
-            		
-            		//set the message to be displayed
+
+                //grab the text from the EditText object
+                String  timeOffText = mTimeOffEditText.getText().toString();
+                String  timeOnText = mTimeOnEditText.getText().toString();
+                if(timeOnText.isEmpty() || timeOffText.isEmpty()){//one of the the fields is empty
+
+                    //create an alert dialog
+                    AlertDialog.Builder alertDialog = new AlertDialog.Builder(SetTimerActivity.this);
+
+                    //set the message to be displayed
                     alertDialog.setMessage(R.string.dialog_message);
-                    
+
                     //set the behaviour of the button
                     alertDialog.setPositiveButton(R.string.okay, new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int id) {
@@ -117,12 +116,12 @@ implements TimePickerDialog.OnTimeSetListener {
                     AlertDialog alert = alertDialog.create();
                     alert.show();
                     return;
-            	}
+                }
                 addTimer();
-               
+
             }
         });
-        
+
     }
 
     /**
@@ -159,75 +158,76 @@ implements TimePickerDialog.OnTimeSetListener {
         }
         return super.onOptionsItemSelected(item);
     }
-    
+
     // -- Intents
-    
+
     public void startDeviceDetailsActivity() {
         Intent intent = new Intent(this, DeviceDetailsActivity.class);
         intent.putExtra(SingleUnitActivity.EXTRA_DEVICE_ID, mDeviceId);
         startActivity(intent);
     }
-    
+
     // -- Time Picker Dialog
-   
+
     public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
         String meridiem = "AM";
-        
+
         if (hourOfDay >= 12) {
             meridiem  = "PM";
         }
-        
+
         hourOfDay %= 12;
-        
+
         if (hourOfDay == 0) {
             hourOfDay = 12;
         }
-        
+
         String min = "" + minute;
-        
+
         if (minute < 10) {
             min = "0" + minute;
         }
-        
+
         String timeString = hourOfDay + ":" + min + " " + meridiem;
-        
+
         if (mSelectedEditText != null) {
-        mSelectedEditText.setText(timeString);
-        mSelectedEditText = null;
+            mSelectedEditText.setText(timeString);
+            mSelectedEditText = null;
         } else {
-          Log.i("SetTimerActivity - onTimeSet()", "mSelectedEditText is null");  
+            Log.i("SetTimerActivity - onTimeSet()", "mSelectedEditText is null");  
         }
     }
-    
+
     public void showTimePickerDialog() {
         DialogFragment newFragment = new TimePickerFragment();
         newFragment.show(getFragmentManager(), "timePicker");
     }   
-    
-    
+
+
     public static class TimePickerFragment extends DialogFragment {
-        
+
         @Override
         public Dialog onCreateDialog(Bundle savedInstanceState) {
             // Use the current time as the default values for the picker
             final Calendar c = Calendar.getInstance();
             int hour = c.get(Calendar.HOUR_OF_DAY);
             int minute = c.get(Calendar.MINUTE);
-            
+
             // Create a new instance of TimePickerDialog and return it
             return new TimePickerDialog(getActivity(), (SetTimerActivity) getActivity(), hour, minute,
-                                        false);
+                    false);
         }        
     }
-    
-// -- Model
-    
+
+    // -- Model
+
     public void addTimer() {
-        String url = "/hack/setTimer?socket=" + mDevice.getSocketId();
-        mConnectionManager.submitRequest(new HackCommand(SetTimerActivity.this, mHardwareUnit, url) {
-            
+        String url = "http://" + mHardwareUnit.getBasePath() + ":" + mHardwareUnit.getPortNumber() + "/hack/setTimer?socket=" + mDevice.getSocketId();
+        HackCommand setTimerCommand = new HackCommand(SetTimerActivity.this, mHardwareUnit, url) {
+
             @Override
-            public void doSuccess(JSONObject data) {
+            public void doSuccess(JSONObject data, String message) {
+                super.doSuccess(data, message);
                 if (data != null) {
                     String timeOn = mTimeOnEditText.getText().toString();
                     String timeOff = mTimeOffEditText.getText().toString();
@@ -236,8 +236,10 @@ implements TimePickerDialog.OnTimeSetListener {
                     startDeviceDetailsActivity();
                 }
             }
-        });
+        };
         
+        setTimerCommand.send();
+
     }
 
 }

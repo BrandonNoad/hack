@@ -23,19 +23,19 @@ import android.widget.TextView;
 import android.widget.TextView.OnEditorActionListener;
 
 public class AddDeviceActivity extends Activity {
-    
+
     // -- Constants
-    
+
     public final static String EXTRA_UNIT_ID = "com.hack.UNIT_ID";
-    
+
     // -- Member Variables
-    
+
     private DeviceDataSource mDeviceDataSource;
     private long mHardwareUnitId;
     private long mSocketId;
     private long mDeviceId;
     private Device mDevice = null;
-    
+
     private Spinner mDeviceTypeSpinner;
     private ArrayAdapter<CharSequence> mDeviceTypeAdapter;
     private int mSelectedDeviceTypeId = 1;
@@ -43,43 +43,43 @@ public class AddDeviceActivity extends Activity {
     private EditText deviceNameET;
 
     // -- Initialize Activity
-    
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_device);
         // Show the Up button in the action bar.
         setupActionBar();
-        
+
         // initialize memebrs
         mActionBar = getActionBar();   
         mDeviceDataSource = new DeviceDataSource(this);
         mDeviceDataSource.open();
         deviceNameET = (EditText) findViewById(R.id.deviceNameEditText);
-        
-        
+
+
         // get hardware unit id and socket id from previous activity
         Intent intent = getIntent();
-        
+
         mDeviceId = intent.getLongExtra(SingleUnitActivity.EXTRA_DEVICE_ID, -1);
         mHardwareUnitId = intent.getLongExtra(SingleUnitActivity.EXTRA_HARDWARE_UNIT_ID, -1);
         mSocketId = intent.getLongExtra(SingleUnitActivity.EXTRA_SOCKET_ID, -1);
         String title = intent.getStringExtra(SingleUnitActivity.EXTRA_TITLE);
-        
+
         mActionBar.setTitle(title);
-        
+
         // create spinner
         mDeviceTypeSpinner = (Spinner) findViewById(R.id.deviceTypeSpinner);
-        
+
         //populate spinner with predefined types listed in hardware_types
         mDeviceTypeAdapter = ArrayAdapter.createFromResource(this,
-                                                             R.array.hardware_types, 
-                                                             android.R.layout.simple_spinner_item);
-        
+                R.array.hardware_types, 
+                android.R.layout.simple_spinner_item);
+
         // set layout of spinner
         mDeviceTypeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         mDeviceTypeSpinner.setAdapter(mDeviceTypeAdapter);
-        
+
         if (mDeviceId != -1) {
             mDevice = mDeviceDataSource.getDeviceById(mDeviceId);
             if (mDevice != null) {
@@ -90,30 +90,30 @@ public class AddDeviceActivity extends Activity {
                 // change spinner selection
                 mDeviceTypeSpinner.setSelection(mDeviceTypeAdapter.getPosition(mDevice.getType()));
             }
-            
+
         }
-        
-        
-        
+
+
+
         // set up event listeners
         deviceNameET.setOnEditorActionListener(new OnEditorActionListener(){
-           @Override
-           public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-               if (actionId == EditorInfo.IME_ACTION_DONE) {
-                   if (mDeviceId != -1) {
-                       updateDevice();
-                       startDeviceDetailsActivity(mDeviceId);
-                   } else {
-                       addDevice();
-                       startSingleUnitActivity();
-                   }
-                   
-                   return true;
-               }
-               return false;
-           }
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                if (actionId == EditorInfo.IME_ACTION_DONE) {
+                    if (mDeviceId != -1) {
+                        updateDevice();
+                        startDeviceDetailsActivity(mDeviceId);
+                    } else {
+                        addDevice();
+                        startSingleUnitActivity();
+                    }
+
+                    return true;
+                }
+                return false;
+            }
         });
-        
+
         // set spinner event listener
         mDeviceTypeSpinner.setOnItemSelectedListener(new OnItemSelectedListener() {
 
@@ -132,24 +132,24 @@ public class AddDeviceActivity extends Activity {
             public void onNothingSelected(AdapterView<?> arg0) {
                 // default to simple
                 mSelectedDeviceTypeId = 1;
-                
+
             }});
-        
-           
+
+
         Button addDeviceButton = (Button) findViewById(R.id.add_device_button);
         addDeviceButton.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
-          
-            	//grab the text from the EditText object
-            	String  editText = deviceNameET.getText().toString();
-            	if(editText.isEmpty()){//the field is empty
-            		
-            		//create an alert dialog
-            		AlertDialog.Builder alertDialog = new AlertDialog.Builder(AddDeviceActivity.this);
-            		
-            		//set the message to be displayed
+
+                //grab the text from the EditText object
+                String  editText = deviceNameET.getText().toString();
+                if(editText.isEmpty()){//the field is empty
+
+                    //create an alert dialog
+                    AlertDialog.Builder alertDialog = new AlertDialog.Builder(AddDeviceActivity.this);
+
+                    //set the message to be displayed
                     alertDialog.setMessage(R.string.dialog_message);
-                    
+
                     //set the behaviour of the button
                     alertDialog.setPositiveButton(R.string.okay, new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int id) {
@@ -161,8 +161,8 @@ public class AddDeviceActivity extends Activity {
                     AlertDialog alert = alertDialog.create();
                     alert.show();
                     return;
-            	}  	
-            	
+                }  	
+
                 if (mDeviceId != -1) {
                     updateDevice();
                     startDeviceDetailsActivity(mDeviceId);
@@ -173,7 +173,7 @@ public class AddDeviceActivity extends Activity {
             }
         });
     }
-    
+
     // -- Action Bar
 
     /**
@@ -201,7 +201,7 @@ public class AddDeviceActivity extends Activity {
             //
             // http://developer.android.com/design/patterns/navigation.html#up-vs-back
             //
-            
+
             // make sure we pass in the hardware unit id
             Intent upIntent = NavUtils.getParentActivityIntent(this);
             upIntent.putExtra(AllUnitsActivity.EXTRA_UNIT_ID, mHardwareUnitId);
@@ -210,29 +210,29 @@ public class AddDeviceActivity extends Activity {
         }
         return super.onOptionsItemSelected(item);
     }
-    
+
     // -- Intents
-    
+
     public void startSingleUnitActivity() {
         Intent intent = new Intent(this, SingleUnitActivity.class);
         intent.putExtra(EXTRA_UNIT_ID, mHardwareUnitId);  // pass back hardware unit id
         startActivity(intent);
     }
-    
+
     public void startDeviceDetailsActivity(long deviceId) {
         Intent intent = new Intent(this, DeviceDetailsActivity.class);
         intent.putExtra(SingleUnitActivity.EXTRA_DEVICE_ID, deviceId);
         startActivity(intent);
     }
-    
+
     // -- Model
-    
+
     public void addDevice() {
         EditText et = (EditText) findViewById(R.id.deviceNameEditText);
         String deviceName = et.getText().toString();
         long deviceId = mDeviceDataSource.addDevice(mHardwareUnitId, mSocketId, deviceName, mSelectedDeviceTypeId);
     }
-    
+
     public void updateDevice() {
         EditText et = (EditText) findViewById(R.id.deviceNameEditText);
         String deviceName = et.getText().toString();

@@ -43,6 +43,7 @@ public class HackConnectionManager {
             String response = null;
             // choose BT adapter if available
             if (mBluetoothAdapter.isUnitAvailable(command)) {
+                Log.i("HackConnectionManager - doInBackground()", "using BT...");
                 translateToBluetooth(command);
                 command.setTest(command.getUrl());
                 response = mBluetoothAdapter.submitRequest(command);
@@ -56,7 +57,7 @@ public class HackConnectionManager {
         @Override
         protected void onPostExecute(String response) {
             mmCommand.hideProgressDialog();
-            Log.i("HackWifiAdapter - onPostExecute()", "response: " + response);
+            Log.i("HackConnectionManager - onPostExecute()", "response: " + response);
             mmCommand.onPostExecute(response);
         }
     }

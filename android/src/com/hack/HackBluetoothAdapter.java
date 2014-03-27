@@ -115,6 +115,7 @@ public class HackBluetoothAdapter extends HackConnectionAdapter {
     }
 
     public boolean isUnitAvailable(HackCommand c) {
+        Log.i("HackBluetoothAdapter - isUnitAvailable()", "starting...");
         // If we are looking for a unit we haven't seen before
         if (c.getHardwareUnit().getBtMac().equals("")) {
             // Check if we have an unrecognized unit already paired
@@ -163,7 +164,7 @@ public class HackBluetoothAdapter extends HackConnectionAdapter {
         // Technically the stream is a thread, so discard it at this point
         mStream.cancel();
 
-        return "success!";
+        return "{'success': 1, 'data': {}, 'message':'Success!'}";
     }
 
 

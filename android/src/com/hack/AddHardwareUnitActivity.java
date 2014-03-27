@@ -3,7 +3,9 @@ package com.hack;
 import org.json.JSONObject;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.NavUtils;
@@ -130,6 +132,28 @@ public class AddHardwareUnitActivity extends Activity {
         String key = ((EditText)findViewById(R.id.editTextWpa2Key)).getText().toString();
         String basePath = ((EditText)findViewById(R.id.editTextBasePath)).getText().toString();
         String port = ((EditText)findViewById(R.id.editTextPortNumber)).getText().toString();
+        
+        if(unitName.isEmpty() || apName.isEmpty() || key.isEmpty() ||
+                basePath.isEmpty() || port.isEmpty()){//at least one field is empty
+            
+            //create an alert dialog
+            AlertDialog.Builder alertDialog = new AlertDialog.Builder(AddHardwareUnitActivity.this);
+            
+            //set the message to be displayed
+            alertDialog.setMessage(R.string.dialog_message);
+            
+            //set behaviour of the button
+            alertDialog.setPositiveButton(R.string.okay, new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int id) {
+                    dialog.dismiss();
+                }
+            });
+
+            //display the alert dialog
+            AlertDialog alert = alertDialog.create();
+            alert.show();
+            return;
+        }
 
         // add new unit to db
         // should we wait until we get a successful response back from espruino before adding? i.e. do in command doSuccess() instead?

@@ -52,7 +52,7 @@ public class DeviceDetailsActivity extends Activity {
     private ActionBar mActionBar;
     private ActionMode mActionMode = null;
 
-    private ProgressDialog mProgressDialog;
+    private long mHardwareUnitId;
     private HardwareUnit mHardwareUnit;
 
     private boolean isCheckedChangeEnabled = true;
@@ -80,6 +80,9 @@ public class DeviceDetailsActivity extends Activity {
         // get device id from previous activity
         Intent intent = getIntent();
         mDeviceId = intent.getLongExtra(SingleUnitActivity.EXTRA_DEVICE_ID, -1);
+        mHardwareUnitId = intent.getLongExtra(SingleUnitActivity.EXTRA_HARDWARE_UNIT_ID, -1);
+        
+        mHardwareUnit = mHardwareUnitDataSource.getHardwareUnitById(mHardwareUnitId);
 
         mEnableTimerButton = (Button) findViewById(R.id.enableTimerButton);
         mDeviceTimerDetails = (TextView) findViewById(R.id.deviceTimerDetails);
@@ -87,10 +90,10 @@ public class DeviceDetailsActivity extends Activity {
         mDeviceType = (TextView) findViewById(R.id.deviceType);
         mDeviceOnSinceTime = (TextView) findViewById(R.id.deviceLastTimeOn);
         mDeviceTotalTimeOn = (TextView) findViewById(R.id.deviceTotalTimeOn);
-        mDevicePowerUsage = (TextView) findViewById(R.id.devicePowerUsage);        
-
-        // update stats
-        updateDeviceStatistics();
+        mDevicePowerUsage = (TextView) findViewById(R.id.devicePowerUsage);
+        
+        // update on-screen stats        
+        updateUIDeviceStatistics();
 
         // set up event listeners
         mDeviceStateSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -111,40 +114,9 @@ public class DeviceDetailsActivity extends Activity {
                         @Override
                         public void doSuccess(JSONObject data, String message) {
                             super.doSuccess(data, message);
-                            if (data != null) {                                
-                                int newState = 0;
-                                long totalTimeOn = 0; // milliseconds
-                                long onSinceTime = 0; // milliseconds
-                                long espruinoCurrentTime = 0; // milliseconds
-                                try {
-                                    espruinoCurrentTime = data.getLong("currentTime");
-                                    JSONObject outlet = data.getJSONArray("outlets").getJSONObject((int) mSocketId);
-                                    newState = outlet.getInt("state");                                    
-                                    totalTimeOn = outlet.getLong("totalTimeOn");
-                                    onSinceTime = outlet.getLong("onSinceTime");
-                                    Log.i("DeviceDetailsActivity - onPostExecute()", "new state: " + newState + 
-                                            ", current time: " + espruinoCurrentTime + 
-                                            ", total time on: " + totalTimeOn +
-                                            ", on since time: " + onSinceTime);
-                                } catch (JSONException e) {
-                                    // TODO Auto-generated catch block
-                                    e.printStackTrace();
-                                }
-                                // update db
-                                // TODO: change updateDevice to update totaltime on and last time on
-
-                                // time conversion
-                                long now = new Date().getTime();
-                                long actualOnSinceTime;
-                                if (onSinceTime != -1) {
-                                    actualOnSinceTime = now - ((espruinoCurrentTime - onSinceTime) * 1000);
-                                } else {
-                                    actualOnSinceTime = 0;
-                                }
-                                mDeviceDataSource.updateDevice(mDeviceId, newState, totalTimeOn, actualOnSinceTime);
-                                updateDeviceStatistics();
-                                Log.i("DeviceDetailsActivity - onPostExecute","device statistics updated");
-                            }
+                            parseJSONResponse(data);
+                            updateUIDeviceStatistics();
+                            Log.i("DeviceDetailsActivity - onPostExecute","device statistics updated");
                         }
 
                         @Override
@@ -230,45 +202,10 @@ public class DeviceDetailsActivity extends Activity {
                 @Override
                 public void doSuccess(JSONObject data, String message) {
                     super.doSuccess(data, message);
-                    if (data != null) {
-                        ArrayList<Device> devices = mDeviceDataSource.getAllDevicesForHardwareUnit(mHardwareUnit.getId());
-                        for (Device d : devices) {
-                            Log.i("DeviceDetailsActivity - Refresh - doSuccess()", "refreshing device at socket: " + d.getSocketId());
-                            int newState = 0;
-                            long totalTimeOn = 0; // milliseconds
-                            long onSinceTime = 0; // milliseconds
-                            long espruinoCurrentTime = 0; // milliseconds
-                            try {
-                                espruinoCurrentTime = data.getLong("currentTime");
-                                JSONObject outlet = data.getJSONArray("outlets").getJSONObject((int) d.getSocketId());
-                                newState = outlet.getInt("state");                                    
-                                totalTimeOn = outlet.getLong("totalTimeOn");
-                                onSinceTime = outlet.getLong("onSinceTime");
-                                Log.i("DeviceDetailsActivity - onPostExecute()", "new state: " + newState + 
-                                        ", current time: " + espruinoCurrentTime + 
-                                        ", total time on: " + totalTimeOn +
-                                        ", on since time: " + onSinceTime);                                
-                            } catch (JSONException e) {
-                                // TODO Auto-generated catch block
-                                e.printStackTrace();
-                            }
-                            // update db
-                            // TODO: change updateDevice to update totaltime on and last time on
-                            // time conversion
-                            long now = new Date().getTime();
-                            long actualOnSinceTime;
-                            if (onSinceTime != -1) {
-                                actualOnSinceTime = now - ((espruinoCurrentTime - onSinceTime) * 1000);
-                            } else {
-                                actualOnSinceTime = -1;
-                            }                               
-                            mDeviceDataSource.updateDevice(d.getId(), newState, totalTimeOn, actualOnSinceTime);
-                        }
-                        updateDeviceStatistics();
-                        Log.i("DeviceDetailsActivity - onPostExecute","device statistics updated");
-                    }
+                    parseJSONResponse(data);
+                    updateUIDeviceStatistics();
+                    Log.i("DeviceDetailsActivity - onPostExecute","device statistics updated");
                 }
-
             };
 
             // send command
@@ -360,7 +297,7 @@ public class DeviceDetailsActivity extends Activity {
         return ((totalTimeOn / 360) * multFactor) / 1000; 
     }
 
-    public void deleteTimer() {
+    private void deleteTimer() {
         if (mTimer != null && mDevice != null) {
             // delete timer from db
             mTimerDataSource.deleteTimerByDeviceId(mDevice.getId());
@@ -372,13 +309,47 @@ public class DeviceDetailsActivity extends Activity {
 
         }
     }
+    
+    private void parseJSONResponse(JSONObject data) {
+        if (data != null) {
+            ArrayList<Device> devices = mDeviceDataSource.getAllDevicesForHardwareUnit(mHardwareUnitId);
+            // update each of the devices in the db
+            for (Device d : devices) {
+                Log.i("DeviceDetailsActivity - parseJSONResponse()", "updating device at socket: " + d.getSocketId());
+                int newState = 0;
+                long totalTimeOn = 0; // milliseconds
+                long onSinceTime = -1; // milliseconds
+                long espruinoCurrentTime = 0; // milliseconds
+                try {
+                    espruinoCurrentTime = data.getLong("currentTime");
+                    JSONObject outlet = data.getJSONArray("outlets").getJSONObject((int) d.getSocketId());
+                    newState = outlet.getInt("state");                                    
+                    totalTimeOn = outlet.getLong("totalTimeOn");
+                    onSinceTime = outlet.getLong("onSinceTime");
+                    Log.i("DeviceDetailsActivity - parseJSONResponse", 
+                            "new state: " + newState + 
+                            ", current time: " + espruinoCurrentTime + 
+                            ", total time on: " + totalTimeOn +
+                            ", on since time: " + onSinceTime);                                
+                } catch (JSONException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+                // update db
+                // time conversion
+                long now = new Date().getTime();
+                if (onSinceTime != -1) {
+                    onSinceTime = now - ((espruinoCurrentTime - onSinceTime) * 1000);
+                }                               
+                mDeviceDataSource.updateDevice(d.getId(), newState, totalTimeOn, onSinceTime);
+            }
+        }
+    }
 
-    public void updateDeviceStatistics() {
+    private void updateUIDeviceStatistics() {
         if (mDeviceDataSource != null) {
             mDevice = mDeviceDataSource.getDeviceById(mDeviceId);
-
             if (mDevice != null) {
-                mHardwareUnit = mHardwareUnitDataSource.getHardwareUnitById(mDevice.getHardwareUnitId());
                 mSocketId = mDevice.getSocketId();
                 // title
                 mActionBar.setTitle(mDevice.getName());
@@ -395,7 +366,7 @@ public class DeviceDetailsActivity extends Activity {
                 mDeviceType.setText(getString(R.string.type_colon) + " " + mDevice.getType());
                 // on since time
                 String onSinceTime = "OFF";
-                Log.i("DeviceDetailsActivity - updateStatistics()", "on Since: " + mDevice.getOnSinceTime());
+                Log.i("DeviceDetailsActivity - updateUIDeviceStatistics()", "Actual on Since: " + mDevice.getOnSinceTime());
                 if (mDevice.getOnSinceTime() != -1) {
                     Date onSinceDate = new Date(mDevice.getOnSinceTime());
                     DateFormat df = DateFormat.getTimeInstance();
@@ -409,6 +380,7 @@ public class DeviceDetailsActivity extends Activity {
                 mDevicePowerUsage.setText(getString(R.string.power_usage_colon) + " " + powerUsage + " kWh");
             }
         }
+        
         // get timer info
         if (mTimerDataSource != null) {
             mTimer = mTimerDataSource.getTimerByDeviceId(mDeviceId);

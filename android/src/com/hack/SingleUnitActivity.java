@@ -209,17 +209,19 @@ public class SingleUnitActivity extends Activity {
     public void startDeviceDetailsActivity(long deviceId) {
         Intent intent = new Intent(this, DeviceDetailsActivity.class);
         intent.putExtra(EXTRA_DEVICE_ID, deviceId);
+        intent.putExtra(EXTRA_HARDWARE_UNIT_ID, mHardwareUnitId);
         startActivity(intent);
     }
 
     // -- Model
 
     public void deleteDevice(Device device) {
-        String url = "/hack/delete?socket=" + device.getSocketId();
-        mConnectionManager.submitRequest(new HackCommand(SingleUnitActivity.this, mHardwareUnit, url) {
+        String url = "http://" + mHardwareUnit.getBasePath() + ":" + mHardwareUnit.getPortNumber() + "/hack/delete?socket=" + device.getSocketId();
+        HackCommand deleteCommand = new HackCommand(SingleUnitActivity.this, mHardwareUnit, url) {
 
             @Override
             public void doSuccess(JSONObject data, String message) {
+                super.doSuccess(data, message);
                 if (data != null) {
                     mDeviceDataSource.deleteDeviceById(mSelectedDevice.getId());
                     mDevices.set((int) mSelectedDevice.getSocketId(), null);
@@ -228,7 +230,9 @@ public class SingleUnitActivity extends Activity {
                 }
             }
 
-        });
+        };
+        
+        deleteCommand.send();
 
 
     }

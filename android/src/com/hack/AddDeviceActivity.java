@@ -222,6 +222,7 @@ public class AddDeviceActivity extends Activity {
     public void startDeviceDetailsActivity(long deviceId) {
         Intent intent = new Intent(this, DeviceDetailsActivity.class);
         intent.putExtra(SingleUnitActivity.EXTRA_DEVICE_ID, deviceId);
+        intent.putExtra(SingleUnitActivity.EXTRA_HARDWARE_UNIT_ID, mHardwareUnitId);
         startActivity(intent);
     }
 

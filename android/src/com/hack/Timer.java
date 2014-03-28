@@ -4,11 +4,11 @@ public class Timer {
 
     private long mId;
     private long mDeviceId;
-    private String mTimeOn;
-    private String mTimeOff;
+    private long mTimeOn;
+    private long mTimeOff;
     private boolean mIsRepeated;
 
-    public Timer(long id, long deviceId, String timeOn, String timeOff, boolean isRepeated) {
+    public Timer(long id, long deviceId, long timeOn, long timeOff, boolean isRepeated) {
         mId = id;
         mDeviceId = deviceId;
         mTimeOn = timeOn;
@@ -24,11 +24,11 @@ public class Timer {
         return mDeviceId;
     }
 
-    public String getTimeOn() {
+    public long getTimeOn() {
         return mTimeOn;
     }
 
-    public String getTimeOff() {
+    public long getTimeOff() {
         return mTimeOff;
     }
 

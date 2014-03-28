@@ -32,12 +32,12 @@
     <string name="yes">Yes</string>
     <string name="no">No</string>
     <string name="set_time">Set Time</string>
-    <string name="name_colon">Name:</string>
-    <string name="type_colon">Type:</string>
-    <string name="on_since_colon">On Since:</string>
-    <string name="total_time_on_colon">Total Time On:</string>
-    <string name="power_usage_colon">Power Usage:</string>
-    <string name="timer_colon">Timer:</string>
+    <string name="name">Name</string>
+    <string name="type">Type</string>
+    <string name="on_since">On Since</string>
+    <string name="total_time_on">Total Time On</string>
+    <string name="power_usage">Power Usage</string>
+    <string name="timer">Timer</string>
     <string name="enable">Enable</string>
     <string name="title_activity_set_timer">Set Timer</string>
     <string name="time_on">Time On</string>
@@ -49,6 +49,16 @@
     <string name="action_delete">Delete</string>
     <string name="dialog_message">Please Fill In All Fields</string>
     <string name="okay">Okay</string>
+    <string name="enter_device_name">Enter Device Name</string>
+    <string name="device_name">Device Name</string>
+    <string name="enter_time_on">Enter Time On</string>
+    <string name="enter_time_off">Enter Time Off</string>
+    <string name="device_type">Device Type</string>
+    <string name="enter_hardware_unit_name">Enter Hardware Unit Name</string>
+    <string name="enter_access_point_name">Enter Access Point Name</string>
+    <string name="enter_wpa2_key">Enter WPA2 Key</string>
+    <string name="base_path_hint">E.g. hack.com</string>
+    <string name="enter_port_number">Enter Port Number</string>
 
     <string-array name="hardware_types">
         <item>Simple</item>

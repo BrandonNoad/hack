@@ -94,8 +94,8 @@ public class HackDbHelper extends SQLiteOpenHelper {
             " (" +
             HackTimers._ID + " INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
             HackTimers.COLUMN_NAME_DEVICE_ID + " " + INT_TYPE + ", " +
-            HackTimers.COLUMN_NAME_TIMER_TIME_ON + " " + TEXT_TYPE + ", " +
-            HackTimers.COLUMN_NAME_TIMER_TIME_OFF + " " + TEXT_TYPE + ", " +
+            HackTimers.COLUMN_NAME_TIMER_TIME_ON + " " + INT_TYPE + ", " +
+            HackTimers.COLUMN_NAME_TIMER_TIME_OFF + " " + INT_TYPE + ", " +
             HackTimers.COLUMN_NAME_TIMER_IS_REPEATED + " " + INT_TYPE +
             ")";
 

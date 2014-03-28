@@ -161,7 +161,7 @@ public class AddDeviceActivity extends Activity {
                     AlertDialog alert = alertDialog.create();
                     alert.show();
                     return;
-                }  	
+                }      
 
                 if (mDeviceId != -1) {
                     updateDevice();

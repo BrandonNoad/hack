@@ -2,10 +2,6 @@ package com.hack;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.List;
-
-import org.apache.http.NameValuePair;
-import org.apache.http.client.utils.URLEncodedUtils;
 
 import android.os.AsyncTask;
 import android.util.Log;
@@ -47,7 +43,7 @@ public class HackConnectionManager {
                 translateToBluetooth(command);
                 response = mBluetoothAdapter.submitRequest(command);
             } else {
-            	translateToWifi(command);
+                translateToWifi(command);
                 response = mWifiAdapter.submitRequest(command);
             }
             // need to set the Command response string in the Adapters
@@ -81,35 +77,64 @@ public class HackConnectionManager {
 
     // -- Private members
 
+    /**
+     * Notes on command formats:
+     *
+     * Commands will always have the following form:
+     *
+     * /hack/<commandName>?<argsAsGET>
+     *
+     * Since they can be since over bluetooth or Wifi, things
+     * change slightly for each case.
+     *
+     * For bluetooth, the command looks very similar to above except
+     * it ends in $, to indicate when a receiver should stop listening
+     * on a stream.
+     *
+     * e.g. /hack/on?socket=0$
+     *
+     * For Wifi, the command needs to be embedded in a proper URL,
+     * so the base command form is prepended with http and a
+     * hostname/IP address.
+     *
+     * e.g. http://192.168.1.129:8080/hack/on?socket=0
+     */
     void translateToBluetooth(HackCommand command) {
         String translation = command.getUrl();
 
         // If it has the Wifi prefix, remove it
         if (translation.startsWith("http://")) {
-        	translation = translation.substring(6, translation.length() - 1);
+            URI uriCommand = null;
+            try {
+                uriCommand = new URI(translation);
+            } catch (URISyntaxException e1) {
+                //command.returnEarly("Couldn't parse the command url");
+            }
+            translation = uriCommand.getPath() + "?" + uriCommand.getRawQuery();
         }
         
         // If it doesn't have the Bluetooth suffix, add it
         if (!translation.endsWith("$")) {
-        	translation += "$";
+            translation += "$";
         }
 
         command.setUrl(translation);
     }
 
     void translateToWifi(HackCommand command) {
-    	String translation = command.getUrl();
-    	
-    	// If it doesn't have a Wifi prefix, add it
-    	if (!translation.startsWith("http://")) {
-    		translation = "http:/" + translation.substring(translation.indexOf("/"), translation.length() - 1);
-    	}
-    	
-    	// If it has the Bluetooth suffix, remove it
-    	if (translation.endsWith("$")) {
-    		translation = translation.substring(0, translation.length() - 2);
-    	}
-    	
-    	command.setUrl(translation);
+        String translation = command.getUrl();
+        
+        // If it doesn't have a Wifi prefix, add it
+        if (!translation.startsWith("http://")) {
+            translation = "http://" + command.getHardwareUnit().getBasePath()
+                                    + translation.substring(translation.indexOf("/"), translation.length() - 1);
+        }
+        
+        // If it has the Bluetooth suffix, remove it
+        if (translation.endsWith("$")) {
+            translation = translation.substring(0, translation.length() - 2);
+        }
+        
+        command.setUrl(translation);
     }
 }

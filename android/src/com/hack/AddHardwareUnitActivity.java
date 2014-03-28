@@ -9,12 +9,14 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.NavUtils;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Toast;
 
 public class AddHardwareUnitActivity extends Activity {
 
@@ -34,11 +36,19 @@ public class AddHardwareUnitActivity extends Activity {
 
 
         @Override
-        public void doSuccess(JSONObject data, String message) {
-            super.doSuccess(data, message);
+        public void doSuccess(JSONObject response) {
+            super.doSuccess(response);
             // should we wait for success before we update the db?
             // return to all units activity
             startAllUnitsActivity();
+        }
+        
+        @Override
+        public void doFail(JSONObject response) {
+            super.doFail(response);
+
+            // Delete the hardware unit we made
+            mHardwareUnitDataSource.deleteHardwareUnitById(getHardwareUnit().getId());
         }
     }
 

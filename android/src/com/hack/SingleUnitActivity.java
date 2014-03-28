@@ -220,14 +220,12 @@ public class SingleUnitActivity extends Activity {
         HackCommand deleteCommand = new HackCommand(SingleUnitActivity.this, mHardwareUnit, url) {
 
             @Override
-            public void doSuccess(JSONObject data, String message) {
-                super.doSuccess(data, message);
-                if (data != null) {
-                    mDeviceDataSource.deleteDeviceById(mSelectedDevice.getId());
-                    mDevices.set((int) mSelectedDevice.getSocketId(), null);
-                    mDeviceAdapter.notifyDataSetChanged();
-                    mSelectedDevice = null;
-                }
+            public void doSuccess(JSONObject response) {
+                super.doSuccess(response);
+                mDeviceDataSource.deleteDeviceById(mSelectedDevice.getId());
+                mDevices.set((int) mSelectedDevice.getSocketId(), null);
+                mDeviceAdapter.notifyDataSetChanged();
+                mSelectedDevice = null;
             }
 
         };

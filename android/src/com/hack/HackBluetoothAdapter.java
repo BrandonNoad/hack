@@ -20,13 +20,12 @@ public class HackBluetoothAdapter extends HackConnectionAdapter {
 
     // -- Inner class that is used to interact with a connected Bluetooth socket
     private class BluetoothStream extends Thread {
-        private final BluetoothSocket mmSocket;
         private final InputStream mmInStream;
         private final OutputStream mmOutStream;
+        private boolean mmRunning;
 
         public BluetoothStream(BluetoothSocket socket) {
             Log.i("Connected Thread", "ctor starting");
-            mmSocket = socket;
             InputStream tmpIn = null;
             OutputStream tmpOut = null;
 
@@ -35,7 +34,10 @@ public class HackBluetoothAdapter extends HackConnectionAdapter {
             try {
                 tmpIn = socket.getInputStream();
                 tmpOut = socket.getOutputStream();
-            } catch (IOException e) { }
+            } catch (IOException e) {
+            	tmpIn = null;
+            	tmpOut = null;
+            }
 
             mmInStream = tmpIn;
             mmOutStream = tmpOut;
@@ -45,11 +47,17 @@ public class HackBluetoothAdapter extends HackConnectionAdapter {
 
         @Override
         public void run() {
+        	if (mmInStream == null || mmOutStream == null) {
+        		return;
+        	} else {
+        		mmRunning = true;
+        	}
+        	
             byte[] buffer = new byte[1024];  // buffer store for the stream
             int bytes; // bytes returned from read()
 
             // Keep listening to the InputStream until an exception occurs
-            while (true) {
+            while (mmRunning) {
                 try {
                     // Read from the InputStream
                     bytes = mmInStream.read(buffer);
@@ -71,12 +79,11 @@ public class HackBluetoothAdapter extends HackConnectionAdapter {
             } catch (IOException e) { }
 
         }
-
-        /* Call this from the main activity to shutdown the connection */
-        public void cancel() {
-            try {
-                mmSocket.close();
-            } catch (IOException e) { }
+        
+        public void done() {
+        	mmRunning = false;
+        	
+        	// Don't touch the mmStreams or mmSocket - let it be managed by BluetoothAdapter
         }
     }
 
@@ -151,7 +158,7 @@ public class HackBluetoothAdapter extends HackConnectionAdapter {
         mStream = new BluetoothStream(mSocket);
         mStream.start();
 
-        if (mStream != null) {
+        if (mStream != null && mStream.isAlive()) {
             mStream.write(" ".getBytes());
             mStream.write(command.getUrl().getBytes());
         } else {
@@ -162,7 +169,8 @@ public class HackBluetoothAdapter extends HackConnectionAdapter {
         // then return this response
 
         // Technically the stream is a thread, so discard it at this point
-        mStream.cancel();
+        // Note that this should leave mSocket and its streams intact...
+        mStream.done();
 
         return "{'success': 1, 'data': {}, 'message':'Success!'}";
     }

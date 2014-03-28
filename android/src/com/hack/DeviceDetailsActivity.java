@@ -9,20 +9,16 @@ import org.json.JSONObject;
 
 import android.app.ActionBar;
 import android.app.Activity;
-import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.NavUtils;
 import android.util.Log;
-import android.view.ActionMode;
 import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.view.View.OnLongClickListener;
-import android.widget.Button;
 import android.widget.CompoundButton;
+import android.widget.ImageButton;
 import android.widget.Switch;
 import android.widget.TextView;
 
@@ -36,7 +32,8 @@ public class DeviceDetailsActivity extends Activity {
     private long mSocketId;
     private int mDeviceState;
 
-    private Button mEnableTimerButton;
+    private ImageButton mAddTimerButton;
+    private ImageButton mDeleteTimerButton;
     private TextView mDeviceTimerDetails;
     private Switch mDeviceStateSwitch;
     private TextView mDeviceType;
@@ -50,7 +47,6 @@ public class DeviceDetailsActivity extends Activity {
     private TimerDataSource mTimerDataSource;   
 
     private ActionBar mActionBar;
-    private ActionMode mActionMode = null;
 
     private long mHardwareUnitId;
     private HardwareUnit mHardwareUnit;
@@ -84,11 +80,12 @@ public class DeviceDetailsActivity extends Activity {
         
         mHardwareUnit = mHardwareUnitDataSource.getHardwareUnitById(mHardwareUnitId);
 
-        mEnableTimerButton = (Button) findViewById(R.id.enableTimerButton);
+        mAddTimerButton = (ImageButton) findViewById(R.id.addTimerButton);
+        mDeleteTimerButton = (ImageButton) findViewById(R.id.deleteTimerButton);
         mDeviceTimerDetails = (TextView) findViewById(R.id.deviceTimerDetails);
         mDeviceStateSwitch = (Switch) findViewById(R.id.deviceStateSwitch);
         mDeviceType = (TextView) findViewById(R.id.deviceType);
-        mDeviceOnSinceTime = (TextView) findViewById(R.id.deviceLastTimeOn);
+        mDeviceOnSinceTime = (TextView) findViewById(R.id.deviceOnSince);
         mDeviceTotalTimeOn = (TextView) findViewById(R.id.deviceTotalTimeOn);
         mDevicePowerUsage = (TextView) findViewById(R.id.devicePowerUsage);
         
@@ -146,24 +143,17 @@ public class DeviceDetailsActivity extends Activity {
             }
         });
 
-        mEnableTimerButton.setOnClickListener(new OnClickListener() {
+        mAddTimerButton.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
                 startSetTimerActivity();
             }
         });
 
-        mDeviceTimerDetails.setOnLongClickListener(new OnLongClickListener() {
+        mDeleteTimerButton.setOnClickListener(new OnClickListener() {
 
             @Override
-            public boolean onLongClick(View v) {
-
-                if (mActionMode != null) {
-                    return false;
-                } else {                
-                    // Start the CAB using the ActionMode.Callback defined above
-                    mActionMode = DeviceDetailsActivity.this.startActionMode(mActionModeCallback);
-                    return true;
-                }
+            public void onClick(View v) {
+                deleteTimer();
             }
 
         });
@@ -234,46 +224,6 @@ public class DeviceDetailsActivity extends Activity {
         return super.onOptionsItemSelected(item);
     }
 
-    // -- Action Mode    
-
-    private ActionMode.Callback mActionModeCallback = new ActionMode.Callback() {
-
-        // Called when the action mode is created; startActionMode() was called
-        @Override
-        public boolean onCreateActionMode(ActionMode mode, Menu menu) {
-            // Inflate a menu resource providing context menu items
-            MenuInflater inflater = mode.getMenuInflater();
-            inflater.inflate(R.menu.all_units_action_mode, menu);
-            return true;
-        }
-
-        // Called each time the action mode is shown. Always called after onCreateActionMode, but
-        // may be called multiple times if the mode is invalidated.
-        @Override
-        public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
-            return false; // Return false if nothing is done
-        }
-
-        // Called when the user selects a contextual menu item
-        @Override
-        public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
-            switch (item.getItemId()) {
-            case R.id.action_delete:
-                deleteTimer();
-                mode.finish();
-                return true;
-            default:
-                return false;
-            }
-        }
-
-        // Called when the user exits the action mode
-        @Override
-        public void onDestroyActionMode(ActionMode mode) {
-            mActionMode = null;
-        }
-    };
-
     // -- Intents
 
     public void startSetTimerActivity() {
@@ -321,9 +271,10 @@ public class DeviceDetailsActivity extends Activity {
             mTimerDataSource.deleteTimerByDeviceId(mDevice.getId());
             mTimer = null;
 
-            // show enable button
-            mDeviceTimerDetails.setVisibility(View.GONE);
-            mEnableTimerButton.setVisibility(View.VISIBLE);
+            // show add button
+            mDeviceTimerDetails.setText("No Timer Set");
+            mAddTimerButton.setVisibility(View.VISIBLE);
+            mDeleteTimerButton.setVisibility(View.GONE);
 
         }
     }
@@ -381,21 +332,21 @@ public class DeviceDetailsActivity extends Activity {
                 }
                 isCheckedChangeEnabled = true;
                 // type
-                mDeviceType.setText(getString(R.string.type_colon) + " " + mDevice.getType());
+                mDeviceType.setText(mDevice.getType());
                 // on since time
                 String onSinceTime = "OFF";
                 Log.i("DeviceDetailsActivity - updateUIDeviceStatistics()", "Actual on Since: " + mDevice.getOnSinceTime());
                 if (mDevice.getOnSinceTime() != -1) {
                     Date onSinceDate = new Date(mDevice.getOnSinceTime());
-                    DateFormat df = DateFormat.getTimeInstance();
+                    DateFormat df = DateFormat.getTimeInstance(DateFormat.SHORT);
                     onSinceTime = df.format(onSinceDate);
                 }
-                mDeviceOnSinceTime.setText(getString(R.string.on_since_colon) + " " +  onSinceTime);
+                mDeviceOnSinceTime.setText(onSinceTime);
                 // total time on and power usage
                 long totalTimeOn = mDevice.getTotalTimeOn();
                 long powerUsage = calculatePowerUsage(totalTimeOn, mDevice.getTypeId());
-                mDeviceTotalTimeOn.setText(getString(R.string.total_time_on_colon) + " " + (totalTimeOn / 60) + " mins");
-                mDevicePowerUsage.setText(getString(R.string.power_usage_colon) + " " + powerUsage + " kWh");
+                mDeviceTotalTimeOn.setText((totalTimeOn / 60) + " minutes");
+                mDevicePowerUsage.setText(powerUsage + " kWh");
             }
         }
         
@@ -404,12 +355,18 @@ public class DeviceDetailsActivity extends Activity {
             mTimer = mTimerDataSource.getTimerByDeviceId(mDeviceId);
             // no timer set?
             if (mTimer == null) {
-                mDeviceTimerDetails.setVisibility(View.GONE);
-                mEnableTimerButton.setVisibility(View.VISIBLE);
+                mDeviceTimerDetails.setText("No Timer Set");
+                mAddTimerButton.setVisibility(View.VISIBLE);
+                mDeleteTimerButton.setVisibility(View.GONE);
             } else {
-                mEnableTimerButton.setVisibility(View.GONE);
-                mDeviceTimerDetails.setVisibility(View.VISIBLE);
-                mDeviceTimerDetails.setText("Turn ON between: " + mTimer.getTimeOn() + " - " + mTimer.getTimeOff());
+                mAddTimerButton.setVisibility(View.GONE);
+                mDeleteTimerButton.setVisibility(View.VISIBLE);
+                DateFormat df = DateFormat.getTimeInstance(DateFormat.SHORT);
+                Date timeOnDate = new Date(mTimer.getTimeOn());
+                Date timeOffDate = new Date(mTimer.getTimeOff());
+                String timeOn = df.format(timeOnDate);
+                String timeOff = df.format(timeOffDate);
+                mDeviceTimerDetails.setText("Turn ON: " + timeOn + " - " + timeOff);
             }
         }
     }

@@ -19,7 +19,7 @@ public class TimerDataSource extends HackDataSource {
      * Add a new timer
      * @return long - id of new timer
      */
-    public long addTimer(long deviceId, String timeOn, String timeOff, boolean isRepeated) {
+    public long addTimer(long deviceId, long timeOn, long timeOff, boolean isRepeated) {
         ContentValues values = new ContentValues();
         values.put(HackTimers.COLUMN_NAME_DEVICE_ID, deviceId);
         values.put(HackTimers.COLUMN_NAME_TIMER_TIME_ON, timeOn);
@@ -58,8 +58,8 @@ public class TimerDataSource extends HackDataSource {
         if (cursor.moveToFirst()) {
             long id = cursor.getLong(0);
             long devId = cursor.getLong(1);            
-            String timeOn = cursor.getString(2);
-            String timeOff = cursor.getString(3);
+            long timeOn = cursor.getLong(2);
+            long timeOff = cursor.getLong(3);
             int isRepeated = cursor.getInt(4);
             Timer t = new Timer(id, devId, timeOn, timeOff, (isRepeated == 1) ? true : false);
             return t;

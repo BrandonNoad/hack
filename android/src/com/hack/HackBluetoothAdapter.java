@@ -156,7 +156,9 @@ public class HackBluetoothAdapter extends HackConnectionAdapter {
         if (c.getHardwareUnit().getBtMac().equals("")) {
             // Check if we have an unrecognized unit already paired
             for (BluetoothDevice d : getUnrecognizedPairedUnits(c)) {
+                Log.i("BluetoothAdapter - isUnitAvailable()", "device MAC: " + d.getName());
                 if (tryConnect(c, d)) {
+                    Log.i("BluetoothAdapter - isUnitAvailable()", "tryConnect is successful");
                     return true;
                 }
             }
@@ -247,12 +249,16 @@ public class HackBluetoothAdapter extends HackConnectionAdapter {
         }
 
         try {
+            Log.i("here!","here");
+            mAdapter.cancelDiscovery();
+            Log.i("here!","discovery cancelled");
             mSocket.connect();
         } catch (IOException e) {
+            Log.i("", "socket.connect() failed!");
             try {
                 mSocket.close();
             } catch (IOException e1) {
-                //
+                
             }
 
             mSocket = null;

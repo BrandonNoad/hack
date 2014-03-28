@@ -274,22 +274,35 @@ function initCommands() {
   };
 
   commandDict["refresh"] = function(args) {
-    var response = buildGoodResponse("on");
+    var response = buildGoodResponse("refresh");
     refreshAllOutlets();
     response["data"] = hardwareUnit;
     return response;
   };
 
   commandDict["delete"] = function(args) {
-    var response = buildGoodResponse("on");
+    var response;
+
+    if (!verifyArgs(["socket"], args)) {
+      response = buildBadResponse("args failed verification");
+      return response;
+    }
     resetOutlet(parseInt(args["socket"], 10));
+    response = buildGoodResponse("delete");
     response["data"] = hardwareUnit;
     return response;
   };
 
   commandDict["setTimer"] = function(args) {
-    var response = buildGoodResponse("on");
+    var response;
+
+    if (!verifyArgs(["socket"], args)) {
+      response = buildBadResponse("args failed verification");
+      return response;
+    }
+
     setTimer(parseInt(args["socket"], 10));
+    response = buildGoodResponse("setTimer");
     response["data"] = hardwareUnit;
     return response;
   };
@@ -297,7 +310,7 @@ function initCommands() {
   commandDict["sync"] = function(args) {
     var response;
 
-    if (!verifyArgs(["ap", "key", "port"], args)) {
+    if (!verifyArgs(["name", "ap", "key", "port"], args)) {
       response = buildBadResponse("args failed verification");
       return response;
     }
@@ -312,6 +325,25 @@ function initCommands() {
 
 /**
  * Receive commands and invoke their callback
+ *
+ * Commands will always have the following form:
+ *
+ * /hack/<commandName>?<argsAsGET>
+ *
+ * Since they can be since over bluetooth or Wifi, things
+ * change slightly for each case.
+ *
+ * For bluetooth, the command looks very similar to above except
+ * it ends in $, to indicate when a receiver should stop listening
+ * on a stream.
+ *
+ * e.g. /hack/on?socket=0$
+ *
+ * For Wifi, the command needs to be embedded in a proper URL,
+ * so the base command form is prepended with http and a
+ * hostname/IP address.
+ *
+ * e.g. http://192.168.1.129:8080/hack/on?socket=0
  */
 
 function doCommand(obj) {
@@ -338,11 +370,6 @@ function doCommand(obj) {
 
 // -- Web Server
 
-/**
- * Expects urls of the form:
- *   http://host:port/hack/on?socket=n
- *   http://host:port/hack/off?socket=n
- */
 function webHandler(req, res) {
 
   // handle request
@@ -494,7 +521,6 @@ function btHandler(e) {
 
     settings.bluetooth.currentRecord += e.data;
   }
-
 }
 
 
@@ -527,6 +553,7 @@ function onInit() {
 
   // Init commands
   if (typeof commandDict !== "object") {
+    resetAllOutlets();
     console.log("Writing out commands...");
     initCommands();
   }

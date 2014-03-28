@@ -77,6 +77,28 @@ public class HackConnectionManager {
 
     // -- Private members
 
+    /**
+     * Notes on command formats:
+     *
+     * Commands will always have the following form:
+     *
+     * /hack/<commandName>?<argsAsGET>
+     *
+     * Since they can be since over bluetooth or Wifi, things
+     * change slightly for each case.
+     *
+     * For bluetooth, the command looks very similar to above except
+     * it ends in $, to indicate when a receiver should stop listening
+     * on a stream.
+     *
+     * e.g. /hack/on?socket=0$
+     *
+     * For Wifi, the command needs to be embedded in a proper URL,
+     * so the base command form is prepended with http and a
+     * hostname/IP address.
+     *
+     * e.g. http://192.168.1.129:8080/hack/on?socket=0
+     */
     void translateToBluetooth(HackCommand command) {
         String translation = command.getUrl();
 

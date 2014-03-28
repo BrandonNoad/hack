@@ -49,7 +49,6 @@ public class AddHardwareUnitActivity extends Activity {
 
             // Delete the hardware unit we made
             mHardwareUnitDataSource.deleteHardwareUnitById(getHardwareUnit().getId());
-            startAllUnitsActivity();
         }
     }
 

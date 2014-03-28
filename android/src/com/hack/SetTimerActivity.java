@@ -226,15 +226,14 @@ implements TimePickerDialog.OnTimeSetListener {
         HackCommand setTimerCommand = new HackCommand(SetTimerActivity.this, mHardwareUnit, url) {
 
             @Override
-            public void doSuccess(JSONObject data, String message) {
-                super.doSuccess(data, message);
-                if (data != null) {
-                    String timeOn = mTimeOnEditText.getText().toString();
-                    String timeOff = mTimeOffEditText.getText().toString();
-                    boolean isRepeated = mIsRepeatedCheckBox.isChecked();        
-                    long timerId = mTimerDataSource.addTimer(mDeviceId, timeOn, timeOff, isRepeated);
-                    startDeviceDetailsActivity();
-                }
+            public void doSuccess(JSONObject response) {
+                super.doSuccess(response);
+                
+                String timeOn = mTimeOnEditText.getText().toString();
+                String timeOff = mTimeOffEditText.getText().toString();
+                boolean isRepeated = mIsRepeatedCheckBox.isChecked();        
+                long timerId = mTimerDataSource.addTimer(mDeviceId, timeOn, timeOff, isRepeated);
+                startDeviceDetailsActivity();
             }
         };
         

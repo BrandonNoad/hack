@@ -1,6 +1,8 @@
 // -- Global Object
 
 var settings = {
+  name: "Espruino",
+
   wifi: {
     wlan: {}, // WiFi network adapter
     status: "",
@@ -218,6 +220,24 @@ function setTimer(outletNumber) {
 
 var commandDict;
 
+function verifyArgs(keys, args) {
+  for (var i = 0; i < keys.length; i++) {
+    if (!(typeof args[keys[i]] === "string" && keys[i] != "")) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+function buildGoodResponse(commandName) {
+  return {"success": 1, "command": commandName};
+}
+
+function buildBadResponse(message) {
+  return {"success": 0, "message": message};
+}
+
 /**
  * Define commands here
  */
@@ -226,30 +246,67 @@ function initCommands() {
   commandDict = {};
 
   commandDict["on"] = function(args) {
-    setOutlet(parseInt(args.socket, 10), 0);
+    var response;
+
+    if (!verifyArgs(["socket"], args)) {
+      response = buildBadResponse("args failed verification");
+      return response;
+    }
+
+    setOutlet(parseInt(args["socket"], 10), 0);
+    response = buildGoodResponse("on");
+    response["data"] = hardwareUnit;
+    return response;
   };
 
   commandDict["off"] = function(args) {
-    setOutlet(parseInt(args.socket, 10), 1);
+    var response;
+
+    if (!verifyArgs(["socket"], args)) {
+      response = buildBadResponse("args failed verification");
+      return response;
+    }
+
+    setOutlet(parseInt(args["socket"], 10), 1);
+    response = buildGoodResponse("off");
+    response["data"] = hardwareUnit;
+    return response;
   };
 
   commandDict["refresh"] = function(args) {
+    var response = buildGoodResponse("on");
     refreshAllOutlets();
+    response["data"] = hardwareUnit;
+    return response;
   };
 
   commandDict["delete"] = function(args) {
-    resetOutlet(parseInt(args.socket, 10));
+    var response = buildGoodResponse("on");
+    resetOutlet(parseInt(args["socket"], 10));
+    response["data"] = hardwareUnit;
+    return response;
   };
 
   commandDict["setTimer"] = function(args) {
-    setTimer(parseInt(args.socket, 10));
+    var response = buildGoodResponse("on");
+    setTimer(parseInt(args["socket"], 10));
+    response["data"] = hardwareUnit;
+    return response;
   };
 
   commandDict["sync"] = function(args) {
+    var response;
+
+    if (!verifyArgs(["ap", "key", "port"], args)) {
+      response = buildBadResponse("args failed verification");
+      return response;
+    }
+
+    settings.name = args["name"];
     settings.wifi.ssid = args["ap"];
     settings.wifi.wpa2key = args["key"];
     settings.wifi.port = args["port"];
-    safeSave();
+    return buildGoodResponse("sync");
   };
 }
 
@@ -258,31 +315,24 @@ function initCommands() {
  */
 
 function doCommand(obj) {
-  var pathList = obj.pathname.split("/");
-  var lastItem = "";
-  var command = "";
+  // Discard "/hack/" prefix at this point
+  var command = obj.pathname.substring(6, obj.pathname.length);
   var args = obj.query;
-
-  if (pathList.length > 2) {
-    // Use "2" because leading "/" creates a blank first element
-    command = pathList[2];
-  } else {
-    pulseLED("red", 100);
-    console.log("doCommand got blank command");
-    return;
-  }
+  var goodResponse;
 
   if (typeof commandDict[command] === "function") {
     pulseLED("green", 100);
     console.log("doCommand recognizes " + command);
-    commandDict[command](args);
+    goodResponse = commandDict[command](args);
   } else {
     pulseLED("red", 100);
     console.log("doCommand discards " + command);
+    return buildBadResponse("doCommand got bad command");
   }
 
   // update current time 
   hardwareUnit.currentTime = getTime();
+  return goodResponse;
 }
 
 
@@ -301,25 +351,12 @@ function webHandler(req, res) {
    * pathname, search, port, and query */
   var urlObj = url.parse(req.url, true);
   
-  var result = doCommand(urlObj);
+  var response = doCommand(urlObj);
 
   // write response header
   res.writeHead(200 /* OK */, 
                 {'Content-Type': 'application/json'} /* send back JSON */
                );
-
-  // write response body  
-  var response = {
-    "success": 0,
-    "data": {},
-    "message": "Error. Invalid command. Please try again."
-  };
-
-  if (result) {
-    response["success"] = 1;
-    response["data"] = hardwareUnit;
-    response["message"] = "Success!";
-  }
 
   var responseBody = JSON.stringify(response);
   res.write(responseBody);
@@ -404,7 +441,11 @@ function webServerInit() {
 // -- Bluetooth
 
 function BluetoothRequest(s) {
-  this.pathname = s.substring(0, s.indexOf("?"));
+  if (s.indexOf("?") > 0) {
+    this.pathname = s.substring(0, s.indexOf("?"));
+  } else {
+    this.pathname = s;
+  }
   this.query = {};
   var queryString = s.substring(s.indexOf("?") + 1, s.length);
   var queryDefs = queryString.split("&");
@@ -440,9 +481,15 @@ function btHandler(e) {
       console.log("Bluetooth got $, the full command is: " + settings.bluetooth.currentRecord + " (entering LISTEN)");
 
       var command = new BluetoothRequest(settings.bluetooth.currentRecord);
-      doCommand(command);
+      var response = doCommand(command);
+      Serial1.print("/hack/" + JSON.stringify(response) + "$");
 
       settings.bluetooth.currentState = settings.bluetooth.states.LISTEN;
+
+      // Special case for sync command
+      if (response["command"] == "sync" && response["success"] === 1) {
+        safeSave();
+      }
     }
 
     settings.bluetooth.currentRecord += e.data;
@@ -476,6 +523,8 @@ function safeSave() {
  * Special function called automatically when Espruino is powered on.
  */
 function onInit() {
+  console.log("[" + settings.name + "] Hello world...");
+
   // Init commands
   if (typeof commandDict !== "object") {
     console.log("Writing out commands...");

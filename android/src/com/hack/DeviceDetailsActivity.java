@@ -112,16 +112,25 @@ public class DeviceDetailsActivity extends Activity {
                     HackCommand toggleCommand = new HackCommand(DeviceDetailsActivity.this, mHardwareUnit, url) {
 
                         @Override
-                        public void doSuccess(JSONObject data, String message) {
-                            super.doSuccess(data, message);
+                        public void doSuccess(JSONObject response) {
+                            super.doSuccess(response);
+                            
+                            JSONObject data = new JSONObject();
+							try {
+								data = response.getJSONObject("data");
+							} catch (JSONException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+							
                             parseJSONResponse(data);
                             updateUIDeviceStatistics();
                             Log.i("DeviceDetailsActivity - onPostExecute","device statistics updated");
                         }
 
                         @Override
-                        public void doFail(String message) {
-                            super.doFail(message);
+                        public void doFail(JSONObject response) {
+                            super.doFail(response);
                             // change switch back to its old position
                             // temporarily disable event listener so we can switch it back without firing event
                             isCheckedChangeEnabled = false;
@@ -200,8 +209,17 @@ public class DeviceDetailsActivity extends Activity {
             HackCommand refreshCommand = new HackCommand(DeviceDetailsActivity.this, mHardwareUnit, url) {
 
                 @Override
-                public void doSuccess(JSONObject data, String message) {
-                    super.doSuccess(data, message);
+                public void doSuccess(JSONObject response) {
+                    super.doSuccess(response);
+                    
+                    JSONObject data = new JSONObject();
+					try {
+						data = response.getJSONObject("data");
+					} catch (JSONException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					
                     parseJSONResponse(data);
                     updateUIDeviceStatistics();
                     Log.i("DeviceDetailsActivity - onPostExecute","device statistics updated");

@@ -2,10 +2,6 @@ package com.hack;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.List;
-
-import org.apache.http.NameValuePair;
-import org.apache.http.client.utils.URLEncodedUtils;
 
 import android.os.AsyncTask;
 import android.util.Log;
@@ -86,7 +82,13 @@ public class HackConnectionManager {
 
         // If it has the Wifi prefix, remove it
         if (translation.startsWith("http://")) {
-        	translation = translation.substring(6, translation.length() - 1);
+    		URI uriCommand = null;
+    		try {
+    			uriCommand = new URI(translation);
+    		} catch (URISyntaxException e1) {
+    			//command.returnEarly("Couldn't parse the command url");
+    		}
+    		translation = uriCommand.getPath() + "?" + uriCommand.getRawQuery();
         }
         
         // If it doesn't have the Bluetooth suffix, add it
@@ -102,7 +104,8 @@ public class HackConnectionManager {
     	
     	// If it doesn't have a Wifi prefix, add it
     	if (!translation.startsWith("http://")) {
-    		translation = "http:/" + translation.substring(translation.indexOf("/"), translation.length() - 1);
+    		translation = "http://" + command.getHardwareUnit().getBasePath()
+    								+ translation.substring(translation.indexOf("/"), translation.length() - 1);
     	}
     	
     	// If it has the Bluetooth suffix, remove it

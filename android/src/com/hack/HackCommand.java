@@ -14,7 +14,6 @@ public abstract class HackCommand {
     private HardwareUnit mHardwareUnit;
     private String mUrl;
     private Context mContext;
-    private String mTest;
 
     /**
      * 
@@ -74,28 +73,52 @@ public abstract class HackCommand {
             int isSuccess = jsonResponse.getInt("success");
             if (isSuccess != 0) {
                 // success
-                JSONObject data = jsonResponse.getJSONObject("data");
-                String message = jsonResponse.getString("message");
-                doSuccess(data, message);
+                doSuccess(jsonResponse);
             } else {
-                String message = jsonResponse.getString("message");
-                doFail(message);
+                doFail(jsonResponse);
             }
         } catch (JSONException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+        	JSONObject jsonResponse = new JSONObject();
+        	
+        	try {
+				jsonResponse.put("message", "Error parsing response, got: " + response);
+			} catch (JSONException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+        	
+            doFail(jsonResponse);
         }
 
     }
 
     // must implement this when you define concrete command
-    public void doSuccess(JSONObject data, String message) {
+    public void doSuccess(JSONObject response) {
+    	String command = "command";
+		try {
+			command = response.getString("command");
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+        Log.i("HackComand - doSuccess()", "command: " + command);
+        // show toast
         Toast.makeText(mContext.getApplicationContext(),  // must use application context
-                message,
+                "Got successful response from " + command,
                 Toast.LENGTH_LONG).show();
     }
 
-    public void doFail(String message) {
+    public void doFail(JSONObject response) {
+    	String message;
+		try {
+			message = response.getString("message");
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return;
+		}
+    	
         Log.i("HackComand - doFail()", "message: " + message);
         // show toast
         Toast.makeText(mContext.getApplicationContext(),  // must use application context
@@ -107,13 +130,4 @@ public abstract class HackCommand {
         HackConnectionManager m = ((HackApplication)mContext.getApplicationContext()).getConnectionManager();
         m.submitRequest(this);
     }
-
-    public String getTest() {
-        return mTest;
-    }
-
-    public void setTest(String s) {
-        mTest = s;
-    }
-
 }

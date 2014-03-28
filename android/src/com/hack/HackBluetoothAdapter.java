@@ -1,9 +1,11 @@
 package com.hack;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.UUID;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -22,6 +24,7 @@ public class HackBluetoothAdapter extends HackConnectionAdapter {
     private class BluetoothStream extends Thread {
         private final InputStream mmInStream;
         private final OutputStream mmOutStream;
+        private ByteArrayOutputStream mmInBuffer;
         private boolean mmRunning;
 
         public BluetoothStream(BluetoothSocket socket) {
@@ -41,6 +44,8 @@ public class HackBluetoothAdapter extends HackConnectionAdapter {
 
             mmInStream = tmpIn;
             mmOutStream = tmpOut;
+            mmInBuffer = new ByteArrayOutputStream();
+            mmInBuffer.reset();
 
             Log.i("Connected Thread", "Ready to write bytes");
         }
@@ -52,21 +57,18 @@ public class HackBluetoothAdapter extends HackConnectionAdapter {
         	} else {
         		mmRunning = true;
         	}
-        	
-            byte[] buffer = new byte[1024];  // buffer store for the stream
-            int bytes; // bytes returned from read()
 
             // Keep listening to the InputStream until an exception occurs
             while (mmRunning) {
-                try {
-                    // Read from the InputStream
-                    bytes = mmInStream.read(buffer);
-                    // TODO: Set up handler
-                    // Send the obtained bytes to the UI activity
-                    //                    mHandler.obtainMessage(MESSAGE_READ, bytes, -1, buffer).sendToTarget();
-                } catch (IOException e) {
-                    break;
-                }
+            	try {
+            		// If there is something to read
+					if (mmInStream.available() > 0) {
+						mmInBuffer.write(mmInStream.read());
+					}
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
             }
 
         }
@@ -78,6 +80,33 @@ public class HackBluetoothAdapter extends HackConnectionAdapter {
                 Log.i("ConnectedThread", "Bytes sucessfully written.");
             } catch (IOException e) { }
 
+        }
+        
+        public String read(long timeout) {
+            long start = Calendar.getInstance().getTimeInMillis();
+            int responseStart = 0, responseEnd = 0;
+            String ret;
+            
+            while ((Calendar.getInstance().getTimeInMillis() - start) < timeout) {
+            	// Check if "/hack/" is in the buffer
+            	responseStart = mmInBuffer.toString().indexOf("/hack/");
+            	
+            	// If it is, check if "$" is in the buffer
+            	if (responseStart >= 0) {
+            		responseEnd = mmInBuffer.toString().indexOf("$");
+
+            		// If this is true, we have an entire command
+            		if (responseEnd >= 0) {
+            			ret = new String(mmInBuffer.toString().substring(responseStart, responseEnd)).replace("/hack/", "");
+            			mmInBuffer.reset();
+            			return ret;
+            		}
+            	}
+
+            	yield();
+            }
+            
+            return "";
         }
         
         public void done() {
@@ -162,17 +191,48 @@ public class HackBluetoothAdapter extends HackConnectionAdapter {
             mStream.write(" ".getBytes());
             mStream.write(command.getUrl().getBytes());
         } else {
+        	mStream.done();
+        	
+            // Close the socket
+            try {
+    			mSocket.close();
+    		} catch (IOException e) {
+    			// TODO Auto-generated catch block
+    			e.printStackTrace();
+    		}
             return fail("Couldn't access stream thread");
         }
 
         // we need to stick around here and wait til we get a response (JSON string) from the espruino
         // then return this response
+        String response = mStream.read(5000);
+        
+        if (response == "") {
+        	mStream.done();
+        	
+            // Close the socket
+            try {
+    			mSocket.close();
+    		} catch (IOException e) {
+    			// TODO Auto-generated catch block
+    			e.printStackTrace();
+    		}
+        	return fail("Timed out waiting for response");
+        }
 
         // Technically the stream is a thread, so discard it at this point
         // Note that this should leave mSocket and its streams intact...
         mStream.done();
+        
+        // Close the socket
+        try {
+			mSocket.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 
-        return "{'success': 1, 'data': {}, 'message':'Success!'}";
+        return response;
     }
 
 

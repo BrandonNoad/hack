@@ -23,66 +23,104 @@
     </LinearLayout>
 
     <TextView
+        android:id="@+id/typeLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:text="@string/type"
+        android:textAppearance="?android:attr/textAppearanceSmall" />
+
+    <TextView
         android:id="@+id/deviceType"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:paddingTop="5dp"
-        android:text="@string/type_colon"
+        android:layout_marginTop="5dp"
+        android:text="foo"
         android:textAppearance="?android:attr/textAppearanceMedium" />
 
     <TextView
-        android:id="@+id/deviceLastTimeOn"
+        android:id="@+id/onSinceLabel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:paddingTop="5dp"
-        android:text="@string/on_since_colon"
+        android:layout_marginTop="10dp"
+        android:text="@string/on_since"
+        android:textAppearance="?android:attr/textAppearanceSmall" />
+
+    <TextView
+        android:id="@+id/deviceOnSince"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5dp"
+        android:text="OFF"
         android:textAppearance="?android:attr/textAppearanceMedium" />
+
+    <TextView
+        android:id="@+id/totalTimeOnLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:text="@string/total_time_on"
+        android:textAppearance="?android:attr/textAppearanceSmall" />
 
     <TextView
         android:id="@+id/deviceTotalTimeOn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:paddingTop="5dp"
-        android:text="@string/total_time_on_colon"
+        android:layout_marginTop="5dp"
+        android:text="0 minutes"
         android:textAppearance="?android:attr/textAppearanceMedium" />
+
+    <TextView
+        android:id="@+id/powerUsageLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:text="@string/power_usage"
+        android:textAppearance="?android:attr/textAppearanceSmall" />
 
     <TextView
         android:id="@+id/devicePowerUsage"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:paddingTop="5dp"
-        android:text="@string/power_usage_colon"
+        android:layout_marginTop="5dp"
+        android:text="0 kWh"
         android:textAppearance="?android:attr/textAppearanceMedium" />
+
+    <TextView
+        android:id="@+id/timerLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:text="@string/timer"
+        android:textAppearance="?android:attr/textAppearanceSmall" />
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:paddingTop="5dp" >
+        android:layout_height="wrap_content" >
 
         <TextView
-            android:id="@+id/deviceTimer"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="0.5"
-            android:text="@string/timer_colon"
+            android:id="@+id/deviceTimerDetails"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center|left"
+            android:text="No Timer Set"
             android:textAppearance="?android:attr/textAppearanceMedium" />
 
-        <Button
-            android:id="@+id/enableTimerButton"
+        <ImageButton
+            android:id="@+id/addTimerButton"
             style="?android:attr/buttonStyleSmall"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="0.5"
-            android:text="@string/enable" />
-    </LinearLayout>
+            android:layout_width="38dp"
+            android:layout_height="38dp"
+            android:background="@drawable/new_timer"
+            android:visibility="visible" />
 
-    <TextView
-        android:id="@+id/deviceTimerDetails"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_weight="0.5"
-        android:text="Large Text"
-        android:textAppearance="?android:attr/textAppearanceLarge"
-        android:visibility="gone" />
+        <ImageButton
+            android:id="@+id/deleteTimerButton"
+            style="?android:attr/buttonStyleSmall"
+            android:layout_width="37dp"
+            android:layout_height="37dp"
+            android:background="@drawable/delete_timer" />
+    </LinearLayout>
 
 </LinearLayout>

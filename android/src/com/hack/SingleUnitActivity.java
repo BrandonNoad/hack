@@ -2,7 +2,6 @@ package com.hack;
 
 import java.util.ArrayList;
 
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.app.ActionBar;
@@ -10,7 +9,6 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.NavUtils;
-import android.util.Log;
 import android.view.ActionMode;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -22,17 +20,17 @@ import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.GridView;
 
 public class SingleUnitActivity extends Activity {
-    
+
     // -- Constants
-    
+
     public final static String EXTRA_HARDWARE_UNIT_ID = "com.hack.HARDWARE_UNIT_ID";
     public final static String EXTRA_SOCKET_ID = "com.hack.SOCKET_ID";
     public final static String EXTRA_DEVICE_ID = "com.hack.DEVICE_ID";
     public final static String EXTRA_TITLE = "com.hack.TITLE";
     public final static int NUM_SOCKETS = 4;
-    
+
     // -- Member Variables
-    
+
     private HardwareUnitDataSource mHardwareUnitDataSource;
     private DeviceDataSource mDeviceDataSource;
     private ArrayList<Device> mDevices = new ArrayList<Device>();
@@ -43,26 +41,26 @@ public class SingleUnitActivity extends Activity {
     private ActionMode mActionMode = null;
     private HackConnectionManager mConnectionManager;
     private HardwareUnit mHardwareUnit;
-    
+
     // -- Initialize Activity
-    
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_single_unit);
-    
+
         // Show the Up button in the action bar.
         setupActionBar();
-        
+
         // initialize members
         mActionBar = getActionBar();        
         mHardwareUnitDataSource = new HardwareUnitDataSource(this);
         mHardwareUnitDataSource.open();
         mDeviceDataSource = new DeviceDataSource(this);
         mDeviceDataSource.open();
-        
+
         mConnectionManager = ((HackApplication) getApplicationContext()).getConnectionManager();
-        
+
         // get hardware unit id from previous activity
         Intent intent = getIntent();
         mHardwareUnitId = intent.getLongExtra(AllUnitsActivity.EXTRA_UNIT_ID, -1);
@@ -71,13 +69,13 @@ public class SingleUnitActivity extends Activity {
             displayUnit(mHardwareUnitId);
             displayDevices(mHardwareUnitId);           
         }
-        
+
         GridView socketGrid = (GridView) findViewById(R.id.socketGrid);
         mDeviceAdapter = new DeviceAdapter(this, mDevices);
         socketGrid.setAdapter(mDeviceAdapter);
-        
+
         // set up event listeners
-        
+
         // regular click
         socketGrid.setOnItemClickListener(new OnItemClickListener() {
             public void onItemClick(AdapterView parent, View v, int position, long id) {
@@ -90,8 +88,8 @@ public class SingleUnitActivity extends Activity {
                     startAddDeviceActivity(position);
                 }
             }
-         });
-        
+        });
+
         // long click
         socketGrid.setOnItemLongClickListener(new OnItemLongClickListener() {
             // Called when the user long-clicks on someView
@@ -111,19 +109,19 @@ public class SingleUnitActivity extends Activity {
             }
         });
     }
-    
+
     public void displayUnit(long unitId) {
         mHardwareUnit = mHardwareUnitDataSource.getHardwareUnitById(unitId);
         mActionBar.setTitle(mHardwareUnit.getName());
     }
-    
+
     public void displayDevices(long unitId) {
         for (int i = 0; i < NUM_SOCKETS; i++) {
             Device d = mDeviceDataSource.getDevice(unitId, i);
             mDevices.add(d);
         }
     }
-    
+
     // -- Action Bar    
 
     /**
@@ -156,9 +154,9 @@ public class SingleUnitActivity extends Activity {
         }
         return super.onOptionsItemSelected(item);
     }
-    
+
     // -- Action Mode    
-    
+
     private ActionMode.Callback mActionModeCallback = new ActionMode.Callback() {
 
         // Called when the action mode is created; startActionMode() was called
@@ -181,12 +179,12 @@ public class SingleUnitActivity extends Activity {
         @Override
         public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
             switch (item.getItemId()) {
-                case R.id.action_delete:
-                    deleteDevice(mSelectedDevice);                    
-                    mode.finish();
-                    return true;
-                default:
-                    return false;
+            case R.id.action_delete:
+                deleteDevice(mSelectedDevice);                    
+                mode.finish();
+                return true;
+            default:
+                return false;
             }
         }
 
@@ -197,9 +195,9 @@ public class SingleUnitActivity extends Activity {
             mDeviceAdapter.setSelectedIndex(-1);  // set background color back to transparent
         }
     };
-    
+
     // -- Intents
-    
+
     public void startAddDeviceActivity(long socketId) {
         Intent intent = new Intent(this, AddDeviceActivity.class);        
         intent.putExtra(EXTRA_HARDWARE_UNIT_ID, mHardwareUnitId);
@@ -207,32 +205,34 @@ public class SingleUnitActivity extends Activity {
         intent.putExtra(EXTRA_TITLE, "Add New Device");
         startActivity(intent);
     }
-    
+
     public void startDeviceDetailsActivity(long deviceId) {
         Intent intent = new Intent(this, DeviceDetailsActivity.class);
         intent.putExtra(EXTRA_DEVICE_ID, deviceId);
+        intent.putExtra(EXTRA_HARDWARE_UNIT_ID, mHardwareUnitId);
         startActivity(intent);
     }
-    
+
     // -- Model
-    
+
     public void deleteDevice(Device device) {
-        String url = "/hack/delete?socket=" + device.getSocketId();
-        mConnectionManager.submitRequest(new HackCommand(SingleUnitActivity.this, mHardwareUnit, url) {
-            
+        String url = "http://" + mHardwareUnit.getBasePath() + ":" + mHardwareUnit.getPortNumber() + "/hack/delete?socket=" + device.getSocketId();
+        HackCommand deleteCommand = new HackCommand(SingleUnitActivity.this, mHardwareUnit, url) {
+
             @Override
-            public void doSuccess(JSONObject data) {
-                if (data != null) {
-                    mDeviceDataSource.deleteDeviceById(mSelectedDevice.getId());
-                    mDevices.set((int) mSelectedDevice.getSocketId(), null);
-                    mDeviceAdapter.notifyDataSetChanged();
-                    mSelectedDevice = null;
-                }
+            public void doSuccess(JSONObject response) {
+                super.doSuccess(response);
+                mDeviceDataSource.deleteDeviceById(mSelectedDevice.getId());
+                mDevices.set((int) mSelectedDevice.getSocketId(), null);
+                mDeviceAdapter.notifyDataSetChanged();
+                mSelectedDevice = null;
             }
-            
-        });
+
+        };
         
-       
+        deleteCommand.send();
+
+
     }
-    
+
 }

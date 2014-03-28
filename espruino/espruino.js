@@ -1,6 +1,8 @@
 // -- Global Object
 
 var settings = {
+  name: "Espruino",
+
   wifi: {
     wlan: {}, // WiFi network adapter
     status: "",
@@ -11,13 +13,13 @@ var settings = {
   },
 
   bluetooth: {
-    LISTEN: 0,
-    PARSE_CMD: 1,
-    SET_APN: 2,
-    SET_WPA: 3,
-    SET_PORT: 4,
-    state: 0,
-    current: "",
+    states: {
+      LISTEN: 0,
+      VERIFY: 1,
+      RECEIVING: 2,
+    },
+    currentState: 0,
+    currentRecord: "",
   },
 };
 
@@ -214,49 +216,160 @@ function setTimer(outletNumber) {
 }
 
 
-/**
- * 
- */
-function doCommand(obj) {
+// -- Command Object
 
-  pulseLED("green", 100);
+var commandDict;
 
-  var pathname = obj.pathname;
-  var socketNumber;
-  var state;
-
-  if (pathname == "/hack/on") {
-    state = 0;    
-    socketNumber = parseInt(obj.query.socket, 10);
-    setOutlet(socketNumber, state);
-  } else if (pathname == "/hack/off") {
-    state = 1;
-    socketNumber = parseInt(obj.query.socket, 10);
-    setOutlet(socketNumber, state);
-  } else if (pathname == "/hack/refresh") {
-    refreshAllOutlets();
-  } else if (pathname == "/hack/delete") {
-    socketNumber = parseInt(obj.query.socket, 10);
-    resetOutlet(socketNumber);
-  } else if (pathname == "/hack/setTimer") {
-    socketNumber = parseInt(obj.query.socket, 10);
-    setTimer(socketNumber);
-  } else {
-    return false;
+function verifyArgs(keys, args) {
+  for (var i = 0; i < keys.length; i++) {
+    if (!(typeof args[keys[i]] === "string" && keys[i] != "")) {
+      return false;
+    }
   }
+
+  return true;
+}
+
+function buildGoodResponse(commandName) {
+  return {"success": 1, "command": commandName};
+}
+
+function buildBadResponse(message) {
+  return {"success": 0, "message": message};
+}
+
+/**
+ * Define commands here
+ */
+
+function initCommands() {
+  commandDict = {};
+
+  commandDict["on"] = function(args) {
+    var response;
+
+    if (!verifyArgs(["socket"], args)) {
+      response = buildBadResponse("args failed verification");
+      return response;
+    }
+
+    setOutlet(parseInt(args["socket"], 10), 0);
+    response = buildGoodResponse("on");
+    response["data"] = hardwareUnit;
+    return response;
+  };
+
+  commandDict["off"] = function(args) {
+    var response;
+
+    if (!verifyArgs(["socket"], args)) {
+      response = buildBadResponse("args failed verification");
+      return response;
+    }
+
+    setOutlet(parseInt(args["socket"], 10), 1);
+    response = buildGoodResponse("off");
+    response["data"] = hardwareUnit;
+    return response;
+  };
+
+  commandDict["refresh"] = function(args) {
+    var response = buildGoodResponse("refresh");
+    refreshAllOutlets();
+    response["data"] = hardwareUnit;
+    return response;
+  };
+
+  commandDict["delete"] = function(args) {
+    var response;
+
+    if (!verifyArgs(["socket"], args)) {
+      response = buildBadResponse("args failed verification");
+      return response;
+    }
+    resetOutlet(parseInt(args["socket"], 10));
+    response = buildGoodResponse("delete");
+    response["data"] = hardwareUnit;
+    return response;
+  };
+
+  commandDict["setTimer"] = function(args) {
+    var response;
+
+    if (!verifyArgs(["socket"], args)) {
+      response = buildBadResponse("args failed verification");
+      return response;
+    }
+
+    setTimer(parseInt(args["socket"], 10));
+    response = buildGoodResponse("setTimer");
+    response["data"] = hardwareUnit;
+    return response;
+  };
+
+  commandDict["sync"] = function(args) {
+    var response;
+
+    if (!verifyArgs(["name", "ap", "key", "port"], args)) {
+      response = buildBadResponse("args failed verification");
+      return response;
+    }
+
+    settings.name = args["name"];
+    settings.wifi.ssid = args["ap"];
+    settings.wifi.wpa2key = args["key"];
+    settings.wifi.port = args["port"];
+    return buildGoodResponse("sync");
+  };
+}
+
+/**
+ * Receive commands and invoke their callback
+ *
+ * Commands will always have the following form:
+ *
+ * /hack/<commandName>?<argsAsGET>
+ *
+ * Since they can be since over bluetooth or Wifi, things
+ * change slightly for each case.
+ *
+ * For bluetooth, the command looks very similar to above except
+ * it ends in $, to indicate when a receiver should stop listening
+ * on a stream.
+ *
+ * e.g. /hack/on?socket=0$
+ *
+ * For Wifi, the command needs to be embedded in a proper URL,
+ * so the base command form is prepended with http and a
+ * hostname/IP address.
+ *
+ * e.g. http://192.168.1.129:8080/hack/on?socket=0
+ */
+
+function doCommand(obj) {
+  // Discard "/hack/" prefix at this point
+  var command = obj.pathname.substring(6, obj.pathname.length);
+  var args = obj.query;
+  var goodResponse;
+
+  if (typeof commandDict[command] === "function") {
+    pulseLED("green", 100);
+    console.log("doCommand recognizes " + command);
+    goodResponse = commandDict[command](args);
+  } else {
+    pulseLED("red", 100);
+    console.log("doCommand discards " + command);
+    return buildBadResponse("doCommand got bad command");
+  }
+
   // update current time 
   hardwareUnit.currentTime = getTime();
-  return true;
+  return goodResponse;
 }
 
 
 // -- Web Server
 
-/**
- * Expects urls of the form:
- *   http://host:port/hack/on?socket=n
- *   http://host:port/hack/off?socket=n
- */
 function webHandler(req, res) {
 
   // handle request
@@ -265,25 +378,12 @@ function webHandler(req, res) {
    * pathname, search, port, and query */
   var urlObj = url.parse(req.url, true);
   
-  var result = doCommand(urlObj);
+  var response = doCommand(urlObj);
 
   // write response header
   res.writeHead(200 /* OK */, 
                 {'Content-Type': 'application/json'} /* send back JSON */
                );
-
-  // write response body  
-  var response = {
-    "success": 0,
-    "data": {},
-    "message": "Error. Invalid command. Please try again."
-  };
-
-  if (result) {
-    response["success"] = 1;
-    response["data"] = hardwareUnit;
-    response["message"] = "Success!";
-  }
 
   var responseBody = JSON.stringify(response);
   res.write(responseBody);
@@ -301,6 +401,16 @@ function webServerInit() {
 
   settings.wifi.wlan = require("CC3000").connect();
   digitalWrite(LED2, 1);
+
+  // skip extra connect if blank credentials
+  if (settings.wifi.ssid === "") {
+    console.log("Skipping 2nd wifi connect since no credentials");
+
+    // Indicate bad wifi state
+    resetLEDs();
+    repeatLED("red");
+    settings.wifi.status = "disconnect";
+  }
      
   // connect to wireless network
   settings.wifi.wlan.connect(settings.wifi.ssid, settings.wifi.wpa2key, function(status) {
@@ -315,7 +425,7 @@ function webServerInit() {
       } else {
         console.log("I don't have an IP address");
 
-        // Indicate bad state
+        // Indicate bad wifi state
         resetLEDs();
         repeatLED("red");
 
@@ -327,14 +437,14 @@ function webServerInit() {
       // create web server
       settings.wifi.server = require("http").createServer(webHandler).listen(settings.wifi.port);
 
-      // Indicate good state
+      // Indicate good wifi state
       resetLEDs();
       repeatLED("blue");
     } else if (status == "disconnect" && settings.wifi.status == "dhcp") {
       console.log("Got disconnect");
       console.log("I lost my connection");
 
-      // Indicate bad state
+      // Indicate bad wifi state
       resetLEDs();
       repeatLED("red");
       settings.wifi.status = status;
@@ -342,7 +452,7 @@ function webServerInit() {
       console.log("Got disconnect");
       console.log("I lost my connection in a different way");
 
-      // Indicate bad state
+      // Indicate bad wifi state
       resetLEDs();
       repeatLED("red");
       settings.wifi.status = status;
@@ -357,71 +467,59 @@ function webServerInit() {
 
 // -- Bluetooth
 
-/* Changes the behaviour of the btHandler()
- *   LISTEN - receive command
- *   SET_APN - receive ACCESS_POINT_NAME
- *   SET_WPA - receive WPA2_KEY
- *   SET_PORT - receive PORT_NUMBER
- */
+function BluetoothRequest(s) {
+  if (s.indexOf("?") > 0) {
+    this.pathname = s.substring(0, s.indexOf("?"));
+  } else {
+    this.pathname = s;
+  }
+  this.query = {};
+  var queryString = s.substring(s.indexOf("?") + 1, s.length);
+  var queryDefs = queryString.split("&");
+
+  for (var i = 0; i < queryDefs.length; i++) {
+    var def = queryDefs[i];
+    this.query[def.split("=")[0]] = def.split("=")[1];
+  }
+}
 
 function btHandler(e) {
-  if (settings.bluetooth.state == settings.bluetooth.LISTEN) {  // receive command
+  if (settings.bluetooth.currentState == settings.bluetooth.states.LISTEN) {  // receive command
     if (e.data == " ") {
-      settings.bluetooth.current = "";
-    } else {
-      settings.bluetooth.current = settings.bluetooth.current + e.data;
-      // handle event
-      if (settings.bluetooth.current == "_toggle") {
-        settings.bluetooth.state = settings.bluetooth.PARSE_CMD;
-        settings.bluetooth.current = "";
-      } else if (settings.bluetooth.current == "_set_apn") {
-        settings.bluetooth.state = settings.bluetooth.SET_APN;
-        settings.bluetooth.current = "";
-      } else if (settings.bluetooth.current == "_set_wpa") {
-        settings.bluetooth.state = settings.bluetooth.SET_WPA;
-        settings.bluetooth.current = "";
-      } else if (settings.bluetooth.current == "_set_port") {
-        settings.bluetooth.state = settings.bluetooth.SET_PORT;
-        settings.bluetooth.current = "";
-      } else if (settings.bluetooth.current == "_save") {
-        settings.bluetooth.current = "";
+      console.log("Bluetooth got space, start recording (entering VERIFY)");
+
+      settings.bluetooth.currentRecord = "";
+      settings.bluetooth.currentState = settings.bluetooth.states.VERIFY;
+    }
+  } else if (settings.bluetooth.currentState == settings.bluetooth.states.VERIFY) {
+    if (settings.bluetooth.currentRecord == "/hack/") {
+      console.log("Bluetooth verified /hack/, commit recording entire command (entering RECORD)");
+
+      settings.bluetooth.currentState = settings.bluetooth.states.RECEIVING;
+    } else if (settings.bluetooth.currentRecord.length > 6) {
+      console.log("Bluetooth verification failed, got <" + settings.bluetooth.currentRecord + "> instead (entering LISTEN)");
+
+      settings.bluetooth.currentState = settings.bluetooth.states.LISTEN;
+    }
+
+    settings.bluetooth.currentRecord += e.data;
+  } else if (settings.bluetooth.currentState == settings.bluetooth.states.RECEIVING) {
+    if (e.data == "$") {
+      console.log("Bluetooth got $, the full command is: " + settings.bluetooth.currentRecord + " (entering LISTEN)");
+
+      var command = new BluetoothRequest(settings.bluetooth.currentRecord);
+      var response = doCommand(command);
+      Serial1.print("/hack/" + JSON.stringify(response) + "$");
+
+      settings.bluetooth.currentState = settings.bluetooth.states.LISTEN;
+
+      // Special case for sync command
+      if (response["command"] == "sync" && response["success"] === 1) {
         safeSave();
       }
+    }
 
-    }
-  } else if (settings.bluetooth.state == settings.bluetooth.PARSE_CMD) {
-    if (e.data == " ") {
-      var btObj = url.parse(settings.bluetooth.current, true);
-      doCommand(btObj);
-      settings.bluetooth.current = "";
-      settings.bluetooth.state = settings.bluetooth.LISTEN;
-    } else {
-      settings.bluetooth.current += e.data;
-    }
-  } else if (settings.bluetooth.state == settings.bluetooth.SET_APN) {  //  receive ACCESS_POINT_NAME
-    if (e.data == "|") {
-      settings.wifi.ssid = settings.bluetooth.current;
-      settings.bluetooth.current = "";
-      settings.bluetooth.state = settings.bluetooth.LISTEN;
-    } else {
-      settings.bluetooth.current += e.data;
-    }
-  } else if (settings.bluetooth.state == settings.bluetooth.SET_WPA) {  //  receive WPA2_KEY
-    if (e.data == "|") {
-      settings.wifi.wpa2key = settings.bluetooth.current;
-      settings.bluetooth.current = "";
-      settings.bluetooth.state = settings.bluetooth.LISTEN;
-    } else {
-      settings.bluetooth.current += e.data;
-    }
-  } else if (settings.bluetooth.state == settings.bluetooth.SET_PORT) {  // receive PORT NUMBER
-    if (e.data == "|") {
-      settings.wifi.port = settings.bluetooth.current;
-      settings.bluetooth.current = "";
-      settings.bluetooth.state = settings.bluetooth.LISTEN;
-    } else {
-      settings.bluetooth.current += e.data;
-    }
+    settings.bluetooth.currentRecord += e.data;
   }
 }
 
@@ -451,6 +549,16 @@ function safeSave() {
  * Special function called automatically when Espruino is powered on.
  */
 function onInit() {
+  console.log("[" + settings.name + "] Hello world...");
+
+  // Init commands
+  if (typeof commandDict !== "object") {
+    resetAllOutlets();
+    console.log("Writing out commands...");
+    initCommands();
+  }
+  
+
   // Always want to try the webserver
   webServerInit();
 }

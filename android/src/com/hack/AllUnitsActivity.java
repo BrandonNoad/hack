@@ -29,43 +29,43 @@ import android.widget.Toast;
  * new hardware units using Bluetooth via a button in the action bar.
  */
 public class AllUnitsActivity extends Activity {
-    
+
     // -- Constants
-    
+
     // intent extras
     public static final String EXTRA_UNIT_ID = "com.hack.UNIT_ID";
     public static final String EXTRA_BT_DEVICE = "com.hack.BT_DEVICE";
     public static final int REQUEST_ENABLE_BT = 1;
-    
+
     // espruino MAC address
     private static final String[] ESPRUINO_MACS = new String[] {"20:13:11:19:00:76", "00:14:01:14:32:08", "00:14:01:32:39"};
-    
+
     // -- Member Variables
-    
+
     // bluetooth
     private BluetoothAdapter mBluetoothAdapter;   
     private ArrayList<BluetoothDevice> mBluetoothDevices = new ArrayList<BluetoothDevice>();
     private BluetoothDevice mSelectedBluetoothDevice;
-    
+
     // hardware units
     private HardwareUnitAdapter mHardwareUnitAdapter;
     private ArrayList<HardwareUnit> mAllUnitsList = new ArrayList<HardwareUnit>(); 
     private HardwareUnitDataSource mHardwareUnitDataSource;
     private HardwareUnit mSelectedHardwareUnit;
-    
+
     // misc.
     ActionMode mActionMode = null;
-    
+
     // -- Initialize Activity
-    
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_all_units);
-        
+
         // rename action bar title
         getActionBar().setTitle(R.string.title_hardware_units);
-        
+
         // initialize members
         mHardwareUnitDataSource = new HardwareUnitDataSource(this);
         mHardwareUnitDataSource.open();
@@ -73,20 +73,20 @@ public class AllUnitsActivity extends Activity {
         mHardwareUnitAdapter = new HardwareUnitAdapter(this, mAllUnitsList);
         ListView listOfAllHardware = (ListView) findViewById(R.id.listOfAllHardware);
         listOfAllHardware.setAdapter(mHardwareUnitAdapter);
-        
+
         // set up event listeners
-        
+
         // regular click
         listOfAllHardware.setOnItemClickListener(new OnItemClickListener() {
-           public void onItemClick(AdapterView parent, View v, int position, long id) {
-               if (mActionMode != null) {
-                   return;
-               }
-               HardwareUnit unit = (HardwareUnit) parent.getItemAtPosition(position);
-               startSingleUnitActivity(unit.getId());
-           }
+            public void onItemClick(AdapterView parent, View v, int position, long id) {
+                if (mActionMode != null) {
+                    return;
+                }
+                HardwareUnit unit = (HardwareUnit) parent.getItemAtPosition(position);
+                startSingleUnitActivity(unit.getId());
+            }
         });
-        
+
         // long click
         listOfAllHardware.setOnItemLongClickListener(new OnItemLongClickListener() {
             // Called when the user long-clicks on someView
@@ -106,31 +106,32 @@ public class AllUnitsActivity extends Activity {
             }
         }); 
     }
-    
+
     // -- Action Bar
-    
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // inflate the menu and add items to the action bar if it is present
         getMenuInflater().inflate(R.menu.all_units, menu);
         return true;
     }
-    
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // handle presses on the action bar items
         switch (item.getItemId()) {
-            case R.id.action_new:  // new hardware unit
-                mSelectedBluetoothDevice = null;
-                initializeBluetooth();
-                return true;            
-            default:
-                return super.onOptionsItemSelected(item);
+        case R.id.action_new:  // new hardware unit
+            //mSelectedBluetoothDevice = null;
+            //initializeBluetooth();
+            startAddHardwareUnitActivity();
+            return true;            
+        default:
+            return super.onOptionsItemSelected(item);
         }
     }
-    
+
     // -- Action Mode
-    
+
     // Action mode is activated by a long click on a hardware unit
     private ActionMode.Callback mActionModeCallback = new ActionMode.Callback() {
 
@@ -154,13 +155,13 @@ public class AllUnitsActivity extends Activity {
         @Override
         public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
             switch (item.getItemId()) {
-                case R.id.action_delete:  // delete hardware unit
-                    deleteHardwareUnit(mSelectedHardwareUnit);
-                       
-                    mode.finish(); // Action picked, so close the CAB
-                    return true;
-                default:
-                    return false;
+            case R.id.action_delete:  // delete hardware unit
+                deleteHardwareUnit(mSelectedHardwareUnit);
+
+                mode.finish(); // Action picked, so close the CAB
+                return true;
+            default:
+                return false;
             }
         }
 
@@ -171,42 +172,42 @@ public class AllUnitsActivity extends Activity {
             mHardwareUnitAdapter.setSelectedIndex(-1);  // reset background colour
         }
     };
-    
+
     // -- Intents
-    
+
     public void startSingleUnitActivity(long unitId) {
         Intent intent = new Intent(this, SingleUnitActivity.class);
         intent.putExtra(EXTRA_UNIT_ID, unitId);
         startActivity(intent);
     } 
-    
+
     public void startAddHardwareUnitActivity() {
         Intent intent = new Intent(this, AddHardwareUnitActivity.class);
-        intent.putExtra(EXTRA_BT_DEVICE, mSelectedBluetoothDevice);
+        //intent.putExtra(EXTRA_BT_DEVICE, mSelectedBluetoothDevice);
         startActivity(intent);
     }
-    
+
     // -- Model
-    
+
     public void deleteHardwareUnit(HardwareUnit hu) {
         int result = mHardwareUnitDataSource.deleteHardwareUnitById(hu.getId());
         Log.i("AllUnitsActivity - deleteHardwareUnit()", "deleted?: " + result);
         mHardwareUnitAdapter.remove(hu);
         mSelectedHardwareUnit = null;
     }
-    
+
     // -- Bluetooth
-    
+
     private void initializeBluetooth() {
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        
+
         // no Bluetooth
         if (mBluetoothAdapter == null) {
-          Log.i("AllUnitsActivity - turnOnBluetooth()", "device does not support blueooth");
-          finish();  // close app
-          return;
+            Log.i("AllUnitsActivity - turnOnBluetooth()", "device does not support blueooth");
+            finish();  // close app
+            return;
         }
-        
+
         // Bluetooth already enabled
         if (mBluetoothAdapter.isEnabled()) {
             getPairedBTDevices();
@@ -216,37 +217,37 @@ public class AllUnitsActivity extends Activity {
             startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
         }
     }
-    
+
     /**
      * Callback for startActivityResult() 
      */
     @Override
     protected void onActivityResult (int requestCode, int resultCode, Intent data) {
         switch(requestCode) {
-            // Enable Bluetooth?
-            case REQUEST_ENABLE_BT:
-                if (resultCode == Activity.RESULT_OK) {
-                    Log.i("AllUnitsActivity - onActivityResult()", "Bluetooth successfully enabled");
-                    getPairedBTDevices();
-                } else if (resultCode == Activity.RESULT_CANCELED) {
-                    Log.i("AllUnitsActivity - onActivityResult()", "Bluetooth not enabled");
-                }
-                break;
-            default:
-                break;
+        // Enable Bluetooth?
+        case REQUEST_ENABLE_BT:
+            if (resultCode == Activity.RESULT_OK) {
+                Log.i("AllUnitsActivity - onActivityResult()", "Bluetooth successfully enabled");
+                getPairedBTDevices();
+            } else if (resultCode == Activity.RESULT_CANCELED) {
+                Log.i("AllUnitsActivity - onActivityResult()", "Bluetooth not enabled");
+            }
+            break;
+        default:
+            break;
         }
     }
-    
+
     public void getPairedBTDevices() {
         // get list of paired devices
         mBluetoothDevices = new ArrayList<BluetoothDevice>(mBluetoothAdapter.getBondedDevices());
-        
+
         int deviceCount = mBluetoothDevices.size();
         Log.i("AllUnitsActivity - getPairedBTDevices", "# devices: " + deviceCount);
-        
+
         // build an array of bluetooth device names to pass to dialog
         String[] bluetoothDeviceNames = new String[deviceCount];
-        
+
         if (deviceCount > 0) {
             int i = 0;
             for (BluetoothDevice device : mBluetoothDevices) {
@@ -254,30 +255,30 @@ public class AllUnitsActivity extends Activity {
                 i++;
             }
         }
-        
+
         // show bluetooth dialog
         DialogFragment bluetoothDialogFragment = BluetoothPairedDevicesDialog.newInstance(bluetoothDeviceNames);
         bluetoothDialogFragment.show(getFragmentManager(), "bluetooth_paired_devices_dialog");
     }    
-    
+
     // -- Paired Bluetooth Devices Dialog
-      
+
     public void doBluetoothDialogOkClick() {
         if (mSelectedBluetoothDevice != null && Arrays.asList(ESPRUINO_MACS).contains(mSelectedBluetoothDevice.getAddress())) {
             startAddHardwareUnitActivity();            
         } else {
             Toast.makeText(getApplicationContext(),
-                           "The selected device was not a HACK hardware unit. Please try again.",
-                           Toast.LENGTH_LONG).show();
+                    "The selected device was not a HACK hardware unit. Please try again.",
+                    Toast.LENGTH_LONG).show();
         }
     }   
-    
+
     public void setBtDevice(int position) {
         mSelectedBluetoothDevice = mBluetoothDevices.get(position);
     }
-    
+
     public static class BluetoothPairedDevicesDialog extends DialogFragment { 
-        
+
         // create a new instance
         public static BluetoothPairedDevicesDialog newInstance(String[] btDeviceNames) {
             BluetoothPairedDevicesDialog btFrag = new BluetoothPairedDevicesDialog();
@@ -287,29 +288,29 @@ public class AllUnitsActivity extends Activity {
             btFrag.setArguments(args);         
             return btFrag;
         }
-        
+
         // build dialog
         @Override
         public Dialog onCreateDialog(Bundle savedInstanceState) {
-            
+
             String[] btDeviceNames = getArguments().getStringArray("btDeviceNames");
-            
+
             AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-            
+
             builder.setTitle(R.string.title_select_hardware_unit);
-            
+
             builder.setPositiveButton(R.string.ok,  new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int whichButton) {//                   
                     ((AllUnitsActivity) getActivity()).doBluetoothDialogOkClick();
                 }
             });
-            
+
             builder.setNegativeButton(R.string.cancel,  new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int whichButton) {
                     ((AllUnitsActivity) getActivity()).mSelectedBluetoothDevice = null;
                 }
             });
-            
+
             builder.setSingleChoiceItems(btDeviceNames, -1, new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int which) {
                     ((AllUnitsActivity) getActivity()).setBtDevice(which);

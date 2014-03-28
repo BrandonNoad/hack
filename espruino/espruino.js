@@ -11,13 +11,13 @@ var settings = {
   },
 
   bluetooth: {
-    LISTEN: 0,
-    PARSE_CMD: 1,
-    SET_APN: 2,
-    SET_WPA: 3,
-    SET_PORT: 4,
-    state: 0,
-    current: "",
+    states: {
+      LISTEN: 0,
+      VERIFY: 1,
+      RECEIVING: 2,
+    },
+    currentState: 0,
+    currentRecord: "",
   },
 };
 
@@ -214,39 +214,75 @@ function setTimer(outletNumber) {
 }
 
 
+// -- Command Object
+
+var commandDict;
+
 /**
- * 
+ * Define commands here
  */
-function doCommand(obj) {
 
-  pulseLED("green", 100);
+function initCommands() {
+  commandDict = {};
 
-  var pathname = obj.pathname;
-  var socketNumber;
-  var state;
+  commandDict["on"] = function(args) {
+    setOutlet(parseInt(args.socket, 10), 0);
+  };
 
-  if (pathname == "/hack/on") {
-    state = 0;    
-    socketNumber = parseInt(obj.query.socket, 10);
-    setOutlet(socketNumber, state);
-  } else if (pathname == "/hack/off") {
-    state = 1;
-    socketNumber = parseInt(obj.query.socket, 10);
-    setOutlet(socketNumber, state);
-  } else if (pathname == "/hack/refresh") {
+  commandDict["off"] = function(args) {
+    setOutlet(parseInt(args.socket, 10), 1);
+  };
+
+  commandDict["refresh"] = function(args) {
     refreshAllOutlets();
-  } else if (pathname == "/hack/delete") {
-    socketNumber = parseInt(obj.query.socket, 10);
-    resetOutlet(socketNumber);
-  } else if (pathname == "/hack/setTimer") {
-    socketNumber = parseInt(obj.query.socket, 10);
-    setTimer(socketNumber);
+  };
+
+  commandDict["delete"] = function(args) {
+    resetOutlet(parseInt(args.socket, 10));
+  };
+
+  commandDict["setTimer"] = function(args) {
+    setTimer(parseInt(args.socket, 10));
+  };
+
+  commandDict["sync"] = function(args) {
+    settings.wifi.ssid = args["ap"];
+    settings.wifi.wpa2key = args["key"];
+    settings.wifi.port = args["port"];
+    safeSave();
+  };
+}
+
+/**
+ * Receive commands and invoke their callback
+ */
+
+function doCommand(obj) {
+  var pathList = obj.pathname.split("/");
+  var lastItem = "";
+  var command = "";
+  var args = obj.query;
+
+  if (pathList.length > 2) {
+    // Use "2" because leading "/" creates a blank first element
+    command = pathList[2];
   } else {
-    return false;
+    pulseLED("red", 100);
+    console.log("doCommand got blank command");
+    return;
   }
+
+  if (typeof commandDict[command] === "function") {
+    pulseLED("green", 100);
+    console.log("doCommand recognizes " + command);
+    commandDict[command](args);
+  } else {
+    pulseLED("red", 100);
+    console.log("doCommand discards " + command);
+  }
+
   // update current time 
   hardwareUnit.currentTime = getTime();
-  return true;
 }
 
 
@@ -301,6 +337,16 @@ function webServerInit() {
 
   settings.wifi.wlan = require("CC3000").connect();
   digitalWrite(LED2, 1);
+
+  // skip extra connect if blank credentials
+  if (settings.wifi.ssid === "") {
+    console.log("Skipping 2nd wifi connect since no credentials");
+
+    // Indicate bad wifi state
+    resetLEDs();
+    repeatLED("red");
+    settings.wifi.status = "disconnect";
+  }
      
   // connect to wireless network
   settings.wifi.wlan.connect(settings.wifi.ssid, settings.wifi.wpa2key, function(status) {
@@ -315,7 +361,7 @@ function webServerInit() {
       } else {
         console.log("I don't have an IP address");
 
-        // Indicate bad state
+        // Indicate bad wifi state
         resetLEDs();
         repeatLED("red");
 
@@ -327,14 +373,14 @@ function webServerInit() {
       // create web server
       settings.wifi.server = require("http").createServer(webHandler).listen(settings.wifi.port);
 
-      // Indicate good state
+      // Indicate good wifi state
       resetLEDs();
       repeatLED("blue");
     } else if (status == "disconnect" && settings.wifi.status == "dhcp") {
       console.log("Got disconnect");
       console.log("I lost my connection");
 
-      // Indicate bad state
+      // Indicate bad wifi state
       resetLEDs();
       repeatLED("red");
       settings.wifi.status = status;
@@ -342,7 +388,7 @@ function webServerInit() {
       console.log("Got disconnect");
       console.log("I lost my connection in a different way");
 
-      // Indicate bad state
+      // Indicate bad wifi state
       resetLEDs();
       repeatLED("red");
       settings.wifi.status = status;
@@ -357,72 +403,51 @@ function webServerInit() {
 
 // -- Bluetooth
 
-/* Changes the behaviour of the btHandler()
- *   LISTEN - receive command
- *   SET_APN - receive ACCESS_POINT_NAME
- *   SET_WPA - receive WPA2_KEY
- *   SET_PORT - receive PORT_NUMBER
- */
+function BluetoothRequest(s) {
+  this.pathname = s.substring(0, s.indexOf("?"));
+  this.query = {};
+  var queryString = s.substring(s.indexOf("?") + 1, s.length);
+  var queryDefs = queryString.split("&");
+
+  for (var i = 0; i < queryDefs.length; i++) {
+    var def = queryDefs[i];
+    this.query[def.split("=")[0]] = def.split("=")[1];
+  }
+}
 
 function btHandler(e) {
-  if (settings.bluetooth.state == settings.bluetooth.LISTEN) {  // receive command
+  if (settings.bluetooth.currentState == settings.bluetooth.states.LISTEN) {  // receive command
     if (e.data == " ") {
-      settings.bluetooth.current = "";
-    } else {
-      settings.bluetooth.current = settings.bluetooth.current + e.data;
-      // handle event
-      if (settings.bluetooth.current == "_toggle") {
-        settings.bluetooth.state = settings.bluetooth.PARSE_CMD;
-        settings.bluetooth.current = "";
-      } else if (settings.bluetooth.current == "_set_apn") {
-        settings.bluetooth.state = settings.bluetooth.SET_APN;
-        settings.bluetooth.current = "";
-      } else if (settings.bluetooth.current == "_set_wpa") {
-        settings.bluetooth.state = settings.bluetooth.SET_WPA;
-        settings.bluetooth.current = "";
-      } else if (settings.bluetooth.current == "_set_port") {
-        settings.bluetooth.state = settings.bluetooth.SET_PORT;
-        settings.bluetooth.current = "";
-      } else if (settings.bluetooth.current == "_save") {
-        settings.bluetooth.current = "";
-        safeSave();
-      }
+      console.log("Bluetooth got space, start recording (entering VERIFY)");
 
+      settings.bluetooth.currentRecord = "";
+      settings.bluetooth.currentState = settings.bluetooth.states.VERIFY;
     }
-  } else if (settings.bluetooth.state == settings.bluetooth.PARSE_CMD) {
-    if (e.data == " ") {
-      var btObj = url.parse(settings.bluetooth.current, true);
-      doCommand(btObj);
-      settings.bluetooth.current = "";
-      settings.bluetooth.state = settings.bluetooth.LISTEN;
-    } else {
-      settings.bluetooth.current += e.data;
+  } else if (settings.bluetooth.currentState == settings.bluetooth.states.VERIFY) {
+    if (settings.bluetooth.currentRecord == "/hack/") {
+      console.log("Bluetooth verified /hack/, commit recording entire command (entering RECORD)");
+
+      settings.bluetooth.currentState = settings.bluetooth.states.RECEIVING;
+    } else if (settings.bluetooth.currentRecord.length > 6) {
+      console.log("Bluetooth verification failed, got <" + settings.bluetooth.currentRecord + "> instead (entering LISTEN)");
+
+      settings.bluetooth.currentState = settings.bluetooth.states.LISTEN;
     }
-  } else if (settings.bluetooth.state == settings.bluetooth.SET_APN) {  //  receive ACCESS_POINT_NAME
-    if (e.data == "|") {
-      settings.wifi.ssid = settings.bluetooth.current;
-      settings.bluetooth.current = "";
-      settings.bluetooth.state = settings.bluetooth.LISTEN;
-    } else {
-      settings.bluetooth.current += e.data;
+
+    settings.bluetooth.currentRecord += e.data;
+  } else if (settings.bluetooth.currentState == settings.bluetooth.states.RECEIVING) {
+    if (e.data == "$") {
+      console.log("Bluetooth got $, the full command is: " + settings.bluetooth.currentRecord + " (entering LISTEN)");
+
+      var command = new BluetoothRequest(settings.bluetooth.currentRecord);
+      doCommand(command);
+
+      settings.bluetooth.currentState = settings.bluetooth.states.LISTEN;
     }
-  } else if (settings.bluetooth.state == settings.bluetooth.SET_WPA) {  //  receive WPA2_KEY
-    if (e.data == "|") {
-      settings.wifi.wpa2key = settings.bluetooth.current;
-      settings.bluetooth.current = "";
-      settings.bluetooth.state = settings.bluetooth.LISTEN;
-    } else {
-      settings.bluetooth.current += e.data;
-    }
-  } else if (settings.bluetooth.state == settings.bluetooth.SET_PORT) {  // receive PORT NUMBER
-    if (e.data == "|") {
-      settings.wifi.port = settings.bluetooth.current;
-      settings.bluetooth.current = "";
-      settings.bluetooth.state = settings.bluetooth.LISTEN;
-    } else {
-      settings.bluetooth.current += e.data;
-    }
+
+    settings.bluetooth.currentRecord += e.data;
   }
+
 }
 
 
@@ -451,6 +476,13 @@ function safeSave() {
  * Special function called automatically when Espruino is powered on.
  */
 function onInit() {
+  // Init commands
+  if (typeof commandDict !== "object") {
+    console.log("Writing out commands...");
+    initCommands();
+  }
+  
+
   // Always want to try the webserver
   webServerInit();
 }

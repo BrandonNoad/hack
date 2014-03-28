@@ -45,9 +45,9 @@ public class HackConnectionManager {
             if (mBluetoothAdapter.isUnitAvailable(command)) {
                 Log.i("HackConnectionManager - doInBackground()", "using BT...");
                 translateToBluetooth(command);
-                command.setTest(command.getUrl());
                 response = mBluetoothAdapter.submitRequest(command);
             } else {
+            	translateToWifi(command);
                 response = mWifiAdapter.submitRequest(command);
             }
             // need to set the Command response string in the Adapters
@@ -82,30 +82,34 @@ public class HackConnectionManager {
     // -- Private members
 
     void translateToBluetooth(HackCommand command) {
-        URI uriCommand = null;
-        try {
-            uriCommand = new URI(command.getUrl());
-        } catch (URISyntaxException e1) {
-            mBluetoothAdapter.fail("Couldn't parse the command url");
+        String translation = command.getUrl();
+
+        // If it has the Wifi prefix, remove it
+        if (translation.startsWith("http://")) {
+        	translation = translation.substring(6, translation.length() - 1);
         }
-
-        String[] strCommand = uriCommand.getPath().split("/");
-        List<NameValuePair> getMap = URLEncodedUtils.parse(uriCommand, "UTF-8");
-        String translation = "";
-
-        for (String commandPiece : strCommand) {
-            if (!commandPiece.equals("")) {
-                translation += "_" + commandPiece + "|";
-            }
+        
+        // If it doesn't have the Bluetooth suffix, add it
+        if (!translation.endsWith("$")) {
+        	translation += "$";
         }
-
-        for (NameValuePair entry : getMap) {
-            translation += "_set_" + entry.getName() + entry.getValue() + "|";
-        }
-
-        translation += "$"; // End of command delimiter for bluetooth
 
         command.setUrl(translation);
     }
 
+    void translateToWifi(HackCommand command) {
+    	String translation = command.getUrl();
+    	
+    	// If it doesn't have a Wifi prefix, add it
+    	if (!translation.startsWith("http://")) {
+    		translation = "http:/" + translation.substring(translation.indexOf("/"), translation.length() - 1);
+    	}
+    	
+    	// If it has the Bluetooth suffix, remove it
+    	if (translation.endsWith("$")) {
+    		translation = translation.substring(0, translation.length() - 2);
+    	}
+    	
+    	command.setUrl(translation);
+    }
 }

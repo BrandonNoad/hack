@@ -23,7 +23,7 @@ public class AddHardwareUnitActivity extends Activity {
         public SyncWifiCommand(HardwareUnit unit, Context context) {
             super(context, unit, "");
 
-            String url = "http://noop/hack/sync?name=" + unit.getName() +
+            String url = "/hack/sync?name=" + unit.getName() +
                     "&ap=" + unit.getAcessPointName() +
                     "&key=" + unit.getWpa2Key() +
                     "&basePath=" + unit.getBasePath() +

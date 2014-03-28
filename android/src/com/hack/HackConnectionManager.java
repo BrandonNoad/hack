@@ -43,7 +43,7 @@ public class HackConnectionManager {
                 translateToBluetooth(command);
                 response = mBluetoothAdapter.submitRequest(command);
             } else {
-            	translateToWifi(command);
+                translateToWifi(command);
                 response = mWifiAdapter.submitRequest(command);
             }
             // need to set the Command response string in the Adapters
@@ -82,37 +82,37 @@ public class HackConnectionManager {
 
         // If it has the Wifi prefix, remove it
         if (translation.startsWith("http://")) {
-    		URI uriCommand = null;
-    		try {
-    			uriCommand = new URI(translation);
-    		} catch (URISyntaxException e1) {
-    			//command.returnEarly("Couldn't parse the command url");
-    		}
-    		translation = uriCommand.getPath() + "?" + uriCommand.getRawQuery();
+            URI uriCommand = null;
+            try {
+                uriCommand = new URI(translation);
+            } catch (URISyntaxException e1) {
+                //command.returnEarly("Couldn't parse the command url");
+            }
+            translation = uriCommand.getPath() + "?" + uriCommand.getRawQuery();
         }
         
         // If it doesn't have the Bluetooth suffix, add it
         if (!translation.endsWith("$")) {
-        	translation += "$";
+            translation += "$";
         }
 
         command.setUrl(translation);
     }
 
     void translateToWifi(HackCommand command) {
-    	String translation = command.getUrl();
-    	
-    	// If it doesn't have a Wifi prefix, add it
-    	if (!translation.startsWith("http://")) {
-    		translation = "http://" + command.getHardwareUnit().getBasePath()
-    								+ translation.substring(translation.indexOf("/"), translation.length() - 1);
-    	}
-    	
-    	// If it has the Bluetooth suffix, remove it
-    	if (translation.endsWith("$")) {
-    		translation = translation.substring(0, translation.length() - 2);
-    	}
-    	
-    	command.setUrl(translation);
+        String translation = command.getUrl();
+        
+        // If it doesn't have a Wifi prefix, add it
+        if (!translation.startsWith("http://")) {
+            translation = "http://" + command.getHardwareUnit().getBasePath()
+                                    + translation.substring(translation.indexOf("/"), translation.length() - 1);
+        }
+        
+        // If it has the Bluetooth suffix, remove it
+        if (translation.endsWith("$")) {
+            translation = translation.substring(0, translation.length() - 2);
+        }
+        
+        command.setUrl(translation);
     }
 }

@@ -116,13 +116,13 @@ public class DeviceDetailsActivity extends Activity {
                             super.doSuccess(response);
                             
                             JSONObject data = new JSONObject();
-							try {
-								data = response.getJSONObject("data");
-							} catch (JSONException e) {
-								// TODO Auto-generated catch block
-								e.printStackTrace();
-							}
-							
+                            try {
+                                data = response.getJSONObject("data");
+                            } catch (JSONException e) {
+                                // TODO Auto-generated catch block
+                                e.printStackTrace();
+                            }
+                            
                             parseJSONResponse(data);
                             updateUIDeviceStatistics();
                             Log.i("DeviceDetailsActivity - onPostExecute","device statistics updated");
@@ -213,13 +213,13 @@ public class DeviceDetailsActivity extends Activity {
                     super.doSuccess(response);
                     
                     JSONObject data = new JSONObject();
-					try {
-						data = response.getJSONObject("data");
-					} catch (JSONException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-					
+                    try {
+                        data = response.getJSONObject("data");
+                    } catch (JSONException e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    }
+                    
                     parseJSONResponse(data);
                     updateUIDeviceStatistics();
                     Log.i("DeviceDetailsActivity - onPostExecute","device statistics updated");

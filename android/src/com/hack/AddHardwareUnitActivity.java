@@ -37,7 +37,7 @@ public class AddHardwareUnitActivity extends Activity {
 
         @Override
         public void doSuccess(JSONObject response) {
-        	super.doSuccess(response);
+            super.doSuccess(response);
             // should we wait for success before we update the db?
             // return to all units activity
             startAllUnitsActivity();
@@ -45,11 +45,11 @@ public class AddHardwareUnitActivity extends Activity {
         
         @Override
         public void doFail(JSONObject response) {
-        	super.doFail(response);
+            super.doFail(response);
 
-        	// Delete the hardware unit we made
-        	mHardwareUnitDataSource.deleteHardwareUnitById(getHardwareUnit().getId());
-        	startAllUnitsActivity();
+            // Delete the hardware unit we made
+            mHardwareUnitDataSource.deleteHardwareUnitById(getHardwareUnit().getId());
+            startAllUnitsActivity();
         }
     }
 

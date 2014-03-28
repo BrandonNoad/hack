@@ -38,8 +38,8 @@ public class HackBluetoothAdapter extends HackConnectionAdapter {
                 tmpIn = socket.getInputStream();
                 tmpOut = socket.getOutputStream();
             } catch (IOException e) {
-            	tmpIn = null;
-            	tmpOut = null;
+                tmpIn = null;
+                tmpOut = null;
             }
 
             mmInStream = tmpIn;
@@ -52,23 +52,23 @@ public class HackBluetoothAdapter extends HackConnectionAdapter {
 
         @Override
         public void run() {
-        	if (mmInStream == null || mmOutStream == null) {
-        		return;
-        	} else {
-        		mmRunning = true;
-        	}
+            if (mmInStream == null || mmOutStream == null) {
+                return;
+            } else {
+                mmRunning = true;
+            }
 
             // Keep listening to the InputStream until an exception occurs
             while (mmRunning) {
-            	try {
-            		// If there is something to read
-					if (mmInStream.available() > 0) {
-						mmInBuffer.write(mmInStream.read());
-					}
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+                try {
+                    // If there is something to read
+                    if (mmInStream.available() > 0) {
+                        mmInBuffer.write(mmInStream.read());
+                    }
+                } catch (IOException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
             }
 
         }
@@ -88,31 +88,31 @@ public class HackBluetoothAdapter extends HackConnectionAdapter {
             String ret;
             
             while ((Calendar.getInstance().getTimeInMillis() - start) < timeout) {
-            	// Check if "/hack/" is in the buffer
-            	responseStart = mmInBuffer.toString().indexOf("/hack/");
-            	
-            	// If it is, check if "$" is in the buffer
-            	if (responseStart >= 0) {
-            		responseEnd = mmInBuffer.toString().indexOf("$");
+                // Check if "/hack/" is in the buffer
+                responseStart = mmInBuffer.toString().indexOf("/hack/");
+                
+                // If it is, check if "$" is in the buffer
+                if (responseStart >= 0) {
+                    responseEnd = mmInBuffer.toString().indexOf("$");
 
-            		// If this is true, we have an entire command
-            		if (responseEnd >= 0) {
-            			ret = new String(mmInBuffer.toString().substring(responseStart, responseEnd)).replace("/hack/", "");
-            			mmInBuffer.reset();
-            			return ret;
-            		}
-            	}
+                    // If this is true, we have an entire command
+                    if (responseEnd >= 0) {
+                        ret = new String(mmInBuffer.toString().substring(responseStart, responseEnd)).replace("/hack/", "");
+                        mmInBuffer.reset();
+                        return ret;
+                    }
+                }
 
-            	yield();
+                yield();
             }
             
             return "";
         }
         
         public void done() {
-        	mmRunning = false;
-        	
-        	// Don't touch the mmStreams or mmSocket - let it be managed by BluetoothAdapter
+            mmRunning = false;
+            
+            // Don't touch the mmStreams or mmSocket - let it be managed by BluetoothAdapter
         }
     }
 
@@ -169,11 +169,11 @@ public class HackBluetoothAdapter extends HackConnectionAdapter {
             }
             // If we are looking for a unit we have seen before
         }/* else {
-    		// It's been paired with before
-    		if (isUnitRecognized(c.getHardwareUnit())) {
-    			return true;
-    		}
-    	}
+            // It's been paired with before
+            if (isUnitRecognized(c.getHardwareUnit())) {
+                return true;
+            }
+        }
          */
         return false;
     }
@@ -191,15 +191,15 @@ public class HackBluetoothAdapter extends HackConnectionAdapter {
             mStream.write(" ".getBytes());
             mStream.write(command.getUrl().getBytes());
         } else {
-        	mStream.done();
-        	
+            mStream.done();
+            
             // Close the socket
             try {
-    			mSocket.close();
-    		} catch (IOException e) {
-    			// TODO Auto-generated catch block
-    			e.printStackTrace();
-    		}
+                mSocket.close();
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
             return fail("Couldn't access stream thread");
         }
 
@@ -208,16 +208,16 @@ public class HackBluetoothAdapter extends HackConnectionAdapter {
         String response = mStream.read(5000);
         
         if (response == "") {
-        	mStream.done();
-        	
+            mStream.done();
+            
             // Close the socket
             try {
-    			mSocket.close();
-    		} catch (IOException e) {
-    			// TODO Auto-generated catch block
-    			e.printStackTrace();
-    		}
-        	return fail("Timed out waiting for response");
+                mSocket.close();
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+            return fail("Timed out waiting for response");
         }
 
         // Technically the stream is a thread, so discard it at this point
@@ -226,11 +226,11 @@ public class HackBluetoothAdapter extends HackConnectionAdapter {
         
         // Close the socket
         try {
-			mSocket.close();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+            mSocket.close();
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
 
         return response;
     }

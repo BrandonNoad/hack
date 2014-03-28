@@ -9,12 +9,13 @@ import android.util.Log;
 import android.widget.Toast;
 
 public abstract class HackCommand {
-    
+
     private ProgressDialog mProgressDialog;
     private HardwareUnit mHardwareUnit;
     private String mUrl;
     private Context mContext;
-    
+    private String mTest;
+
     /**
      * 
      * @param context - activity context (not application context)
@@ -26,24 +27,23 @@ public abstract class HackCommand {
         mUrl = url;
         mContext = context;
     }
-    
+
     public String getUrl() {
         return mUrl;
     }
-    
+
     public HardwareUnit getHardwareUnit() {
         return mHardwareUnit;
     }
-    
+
     public void setUrl(String url) {
         mUrl = url;
     }
-    
+
     public Context getContext() {
         return mContext;
     }
-    
-    
+
     public void showProgressDialog() {
         mProgressDialog = new ProgressDialog(mContext);
         mProgressDialog.setTitle("Sending Request...");
@@ -52,17 +52,17 @@ public abstract class HackCommand {
         mProgressDialog.setIndeterminate(true);
         mProgressDialog.show();
     }
-    
+
     public void hideProgressDialog() {
         if (mProgressDialog != null) {
             mProgressDialog.dismiss();
         }
     }
-    
+
     public void onPreExecute() {
-       // no-op - I'm making this a no-op, so we aren't forced to implement it        
+        // no-op - I'm making this a no-op, so we aren't forced to implement it        
     }
-    
+
     /**
      * 
      * @param response - JSON string of the form {"success": 0/1, "data": { ... }, "message": "some message"} 
@@ -75,7 +75,8 @@ public abstract class HackCommand {
             if (isSuccess != 0) {
                 // success
                 JSONObject data = jsonResponse.getJSONObject("data");
-                doSuccess(data);
+                String message = jsonResponse.getString("message");
+                doSuccess(data, message);
             } else {
                 String message = jsonResponse.getString("message");
                 doFail(message);
@@ -84,18 +85,35 @@ public abstract class HackCommand {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-     
+
     }
-    
+
     // must implement this when you define concrete command
-    abstract void doSuccess(JSONObject data);
+    public void doSuccess(JSONObject data, String message) {
+        Toast.makeText(mContext.getApplicationContext(),  // must use application context
+                message,
+                Toast.LENGTH_LONG).show();
+    }
 
     public void doFail(String message) {
         Log.i("HackComand - doFail()", "message: " + message);
         // show toast
         Toast.makeText(mContext.getApplicationContext(),  // must use application context
-                       message,
-                       Toast.LENGTH_LONG).show();
+                message,
+                Toast.LENGTH_LONG).show();
+    }
+
+    public void send() {
+        HackConnectionManager m = ((HackApplication)mContext.getApplicationContext()).getConnectionManager();
+        m.submitRequest(this);
+    }
+
+    public String getTest() {
+        return mTest;
+    }
+
+    public void setTest(String s) {
+        mTest = s;
     }
 
 }

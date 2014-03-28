@@ -11,33 +11,33 @@ import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
 public class HardwareUnitAdapter extends ArrayAdapter<HardwareUnit> {
-    
+
     private int mSelectedIndex;
     private int mSelectedColor;
-    
+
     public HardwareUnitAdapter(Context context, ArrayList<HardwareUnit> hardwareUnits) {
         super(context, R.layout.item_hardware_unit, hardwareUnits);
         mSelectedIndex = -1;
         mSelectedColor = Color.parseColor("#ff33b5e5");  // light blue backgrond colour
-     }
-    
+    }
+
     public void setSelectedIndex(int index) {
         mSelectedIndex = index;
         notifyDataSetChanged();
     }
-    
+
     public int getSelectedIndex() {
         return mSelectedIndex;
     }
 
-     @Override
-     public View getView(int position, View convertView, ViewGroup parent) {
+    @Override
+    public View getView(int position, View convertView, ViewGroup parent) {
         View v = convertView;
         // Get the data item for this position
         HardwareUnit unit = getItem(position);    
         // Check if an existing view is being reused, otherwise inflate the view
         if (v == null) {
-           v = LayoutInflater.from(getContext()).inflate(R.layout.item_hardware_unit, null);
+            v = LayoutInflater.from(getContext()).inflate(R.layout.item_hardware_unit, null);
         }
         // Lookup view for data population
         TextView hardwareUnitName = (TextView) v.findViewById(R.id.hardwareUnitName);

@@ -12,34 +12,34 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 public class DeviceAdapter extends ArrayAdapter<Device> {
-    
+
     private int mSelectedIndex;
     private int mSelectedColor;
-    
+
     public void setSelectedIndex(int index) {
         mSelectedIndex = index;
         notifyDataSetChanged();
     }
-    
+
     public DeviceAdapter(Context context, ArrayList<Device> devices) {
         super(context, R.layout.item_socket, devices);
         mSelectedIndex = -1;
         mSelectedColor = Color.parseColor("#ff33b5e5");
-     }
+    }
 
-     @Override
-     public View getView(int position, View convertView, ViewGroup parent) {
+    @Override
+    public View getView(int position, View convertView, ViewGroup parent) {
         View v = convertView;
         // Get the data item for this position
         Device device = getItem(position);
         // Check if an existing view is being reused, otherwise inflate the view
         if (v == null) {
-           v = LayoutInflater.from(getContext()).inflate(R.layout.item_socket, parent, false);
+            v = LayoutInflater.from(getContext()).inflate(R.layout.item_socket, parent, false);
         }
         // Lookup view for data population
         TextView socketLabel = (TextView) v.findViewById(R.id.socketLabel);
         ImageView socketImage = (ImageView) v.findViewById(R.id.socketImage);
-        
+
         // Populate the data into the template view using the data object
         if (device != null) {
             socketLabel.setText(device.getName());

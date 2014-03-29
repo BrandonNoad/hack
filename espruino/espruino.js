@@ -229,7 +229,10 @@ function setTimer(outletNumber, millisecondsFromNow, duration, isRepeated) {
   var timerHelper = function() {
     console.log("turning on device for timer");
     setOutlet(outletNumber, 0);
-    setTimeout(function(e) {setOutlet(outletNumber, 1);}, duration);
+    setTimeout(function(e) {
+      setOutlet(outletNumber, 1);
+      console.log("turning off device for timer");
+    }, duration);
   };
 
   // set the timeout for when to first turn on the socket

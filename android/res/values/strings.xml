@@ -19,7 +19,7 @@
     <string name="paired_devices">Paried Devices</string>
     <string name="available_devices">Available Devices</string>
     <string name="scan">Scan</string>
-    <string name="title_activity_add_hardware_unit">AddHardwareUnitActivity</string>
+    <string name="title_activity_add_hardware_unit">Add New Hardware Unit</string>
     <string name="hello_world">Hello world!</string>
     <string name="hardware_unit_name">Hardware Unit Name</string>
     <string name="base_path">Base Path</string>

@@ -32,6 +32,17 @@ public class HardwareUnitDataSource extends HackDataSource {
         long id = mDatabase.insert(HackHardwareUnits.TABLE_NAME, null, values);
         return id;
     }
+    
+    /**
+     * Update hardware unit MAC
+     * @return int - number of rows updated
+     */
+    public int updateHardwareUnit(long id, String btMac) {
+        ContentValues values = new ContentValues();
+        values.put(HackHardwareUnits.COLUMN_NAME_HARDWARE_UNIT_BT_MAC, btMac);
+        int result = mDatabase.update(HackHardwareUnits.TABLE_NAME, values, HackHardwareUnits._ID + " = " + id, null);
+        return result;
+    }
 
     /**
      * Delete a hardware unit given an id

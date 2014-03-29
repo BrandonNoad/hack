@@ -45,16 +45,13 @@ public class DeviceAdapter extends ArrayAdapter<Device> {
             socketLabel.setText(device.getName());
             int deviceState = device.getState();
             if (deviceState == 0) { // on?
-                socketImage.setBackgroundResource(0);
-                socketImage.setBackgroundResource(R.drawable.outlet_on);
+                socketImage.setImageResource(R.drawable.outlet_on);
             } else { // off?
-                socketImage.setBackgroundResource(0);
-                socketImage.setBackgroundResource(R.drawable.outlet_off);
+                socketImage.setImageResource(R.drawable.outlet_off);
             }
         } else {
             socketLabel.setText("");
-            socketImage.setBackgroundResource(0);
-            socketImage.setBackgroundResource(R.drawable.outlet);
+            socketImage.setImageResource(R.drawable.outlet);
         }
         if (mSelectedIndex != -1 && position == mSelectedIndex) {
             v.setBackgroundColor(mSelectedColor);

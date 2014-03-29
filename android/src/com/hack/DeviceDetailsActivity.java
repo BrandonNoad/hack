@@ -153,7 +153,7 @@ public class DeviceDetailsActivity extends Activity {
 
             @Override
             public void onClick(View v) {
-                deleteTimer();
+                cancelTimer();
             }
 
         });
@@ -297,9 +297,9 @@ public class DeviceDetailsActivity extends Activity {
                     onSinceTime = outlet.getLong("onSinceTime");
                     Log.i("DeviceDetailsActivity - parseJSONResponse", 
                             "new state: " + newState + 
-                            ", current time: " + espruinoCurrentTime + 
+                            ", current espruino time (seconds): " + espruinoCurrentTime + 
                             ", total time on: " + totalTimeOn +
-                            ", on since time: " + onSinceTime);                                
+                            ", on since time (espruino seconds): " + onSinceTime);                                
                 } catch (JSONException e) {
                     // TODO Auto-generated catch block
                     e.printStackTrace();
@@ -369,6 +369,20 @@ public class DeviceDetailsActivity extends Activity {
                 mDeviceTimerDetails.setText("Turn ON: " + timeOn + " - " + timeOff);
             }
         }
+    }
+    
+    public void cancelTimer() {
+        String url = "http://" + mHardwareUnit.getBasePath() + ":" + mHardwareUnit.getPortNumber() + "/hack/cancelTimer?socket=" + mDevice.getSocketId();
+        HackCommand cancelTimerCommand = new HackCommand(DeviceDetailsActivity.this, mHardwareUnit, url) {
+
+            @Override
+            public void doSuccess(JSONObject response) {
+                super.doSuccess(response);
+                deleteTimer();
+            }
+        };
+
+        cancelTimerCommand.send();
     }
 
 }

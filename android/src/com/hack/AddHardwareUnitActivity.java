@@ -1,5 +1,6 @@
 package com.hack;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.app.Activity;
@@ -15,8 +16,10 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
+import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.EditText;
-import android.widget.Toast;
 
 public class AddHardwareUnitActivity extends Activity {
 
@@ -33,7 +36,6 @@ public class AddHardwareUnitActivity extends Activity {
 
             setUrl(url);
         }
-
 
         @Override
         public void doSuccess(JSONObject response) {
@@ -58,6 +60,9 @@ public class AddHardwareUnitActivity extends Activity {
 
     private Button mAddHardwareUnitButton;
     private HardwareUnitDataSource mHardwareUnitDataSource;
+    private CheckBox mIsNewUnitCheckBox;
+    private EditText mAccessPointNameET;
+    private EditText mWpa2KeyET;
     //private BluetoothDevice mChosenBluetooth;
 
     // -- Initialize Activity
@@ -73,6 +78,10 @@ public class AddHardwareUnitActivity extends Activity {
         mHardwareUnitDataSource = new HardwareUnitDataSource(this);
         mHardwareUnitDataSource.open();
         mAddHardwareUnitButton = (Button) findViewById(R.id.add_hardware_unit_button);
+        mIsNewUnitCheckBox = (CheckBox) findViewById(R.id.isNewUnitCheckBox);
+        mAccessPointNameET = (EditText) findViewById(R.id.editTextAccessPointName);
+        mWpa2KeyET = (EditText) findViewById(R.id.editTextWpa2Key);
+        
 
         // get BluetoothDevice passed in from previoius activity
         //Bundle bundle = getIntent().getExtras();
@@ -84,6 +93,18 @@ public class AddHardwareUnitActivity extends Activity {
             public void onClick(View v) {
                 addHardwareUnit();
             }
+        });
+        
+        mIsNewUnitCheckBox.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+
+            @Override
+            public void onCheckedChanged(CompoundButton view, boolean isChecked) {
+                mAccessPointNameET.setFocusable(isChecked);
+                mWpa2KeyET.setFocusable(isChecked);
+                mAccessPointNameET.setText((isChecked) ? "" : getString(R.string.not_applicable));
+                mWpa2KeyET.setText((isChecked) ? "" : getString(R.string.not_applicable));
+            }
+            
         });
     }
 
@@ -168,9 +189,39 @@ public class AddHardwareUnitActivity extends Activity {
         // add new unit to db
         // should we wait until we get a successful response back from espruino before adding? i.e. do in command doSuccess() instead?
         long huId = mHardwareUnitDataSource.addHardwareUnit(unitName, basePath, Integer.parseInt(port), apName, key, "");
+        
+        if (mIsNewUnitCheckBox.isChecked()) {
 
-        // send discover command
-        HackCommand syncWifiCommand = new SyncWifiCommand(mHardwareUnitDataSource.getHardwareUnitById(huId), this);
-        syncWifiCommand.send();
+            // send discover command
+            HackCommand syncWifiCommand = new SyncWifiCommand(mHardwareUnitDataSource.getHardwareUnitById(huId), this);
+            syncWifiCommand.send();
+            
+        } else {
+            // send refresh command
+            HardwareUnit hardwareUnit = mHardwareUnitDataSource.getHardwareUnitById(huId);
+            String url = "http://" + hardwareUnit.getBasePath() + ":" + hardwareUnit.getPortNumber() + "/hack/refresh";
+            HackCommand refreshCommand = new HackCommand(AddHardwareUnitActivity.this, hardwareUnit, url) {
+
+                @Override
+                public void doSuccess(JSONObject response) {
+                    super.doSuccess(response);
+                    
+                    startAllUnitsActivity();
+                }
+                
+                @Override
+                public void doFail(JSONObject response) {
+                    super.doFail(response);
+
+                    // Delete the hardware unit we made
+                    mHardwareUnitDataSource.deleteHardwareUnitById(getHardwareUnit().getId());
+                }
+                
+            };
+
+            // send command
+            refreshCommand.send();
+           
+        }
     }
 }

@@ -10,10 +10,18 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context=".AddHardwareUnitActivity" >
 
+    <CheckBox
+        android:id="@+id/isNewUnitCheckBox"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:checked="true"
+        android:text="@string/new_hardware_unit_question" />
+
     <TextView
         android:id="@+id/hardwareUnitNameLabel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
         android:text="@string/hardware_unit_name"
         android:textAppearance="?android:attr/textAppearanceSmall" />
 

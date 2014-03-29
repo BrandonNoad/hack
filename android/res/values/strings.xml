@@ -19,7 +19,7 @@
     <string name="paired_devices">Paried Devices</string>
     <string name="available_devices">Available Devices</string>
     <string name="scan">Scan</string>
-    <string name="title_activity_add_hardware_unit">Add New Hardware Unit</string>
+    <string name="title_activity_add_hardware_unit">Add Hardware Unit</string>
     <string name="hello_world">Hello world!</string>
     <string name="hardware_unit_name">Hardware Unit Name</string>
     <string name="base_path">Base Path</string>
@@ -59,6 +59,8 @@
     <string name="enter_wpa2_key">Enter WPA2 Key</string>
     <string name="base_path_hint">E.g. hack.com</string>
     <string name="enter_port_number">Enter Port Number</string>
+    <string name="new_hardware_unit_question">New Hardware Unit?</string>
+    <string name="not_applicable">N/A</string>
 
     <string-array name="hardware_types">
         <item>Simple</item>

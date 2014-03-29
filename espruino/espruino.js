@@ -110,7 +110,7 @@ var hardwareUnit = {
       totalTimeOn: 0,
       onSinceTime: -1,
       lastTimeUpdated: 0,
-      isTimer: false
+      timer: null
     },
 
     // outlet1 "NE"  
@@ -121,7 +121,7 @@ var hardwareUnit = {
       totalTimeOn: 0,
       onSinceTime: -1,
       lastTimeUpdated: 0,
-      isTimer: false
+      timer: null
     },
 
     // outlet2 "SW"
@@ -132,7 +132,7 @@ var hardwareUnit = {
       totalTimeOn: 0,
       onSinceTime: -1,
       lastTimeUpdated: 0,
-      isTimer: false
+      timer: null
     },
 
     // outlet3 "SE"
@@ -143,7 +143,7 @@ var hardwareUnit = {
       totalTimeOn: 0,
       onSinceTime: -1,
       lastTimeUpdated: 0,
-      isTimer: false
+      timer: null
     }
 
   ]
@@ -187,7 +187,7 @@ function resetAllOutlets() {
     hardwareUnit.outlets[i].totalTimeOn = 0;
     hardwareUnit.outlets[i].onSinceTime = -1;
     hardwareUnit.outlets[i].lastTimeUpdated = 0;
-    hardwareUnit.outlets[i].isTimer = false;
+    hardwareUnit.outlets[i].timer = null;
   }
 }
 
@@ -197,7 +197,7 @@ function resetOutlet(outletNumber) {
     hardwareUnit.outlets[outletNumber].totalTimeOn = 0;
     hardwareUnit.outlets[outletNumber].onSinceTime = -1;
     hardwareUnit.outlets[outletNumber].lastTimeUpdated = 0;
-    hardwareUnit.outlets[outletNumber].isTimer = false;
+    hardwareUnit.outlets[outletNumber].timer = null;
 }
 
 function refreshAllOutlets() {
@@ -211,10 +211,44 @@ function refreshAllOutlets() {
   }  
 }
 
-function setTimer(outletNumber) {
-  hardwareUnit.outlets[outletNumber].isTimer = true;
+/**
+* Sets a one-time or repeated timer to turn on a socket/device at a specific
+* time each day, then turn it off a set period of time later.
+* @param int socketNumber - the socket to toggle; 0, 1, 2, or 3
+* @param float millisecondsFromNow - the # of milliseconds from now to turn the device on at
+* @param float duration - the # of milliseconds the device should remain on for
+* @param bool isRepeated - is the timer a one-time or repeated event?
+*/
+function setTimer(outletNumber, millisecondsFromNow, duration, isRepeated) {
+  var MILLISECONDS_PER_DAY = 86400000;
+  var MILLISECONDS_PER_HOUR = 3600000;
+
+  console.log("turn on device in " + (millisecondsFromNow / MILLISECONDS_PER_HOUR) + " hours");
+
+  /* turns the socket on, then turns it off duration hours later */
+  var timerHelper = function() {
+    console.log("turning on device for timer");
+    setOutlet(outletNumber, 0);
+    setTimeout(function(e) {setOutlet(outletNumber, 1);}, duration);
+  };
+
+  // set the timeout for when to first turn on the socket
+  hardwareUnit.outlets[outletNumber].timer = setTimeout(function(e) {
+    // after timeout milliseconds, run timerHelper
+    timerHelper();
+    // if this is a repeated timer, run timerHelper every 24 hrs after the initial on
+    if (isRepeated) {
+      hardwareUnit.outlets[outletNumber].timer = setInterval(function(e) {
+        timerHelper();
+      }, MILLISECONDS_PER_DAY);
+    }
+  }, millisecondsFromNow);
 }
 
+function cancelTimer(outletNumber) {
+  clearInterval(hardwareUnit.outlets[outletNumber].timer);
+  hardwareUnit.outlets[outletNumber].timer = null;
+}
 
 // -- Command Object
 
@@ -231,6 +265,8 @@ function verifyArgs(keys, args) {
 }
 
 function buildGoodResponse(commandName) {
+  // update current time 
+  hardwareUnit.currentTime = getTime();
   return {"success": 1, "command": commandName};
 }
 
@@ -296,13 +332,26 @@ function initCommands() {
   commandDict["setTimer"] = function(args) {
     var response;
 
-    if (!verifyArgs(["socket"], args)) {
+    if (!verifyArgs(["socket", "timeFromNow", "duration", "isRepeated"], args)) {
       response = buildBadResponse("args failed verification");
       return response;
     }
 
-    setTimer(parseInt(args["socket"], 10));
+    setTimer(parseInt(args["socket"], 10), args["timeFromNow"], args["duration"], args["isRepeated"]);
     response = buildGoodResponse("setTimer");
+    response["data"] = hardwareUnit;
+    return response;
+  };
+
+   commandDict["cancelTimer"] = function(args) {
+    var response;
+
+    if (!verifyArgs(["socket"], args)) {
+      response = buildBadResponse("args failed verification");
+      return response;
+    }
+    cancelTimer(parseInt(args["socket"], 10));
+    response = buildGoodResponse("cancelTimer");
     response["data"] = hardwareUnit;
     return response;
   };
@@ -355,16 +404,13 @@ function doCommand(obj) {
   if (typeof commandDict[command] === "function") {
     pulseLED("green", 100);
     console.log("doCommand recognizes " + command);
-    goodResponse = commandDict[command](args);
+    return commandDict[command](args);
   } else {
     pulseLED("red", 100);
     console.log("doCommand discards " + command);
     return buildBadResponse("doCommand got bad command");
   }
 
-  // update current time 
-  hardwareUnit.currentTime = getTime();
-  return goodResponse;
 }
 
 

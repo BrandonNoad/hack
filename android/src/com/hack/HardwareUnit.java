@@ -72,4 +72,7 @@ public class HardwareUnit {
         mWpa2Key = wpa2Key;
     }
 
+    public void setBtMac(String mac) {
+    	mBtMac = mac;
+    }
 }

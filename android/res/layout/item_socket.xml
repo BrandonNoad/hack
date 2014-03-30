@@ -1,24 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/LinearLayout1"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
+    android:layout_width="175dp"
+    android:layout_height="175dp"
     android:layout_centerHorizontal="true"
-    android:orientation="vertical" >
+    android:orientation="vertical"
+    android:padding="10dp" >
 
     <TextView
         android:id="@+id/socketLabel"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center_horizontal"
-        android:paddingTop="10dp"
         android:textAppearance="?android:attr/textAppearanceMedium" />
 
     <ImageView
         android:id="@+id/socketImage"
-        android:layout_width="150dp"
-        android:layout_height="150dp"
-        android:background="@drawable/outlet"
-        android:padding="5dp" />
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:src="@drawable/outlet" />
 
 </LinearLayout>

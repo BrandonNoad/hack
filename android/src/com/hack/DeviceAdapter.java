@@ -43,8 +43,15 @@ public class DeviceAdapter extends ArrayAdapter<Device> {
         // Populate the data into the template view using the data object
         if (device != null) {
             socketLabel.setText(device.getName());
+            int deviceState = device.getState();
+            if (deviceState == 0) { // on?
+                socketImage.setImageResource(R.drawable.outlet_on);
+            } else { // off?
+                socketImage.setImageResource(R.drawable.outlet_off);
+            }
         } else {
             socketLabel.setText("");
+            socketImage.setImageResource(R.drawable.outlet);
         }
         if (mSelectedIndex != -1 && position == mSelectedIndex) {
             v.setBackgroundColor(mSelectedColor);

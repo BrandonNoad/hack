@@ -128,6 +128,7 @@ public class HackBluetoothAdapter extends HackConnectionAdapter {
     private LinkedBlockingQueue<BluetoothDevice> mScanResult;
     private BluetoothSocket mSocket;
     private BluetoothStream mStream;
+    private BluetoothDevice mLastDevice;
     private BroadcastReceiver mReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -148,6 +149,7 @@ public class HackBluetoothAdapter extends HackConnectionAdapter {
         mAdapter = BluetoothAdapter.getDefaultAdapter();
         mScanResult = new LinkedBlockingQueue<BluetoothDevice>();
         mSocket = null;
+        mLastDevice = null;
     }
 
     public boolean isUnitAvailable(HackCommand c) {
@@ -159,6 +161,12 @@ public class HackBluetoothAdapter extends HackConnectionAdapter {
                 Log.i("BluetoothAdapter - isUnitAvailable()", "device MAC: " + d.getName());
                 if (tryConnect(c, d)) {
                     Log.i("BluetoothAdapter - isUnitAvailable()", "tryConnect is successful");
+                    // Update hardware unit with mac address
+                    HardwareUnitDataSource db = new HardwareUnitDataSource(c.getContext()); 
+                    db.open();
+                    db.updateHardwareUnit(c.getHardwareUnit().getId(), d.getAddress());
+                    db.close();
+                    c.getHardwareUnit().setBtMac(d.getAddress());
                     return true;
                 }
             }
@@ -166,17 +174,34 @@ public class HackBluetoothAdapter extends HackConnectionAdapter {
             // Check if we see an unrecognized unit in a scan
             for (BluetoothDevice d : scanForNewUnits(c)) {
                 if (tryConnect(c, d)) {
+                    // Update hardware unit with mac address
+                    HardwareUnitDataSource db = new HardwareUnitDataSource(c.getContext()); 
+                    db.open();
+                    db.updateHardwareUnit(c.getHardwareUnit().getId(), d.getAddress());
+                    db.close();
+                    c.getHardwareUnit().setBtMac(d.getAddress());
                     return true;
                 }
             }
             // If we are looking for a unit we have seen before
-        }/* else {
+        } else {
+        	// If it's currently connected
+        	if (mLastDevice != null && mSocket.isConnected()) {
+        		if (mLastDevice.getAddress().equals(c.getHardwareUnit().getBtMac())) {
+        			return true;
+        		} else {
+        			closeSocket();
+        		}
+        	}
+        	
             // It's been paired with before
             if (isUnitRecognized(c.getHardwareUnit())) {
-                return true;
+            	// Last device should have been set by isUnitRecogized, don't check for null on purpose
+            	if (tryConnect(c, mLastDevice)) {
+            		return true;
+            	}
             }
         }
-         */
         return false;
     }
 
@@ -195,13 +220,7 @@ public class HackBluetoothAdapter extends HackConnectionAdapter {
         } else {
             mStream.done();
             
-            // Close the socket
-            try {
-                mSocket.close();
-            } catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
+            closeSocket();
             return fail("Couldn't access stream thread");
         }
 
@@ -212,33 +231,30 @@ public class HackBluetoothAdapter extends HackConnectionAdapter {
         if (response == "") {
             mStream.done();
             
-            // Close the socket
-            try {
-                mSocket.close();
-            } catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
+            closeSocket();
             return fail("Timed out waiting for response");
         }
 
         // Technically the stream is a thread, so discard it at this point
         // Note that this should leave mSocket and its streams intact...
         mStream.done();
-        
-        // Close the socket
-        try {
-            mSocket.close();
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
 
         return response;
     }
 
 
     // -- Private members
+    
+    private void closeSocket() {
+        try {
+            mSocket.close();
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        
+        mLastDevice = null;
+    }
 
     private boolean tryConnect(HackCommand c, BluetoothDevice d) {
         try {
@@ -265,6 +281,7 @@ public class HackBluetoothAdapter extends HackConnectionAdapter {
             return false;
         }
 
+        mLastDevice = d;
         return true;
     }
 
@@ -275,6 +292,8 @@ public class HackBluetoothAdapter extends HackConnectionAdapter {
 
         for (BluetoothDevice d : mAdapter.getBondedDevices()) {
             if (d.getAddress().equals(u.getBtMac())) {
+            	// Set last device since we will try to connect to this
+            	mLastDevice = d;
                 return true;
             }
         }

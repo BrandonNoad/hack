@@ -235,22 +235,15 @@ implements TimePickerDialog.OnTimeSetListener {
             timeFromNow += 86400000;
         }
         
-        // convert to seconds for Espruino
-        duration /= 1000;
-        timeFromNow /= 1000;
-        
-        int isRepeated = (mIsRepeatedCheckBox.isChecked()) ? 1 : 0;
-        
         String url = "http://" + mHardwareUnit.getBasePath() + ":" + mHardwareUnit.getPortNumber() + 
                      "/hack/setTimer?socket=" + mDevice.getSocketId() +"&timeFromNow=" + timeFromNow +
-                     "&duration=" + duration + "&isRepeated=" + isRepeated;
+                     "&duration=" + duration + "&isRepeated=" + mIsRepeatedCheckBox.isChecked();
         HackCommand setTimerCommand = new HackCommand(SetTimerActivity.this, mHardwareUnit, url) {
 
             @Override
             public void doSuccess(JSONObject response) {
                 super.doSuccess(response);
-                boolean isRepeated = mIsRepeatedCheckBox.isChecked();
-                long timerId = mTimerDataSource.addTimer(mDeviceId, mTimeOnDate.getTime(), mTimeOffDate.getTime(), isRepeated);
+                long timerId = mTimerDataSource.addTimer(mDeviceId, mTimeOnDate.getTime(), mTimeOffDate.getTime(), mIsRepeatedCheckBox.isChecked());
                 startDeviceDetailsActivity();
             }
         };

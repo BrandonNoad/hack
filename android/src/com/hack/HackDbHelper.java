@@ -133,7 +133,7 @@ public class HackDbHelper extends SQLiteOpenHelper {
         db.execSQL(SQL_CREATE_DEVICE_TYPES);
         db.execSQL(SQL_CREATE_DEVICES);
         db.execSQL(SQL_CREATE_TIMERS);
-        db.execSQL(SQL_INSERT_HARDWARE_UNTIS);
+//        db.execSQL(SQL_INSERT_HARDWARE_UNTIS);
         db.execSQL(SQL_INSERT_SOCKETS);
         db.execSQL(SQL_INSERT_DEVICE_TYPES);
     }

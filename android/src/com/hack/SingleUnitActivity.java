@@ -1,7 +1,9 @@
 package com.hack;
 
 import java.util.ArrayList;
+import java.util.Date;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.app.ActionBar;
@@ -9,6 +11,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.NavUtils;
+import android.util.Log;
 import android.view.ActionMode;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -64,11 +67,7 @@ public class SingleUnitActivity extends Activity {
         // get hardware unit id from previous activity
         Intent intent = getIntent();
         mHardwareUnitId = intent.getLongExtra(AllUnitsActivity.EXTRA_UNIT_ID, -1);
-        if (mHardwareUnitId >= 0) {
-            // display unit/devices
-            displayUnit(mHardwareUnitId);
-            displayDevices(mHardwareUnitId);           
-        }
+     
 
         GridView socketGrid = (GridView) findViewById(R.id.socketGrid);
         mDeviceAdapter = new DeviceAdapter(this, mDevices);
@@ -109,6 +108,16 @@ public class SingleUnitActivity extends Activity {
             }
         });
     }
+    
+    @Override
+    protected void onStart() {
+        super.onStart();  // Always call the superclass method first
+        if (mHardwareUnitId >= 0) {
+            // display unit/devices
+            displayUnit(mHardwareUnitId);
+            displayDevices(mHardwareUnitId);
+        }
+    }
 
     public void displayUnit(long unitId) {
         mHardwareUnit = mHardwareUnitDataSource.getHardwareUnitById(unitId);
@@ -116,10 +125,13 @@ public class SingleUnitActivity extends Activity {
     }
 
     public void displayDevices(long unitId) {
+        mDeviceAdapter.clear();
         for (int i = 0; i < NUM_SOCKETS; i++) {
             Device d = mDeviceDataSource.getDevice(unitId, i);
-            mDevices.add(d);
+            mDeviceAdapter.add(d);
         }
+        mDeviceAdapter.notifyDataSetChanged();
+        
     }
 
     // -- Action Bar    
@@ -151,6 +163,32 @@ public class SingleUnitActivity extends Activity {
             //
             NavUtils.navigateUpFromSameTask(this);
             return true;
+        case R.id.action_refresh:
+            String url = "http://" + mHardwareUnit.getBasePath() + ":" + mHardwareUnit.getPortNumber() + "/hack/refresh";
+            HackCommand refreshCommand = new HackCommand(SingleUnitActivity.this, mHardwareUnit, url) {
+
+                @Override
+                public void doSuccess(JSONObject response) {
+                    super.doSuccess(response);
+                    
+                    JSONObject data = new JSONObject();
+                    try {
+                        data = response.getJSONObject("data");
+                    } catch (JSONException e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    }
+                    
+                    parseJSONResponse(data);
+                    displayDevices(getHardwareUnit().getId());
+                    Log.i("DeviceDetailsActivity - onPostExecute","device statistics updated");
+                }
+            };
+
+            // send command
+            refreshCommand.send();
+
+            break;
         }
         return super.onOptionsItemSelected(item);
     }
@@ -233,6 +271,42 @@ public class SingleUnitActivity extends Activity {
         deleteCommand.send();
 
 
+    }
+    
+    private void parseJSONResponse(JSONObject data) {
+        if (data != null) {
+            ArrayList<Device> devices = mDeviceDataSource.getAllDevicesForHardwareUnit(mHardwareUnitId);
+            // update each of the devices in the db
+            for (Device d : devices) {
+                Log.i("DeviceDetailsActivity - parseJSONResponse()", "updating device at socket: " + d.getSocketId());
+                int newState = 0;
+                long totalTimeOn = 0; // milliseconds
+                long onSinceTime = -1; // milliseconds
+                long espruinoCurrentTime = 0; // milliseconds
+                try {
+                    espruinoCurrentTime = data.getLong("currentTime");
+                    JSONObject outlet = data.getJSONArray("outlets").getJSONObject((int) d.getSocketId());
+                    newState = outlet.getInt("state");                                    
+                    totalTimeOn = outlet.getLong("totalTimeOn");
+                    onSinceTime = outlet.getLong("onSinceTime");
+                    Log.i("DeviceDetailsActivity - parseJSONResponse", 
+                            "new state: " + newState + 
+                            ", current espruino time (seconds): " + espruinoCurrentTime + 
+                            ", total time on: " + totalTimeOn +
+                            ", on since time (espruino seconds): " + onSinceTime);                                
+                } catch (JSONException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+                // update db
+                // time conversion
+                long now = new Date().getTime();
+                if (onSinceTime != -1) {
+                    onSinceTime = now - ((espruinoCurrentTime - onSinceTime) * 1000);
+                }                               
+                mDeviceDataSource.updateDevice(d.getId(), newState, totalTimeOn, onSinceTime);
+            }
+        }
     }
 
 }
